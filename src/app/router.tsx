@@ -9,9 +9,10 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <MainLayout />,
+    errorElement: <NotFoundPage />,
     children: [
       {
-        path: '/',
+        index: true,
         element: <HomePage />,
       },
       {
@@ -21,10 +22,6 @@ export const router = createBrowserRouter([
       {
         path: 'about',
         element: <AboutPage />,
-      },
-      {
-        path: '*',
-        element: <NotFoundPage />,
       },
     ],
   },
