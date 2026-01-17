@@ -6,7 +6,7 @@ const NAV_ITEMS = [
   { label: 'Розклад', href: '/' },
   { label: 'Фільми', href: '/' },
   { label: 'Новини', href: '/' },
-  { label: 'Про нас', href: '/' },
+  { label: 'Про нас', href: '/about' },
 ]
 
 const Header = () => {
