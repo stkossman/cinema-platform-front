@@ -65,6 +65,11 @@ export const authService = {
         if (!stored) throw new Error('User not found')
 
         const currentUser = JSON.parse(stored)
+
+        if (currentUser.id !== id) {
+          throw new Error('User ID mismatch')
+        }
+
         const updatedUser = { ...currentUser, ...data }
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser))

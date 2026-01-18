@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, User as UserIcon } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
 
 const NAV_ITEMS = [
