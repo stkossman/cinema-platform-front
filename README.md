@@ -14,7 +14,7 @@ Check [cinema-platform-back](https://github.com/stkossman/cinema-platform-back) 
 ### Week 1
 - [x] **Project Setup:** Vite, Tailwind v4, Biome configuration.
 - [x] **Architecture:** Feature-based folder structure
-- [x] **Layouts:** Main Layout (Responsive Header/Footer), Admin Layout (Sidebar).
+- [x] **Layouts:** Main Layout (Responsive Header), Admin Layout (Sidebar).
 - [x] **Pages:**
 	- [x] Hero Section.
 	- [x] "About Us".
