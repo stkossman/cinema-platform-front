@@ -1,7 +1,17 @@
-import { Link } from 'react-router-dom'
-import { Home, Film } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Film, ArrowLeft } from 'lucide-react'
 
 const NotFoundPage = () => {
+  const navigate = useNavigate()
+
+  const handleGoBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/', { replace: true })
+    }
+  }
+
   return (
     <div className='relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-zinc-950 text-center text-zinc-100 selection:bg-red-500/30'>
       <div className='pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600/10 blur-[120px]' />
@@ -23,13 +33,14 @@ const NotFoundPage = () => {
           скасовано.
         </p>
 
-        <Link
-          to='/'
-          className='group mt-10 flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-black transition-all hover:scale-105 hover:bg-zinc-200 hover:shadow-lg hover:shadow-white/10 active:scale-95'
+        <button
+          type='button'
+          onClick={handleGoBack}
+          className='group mt-10 flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-black transition-all hover:scale-105 hover:bg-zinc-200 hover:shadow-lg hover:shadow-white/10 active:scale-95 cursor-pointer'
         >
-          <Home className='h-4 w-4 transition-transform group-hover:-translate-y-0.5' />
-          Повернутися в зал
-        </Link>
+          <ArrowLeft className='h-4 w-4 transition-transform group-hover:-translate-x-1' />
+          Повернутися назад
+        </button>
       </div>
 
       <div className='absolute bottom-8 text-xs font-medium uppercase tracking-widest text-zinc-600'>
