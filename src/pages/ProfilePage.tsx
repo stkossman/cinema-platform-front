@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useAuth } from '../features/auth/AuthContext'
 import Input from '../common/components/Input'
-import { Loader2, User, Save, LogOut } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Loader2, User, Save, LogOut, LayoutDashboard } from 'lucide-react'
+import { useNavigate, Link } from 'react-router-dom'
 
 const profileSchema = z.object({
   name: z.string().min(2, "Ім'я занадто коротке"),
@@ -86,6 +86,16 @@ const ProfilePage = () => {
           <div className='mt-4 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500 inline-block uppercase tracking-wider'>
             {user.role}
           </div>
+
+          {user.role === 'admin' && (
+            <Link
+              to='/admin'
+              className='mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3 text-sm font-bold text-black transition-all hover:bg-zinc-200'
+            >
+              <LayoutDashboard size={16} />
+              Панель Адміністратора
+            </Link>
+          )}
 
           <button
             type='button'

@@ -6,6 +6,9 @@ import AboutPage from '../pages/AboutPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import RegisterPage from '../pages/RegisterPage'
 import ProfilePage from '../pages/ProfilePage'
+import AdminLayout from '../layouts/AdminLayout'
+import AdminDashboard from '../features/admin/AdminDashboard'
+import AdminRoute from '../features/auth/AdminRoute'
 
 export const router = createBrowserRouter([
   {
@@ -32,6 +35,21 @@ export const router = createBrowserRouter([
       {
         path: 'profile',
         element: <ProfilePage />,
+      },
+    ],
+  },
+  {
+    path: '/admin',
+    element: <AdminRoute />,
+    children: [
+      {
+        element: <AdminLayout />,
+        children: [
+          {
+            index: true,
+            element: <AdminDashboard />,
+          },
+        ],
       },
     ],
   },
