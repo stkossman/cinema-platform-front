@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, User as UserIcon, LogOut } from 'lucide-react'
+import { useAuth } from '../../features/auth/AuthContext'
 
 const NAV_ITEMS = [
   { label: 'Розклад', href: '/' },
@@ -11,6 +12,7 @@ const NAV_ITEMS = [
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { user, logout } = useAuth()
 
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
 
@@ -38,12 +40,31 @@ const Header = () => {
         </nav>
 
         <div className='flex items-center gap-4'>
-          <Link
-            to='/auth/login'
-            className='hidden md:block rounded-full bg-white px-5 py-2 text-sm font-semibold text-black transition-transform hover:scale-105 active:scale-95'
-          >
-            Увійти
-          </Link>
+          {user ? (
+            <div className='flex items-center gap-4'>
+              <Link
+                to='/profile'
+                className='hidden text-sm font-medium text-white hover:text-red-500 md:block'
+              >
+                {user.email}
+              </Link>
+              <button
+                type='button'
+                onClick={logout}
+                className='text-zinc-400 hover:text-white'
+                title='Вийти'
+              >
+                <LogOut size={20} />
+              </button>
+            </div>
+          ) : (
+            <Link
+              to='/auth/login'
+              className='hidden md:block rounded-full bg-white px-5 py-2 text-sm font-semibold text-black transition-transform hover:scale-105 active:scale-95'
+            >
+              Увійти
+            </Link>
+          )}
 
           <button
             type='button'
