@@ -57,4 +57,20 @@ export const authService = {
   logout: () => {
     localStorage.removeItem(STORAGE_KEY)
   },
+
+  updateProfile: async (id: string, data: Partial<User>): Promise<User> => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const stored = localStorage.getItem(STORAGE_KEY)
+        if (!stored) throw new Error('User not found')
+
+        const currentUser = JSON.parse(stored)
+        const updatedUser = { ...currentUser, ...data }
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser))
+
+        resolve(updatedUser)
+      }, 600)
+    })
+  },
 }

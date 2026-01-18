@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, User as UserIcon, LogOut } from 'lucide-react'
+import { Menu, X, User as UserIcon } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
 
 const NAV_ITEMS = [
@@ -12,7 +12,7 @@ const NAV_ITEMS = [
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
 
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
 
@@ -48,14 +48,6 @@ const Header = () => {
               >
                 {user.email}
               </Link>
-              <button
-                type='button'
-                onClick={logout}
-                className='text-zinc-400 hover:text-white'
-                title='Вийти'
-              >
-                <LogOut size={20} />
-              </button>
             </div>
           ) : (
             <Link

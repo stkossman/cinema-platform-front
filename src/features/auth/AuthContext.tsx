@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (email: string) => Promise<void>
   register: (email: string, name: string, surname: string) => Promise<void>
   logout: () => void
+  updateUserData: (data: Partial<User>) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -46,6 +47,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null)
   }
 
+  const updateUserData = async (data: Partial<User>) => {
+    if (!user) return
+    const updatedUser = await authService.updateProfile(user.id, data)
+    setUser(updatedUser)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -55,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         register,
         logout,
+        updateUserData,
       }}
     >
       {children}
