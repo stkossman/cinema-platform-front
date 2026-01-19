@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, LogOut, User } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
 
 const NAV_ITEMS = [
@@ -12,9 +12,14 @@ const NAV_ITEMS = [
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
 
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
+
+  const handleLogout = () => {
+    logout()
+    setIsMobileMenuOpen(false)
+  }
 
   return (
     <header className='sticky top-0 z-50 w-full border-b border-white/5 bg-black/60 backdrop-blur-xl'>
@@ -82,14 +87,39 @@ const Header = () => {
                 {item.label}
               </Link>
             ))}
+
             <hr className='border-white/5' />
-            <Link
-              to='/auth/login'
-              className='w-full text-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition-transform active:scale-95'
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Увійти
-            </Link>
+
+            {/* Mobile Auth Actions */}
+            {user ? (
+              <div className='flex flex-col gap-3 pt-2'>
+                <div className='text-sm text-zinc-500 px-1'>Увійшов як:</div>
+                <Link
+                  to='/profile'
+                  className='flex items-center justify-center gap-2 w-full rounded-lg bg-zinc-800 px-5 py-3 text-sm font-semibold text-white active:scale-95 transition-transform'
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User size={18} />
+                  {user.email}
+                </Link>
+                <button
+                  type='button'
+                  onClick={handleLogout}
+                  className='flex items-center justify-center gap-2 w-full rounded-lg border border-red-500/20 bg-red-500/10 px-5 py-3 text-sm font-semibold text-red-500 active:scale-95 transition-transform'
+                >
+                  <LogOut size={18} />
+                  Вийти
+                </button>
+              </div>
+            ) : (
+              <Link
+                to='/auth/login'
+                className='w-full text-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition-transform active:scale-95'
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Увійти
+              </Link>
+            )}
           </nav>
         </div>
       )}
