@@ -26,4 +26,6 @@ Check [cinema-platform-back](https://github.com/stkossman/cinema-platform-back) 
 - [x] Admin Dashboard UI (Basic Stats).
 
 ### Week 2
-> Upcoming
+- [ ] **Pages:**
+	- [x] Move Details Page
+	- [ ] Ticket Purchase (*Short Movie Info, Session Selection, Hall Map, Price Summary, Payment Simulation)
