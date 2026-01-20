@@ -9,6 +9,7 @@ import ProfilePage from '../pages/ProfilePage'
 import AdminLayout from '../layouts/AdminLayout'
 import AdminDashboard from '../features/admin/AdminDashboard'
 import AdminRoute from '../features/auth/AdminRoute'
+import MoviePage from '../pages/MoviePage'
 
 export const router = createBrowserRouter([
   {
@@ -31,6 +32,10 @@ export const router = createBrowserRouter([
       {
         path: 'about',
         element: <AboutPage />,
+      },
+      {
+        path: 'movies/:id',
+        element: <MoviePage />,
       },
       {
         path: 'profile',
