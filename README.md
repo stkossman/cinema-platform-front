@@ -26,6 +26,14 @@ Check [cinema-platform-back](https://github.com/stkossman/cinema-platform-back) 
 - [x] Admin Dashboard UI (Basic Stats).
 
 ### Week 2
-- [ ] **Pages:**
+- [x] **Pages:**
 	- [x] Move Details Page
-	- [ ] Ticket Purchase (*Short Movie Info, Session Selection, Hall Map, Price Summary, Payment Simulation)
+	- [x] Ticket Purchase (*Short Movie Info, Session Selection, Hall Map, Price Summary, Payment Simulation)
+	- [x] FAQ Page
+	- [x] Offers Page
+- [x] Hall Builder
+- [x] Active Ticket & Order History on Profile Page
+
+### Week 3
+> In development
+- [] Connect API and replace mock data
