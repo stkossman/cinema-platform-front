@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { LayoutDashboard, Loader2, LogOut, Save, User } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { Link, useNavigate } from 'react-router-dom'
 import * as z from 'zod'
-import { useAuth } from '../features/auth/AuthContext'
 import Input from '../common/components/Input'
-import { Loader2, User, Save, LogOut, LayoutDashboard } from 'lucide-react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../features/auth/AuthContext'
 
 const profileSchema = z.object({
   name: z.string().min(2, "Ім'я занадто коротке"),
@@ -83,9 +83,6 @@ const ProfilePage = () => {
             {user.name} {user.surname}
           </h2>
           <p className='text-sm text-zinc-400'>{user.email}</p>
-          <div className='mt-4 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500 inline-block uppercase tracking-wider'>
-            {user.role}
-          </div>
 
           {user.role === 'admin' && (
             <Link
