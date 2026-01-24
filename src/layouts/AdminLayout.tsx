@@ -4,11 +4,10 @@ import {
   Film,
   Calendar,
   Users,
-  LogOut,
+  ArrowLeft,
   Settings,
   Armchair,
 } from 'lucide-react'
-import { useAuth } from '../features/auth/AuthContext'
 
 const MENU_ITEMS = [
   { icon: LayoutDashboard, label: 'Дашборд', href: '/admin' },
@@ -20,7 +19,6 @@ const MENU_ITEMS = [
 ]
 
 const AdminLayout = () => {
-  const { logout } = useAuth()
   const location = useLocation()
 
   return (
@@ -54,14 +52,13 @@ const AdminLayout = () => {
         </nav>
 
         <div className='absolute bottom-4 left-0 w-full px-4'>
-          <button
-            type='button'
-            onClick={logout}
-            className='flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-red-500 transition-colors hover:bg-red-500/10'
+          <Link
+            to='/profile'
+            className='flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white'
           >
-            <LogOut size={18} />
-            Вийти
-          </button>
+            <ArrowLeft size={18} />
+            Назад у Профіль
+          </Link>
         </div>
       </aside>
 
