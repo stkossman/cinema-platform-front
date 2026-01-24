@@ -12,6 +12,8 @@ import AdminRoute from '../features/auth/AdminRoute'
 import MoviePage from '../pages/MoviePage'
 import FAQPage from '../pages/FAQPage'
 import OffersPage from '../pages/OffersPage'
+import HallsPage from '../features/admin/HallsPage'
+import BookingPage from '../pages/BookingPage'
 
 export const router = createBrowserRouter([
   {
@@ -51,6 +53,10 @@ export const router = createBrowserRouter([
         path: 'offers',
         element: <OffersPage />,
       },
+      {
+        path: 'booking/:id',
+        element: <BookingPage />,
+      },
     ],
   },
   {
@@ -63,6 +69,10 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <AdminDashboard />,
+          },
+          {
+            path: 'halls',
+            element: <HallsPage />,
           },
         ],
       },

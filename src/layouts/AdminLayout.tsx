@@ -6,6 +6,7 @@ import {
   Users,
   LogOut,
   Settings,
+  Armchair,
 } from 'lucide-react'
 import { useAuth } from '../features/auth/AuthContext'
 
@@ -14,6 +15,7 @@ const MENU_ITEMS = [
   { icon: Film, label: 'Фільми', href: '/admin/movies' },
   { icon: Calendar, label: 'Сеанси', href: '/admin/sessions' },
   { icon: Users, label: 'Користувачі', href: '/admin/users' },
+  { icon: Armchair, label: 'Зали', href: '/admin/halls' },
   { icon: Settings, label: 'Налаштування', href: '/profile' },
 ]
 
