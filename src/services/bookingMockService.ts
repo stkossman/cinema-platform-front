@@ -75,10 +75,10 @@ const MOCK_SESSIONS: Session[] = [
 ]
 
 export const bookingService = {
-  getSessionsByMovieId: async (movieId: string): Promise<Session[]> => {
+  getSessionsByMovieId: async (_movieId: string): Promise<Session[]> => {
     return new Promise(resolve => setTimeout(() => resolve(MOCK_SESSIONS), 500))
   },
-  getHallById: async (hallId: string): Promise<Hall> => {
+  getHallById: async (_hallId: string): Promise<Hall> => {
     return new Promise(resolve => setTimeout(() => resolve(MOCK_HALL), 500))
   },
 }

@@ -1,6 +1,4 @@
 import { type Session } from '../../../types/hall'
-import { format } from 'date-fns'
-import { uk } from 'date-fns/locale'
 
 interface SessionSelectorProps {
   sessions: Session[]

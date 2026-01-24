@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { Seat, SeatType } from '../../../types/hall'
 import { SEAT_TYPES } from '../../../common/constants/seatTypes'
-import { Plus, Trash2, Save, Armchair } from 'lucide-react'
+import { Plus, Save, Armchair } from 'lucide-react'
 import { clsx } from 'clsx'
 
 interface HallBuilderProps {

@@ -51,6 +51,32 @@ const ProfilePage = () => {
 
   useEffect(() => {
     // TODO: fetch tickets from API
+    setIsLoadingTickets(true)
+
+    // api simulation
+    const timer = setTimeout(() => {
+      const mockActive: OrderItem[] = [
+        {
+          id: '1',
+          movieTitle: 'Dune: Part Two',
+          posterUrl:
+            'https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg',
+          sessionDate: new Date().toISOString(),
+          cinemaHall: 'Red Hall',
+          seats: ['A-5', 'A-6'],
+          totalPrice: 450,
+          status: 'active',
+          bookingId: 'xyz',
+        },
+      ]
+
+      setActiveTickets(mockActive)
+      setHistoryOrders([])
+
+      setIsLoadingTickets(false)
+    }, 1000)
+
+    return () => clearTimeout(timer)
   }, [])
 
   const {
@@ -212,7 +238,6 @@ const ProfilePage = () => {
               )}
             </div>
           )}
-
           {activeTab === 'settings' && (
             <div className='rounded-2xl border border-white/10 bg-black/50 p-6 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-300'>
               <div className='mb-6 flex items-center gap-2 border-b border-white/5 pb-4'>
