@@ -6,7 +6,8 @@ import { useAuth } from '../../features/auth/AuthContext'
 const NAV_ITEMS = [
   { label: 'Розклад', href: '/' },
   { label: 'Фільми', href: '/' },
-  { label: 'Новини', href: '/' },
+  { label: 'Знижки', href: '/offers' },
+  { label: 'Допомога', href: '/faq' },
   { label: 'Про нас', href: '/about' },
 ]
 

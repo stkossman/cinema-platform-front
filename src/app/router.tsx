@@ -10,6 +10,8 @@ import AdminLayout from '../layouts/AdminLayout'
 import AdminDashboard from '../features/admin/AdminDashboard'
 import AdminRoute from '../features/auth/AdminRoute'
 import MoviePage from '../pages/MoviePage'
+import FAQPage from '../pages/FAQPage'
+import OffersPage from '../pages/OffersPage'
 
 export const router = createBrowserRouter([
   {
@@ -40,6 +42,14 @@ export const router = createBrowserRouter([
       {
         path: 'profile',
         element: <ProfilePage />,
+      },
+      {
+        path: 'faq',
+        element: <FAQPage />,
+      },
+      {
+        path: 'offers',
+        element: <OffersPage />,
       },
     ],
   },
