@@ -1,35 +1,37 @@
 export interface SeatType {
   id: string
   name: string
-  price: number
-  color: string
+  description?: string
 }
 
 export interface Seat {
   id: string
-  hall_id: string
-  seat_type_id: string
-  row_label: string
+  row: string
   number: number
-  grid_x: number
-  grid_y: number
-  status: number
+  gridX: number
+  gridY: number
+  status: string
+  seatTypeId: string
+  seatTypeName: string
 }
 
 export interface Hall {
   id: string
   name: string
-  total_capacity: number
-  rows_count: number
-  cols_count: number
+  capacity: number
   seats: Seat[]
+  rowsCount?: number
+  colsCount?: number
 }
 
 export interface Session {
   id: string
-  movie_id: number | string
-  hall_id: string
-  start_time: string
-  end_time: string
-  price_base: number
+  startTime: string
+  endTime: string
+  status: string
+  movieId: string
+  movieTitle: string
+  hallId: string
+  hallName: string
+  priceBase?: number
 }

@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import type { Movie } from '../types/movie'
 import type { Session, Hall, Seat } from '../types/hall'
-import { SEAT_TYPES } from '../common/constants/seatTypes'
 import { moviesService } from '../services/moviesService'
-import { bookingService } from '../services/bookingMockService'
+import { bookingService } from '../services/bookingService'
 import { Loader2, ArrowLeft, CheckCircle, Ticket } from 'lucide-react'
 
 import SessionSelector from '../features/booking/components/SessionSelector'
@@ -47,7 +46,7 @@ const BookingPage = () => {
       const loadHall = async () => {
         setIsLoading(true)
         const hallData = await bookingService.getHallById(
-          selectedSession.hall_id,
+          selectedSession.hallId,
         )
         setHall(hallData)
         setIsLoading(false)
@@ -73,9 +72,17 @@ const BookingPage = () => {
     }, 2000)
   }
 
+  const handleChangeSession = () => {
+    setStep(1)
+    setSelectedSeats([])
+    setSelectedSession(null)
+  }
+
   const totalPrice = selectedSeats.reduce((sum, seat) => {
-    const type = Object.values(SEAT_TYPES).find(t => t.id === seat.seat_type_id)
-    return sum + (type?.price || 0)
+    const isVip = seat.seatTypeName?.toLowerCase().includes('vip')
+    const price = isVip ? 300 : 150
+
+    return sum + price
   }, 0)
 
   if (isLoading && !movie) {
@@ -162,14 +169,14 @@ const BookingPage = () => {
             <div className='mb-4 text-sm'>
               <div className='text-zinc-500'>Сеанс:</div>
               <div className='text-white'>
-                {new Date(selectedSession.start_time).toLocaleDateString()} о{' '}
-                {new Date(selectedSession.start_time).toLocaleTimeString([], {
+                {new Date(selectedSession.startTime).toLocaleDateString()} о{' '}
+                {new Date(selectedSession.startTime).toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}
               </div>
               <div className='text-zinc-500 mt-2'>Зал:</div>
-              <div className='text-white'>{hall?.name}</div>
+              <div className='text-white'>{selectedSession.hallName}</div>
             </div>
           )}
 
@@ -182,7 +189,7 @@ const BookingPage = () => {
                     key={s.id}
                     className='rounded bg-white/10 px-2 py-1 text-xs'
                   >
-                    Ряд {s.row_label} / {s.number}
+                    Ряд {s.row} / {s.number}
                   </span>
                 ))}
               </div>
@@ -226,7 +233,7 @@ const BookingPage = () => {
             {step === 2 && (
               <button
                 type='button'
-                onClick={() => setStep(1)}
+                onClick={handleChangeSession}
                 className='w-full mt-2 py-2 text-sm text-zinc-400 hover:text-white'
               >
                 Змінити сеанс

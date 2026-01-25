@@ -18,6 +18,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { type OrderItem } from '../types/order'
 import TicketCard from '../features/profile/components/TicketCard'
+import { ordersService } from '../services/ordersService'
 
 const profileSchema = z.object({
   name: z.string().min(2, "Ім'я занадто коротке"),
@@ -50,34 +51,27 @@ const ProfilePage = () => {
   }, [user, navigate])
 
   useEffect(() => {
-    // TODO: fetch tickets from API
-    setIsLoadingTickets(true)
+    const fetchOrders = async () => {
+      if (!user) return
 
-    // api simulation
-    const timer = setTimeout(() => {
-      const mockActive: OrderItem[] = [
-        {
-          id: '1',
-          movieTitle: 'Dune: Part Two',
-          posterUrl:
-            'https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg',
-          sessionDate: new Date().toISOString(),
-          cinemaHall: 'Red Hall',
-          seats: ['A-5', 'A-6'],
-          totalPrice: 450,
-          status: 'active',
-          bookingId: 'xyz',
-        },
-      ]
+      setIsLoadingTickets(true)
+      try {
+        const allOrders = await ordersService.getUserOrders(user.id)
 
-      setActiveTickets(mockActive)
-      setHistoryOrders([])
+        const active = allOrders.filter(o => o.status === 'active')
+        const history = allOrders.filter(o => o.status !== 'active')
 
-      setIsLoadingTickets(false)
-    }, 1000)
+        setActiveTickets(active)
+        setHistoryOrders(history)
+      } catch (error) {
+        console.error('Failed to load orders', error)
+      } finally {
+        setIsLoadingTickets(false)
+      }
+    }
 
-    return () => clearTimeout(timer)
-  }, [])
+    fetchOrders()
+  }, [user])
 
   const {
     register,

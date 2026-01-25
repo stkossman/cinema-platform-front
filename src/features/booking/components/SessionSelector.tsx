@@ -13,7 +13,7 @@ const SessionSelector = ({
 }: SessionSelectorProps) => {
   const grouped = sessions.reduce(
     (acc, session) => {
-      const dateKey = new Date(session.start_time).toDateString()
+      const dateKey = new Date(session.startTime).toDateString()
       if (!acc[dateKey]) acc[dateKey] = []
       acc[dateKey].push(session)
       return acc
@@ -46,7 +46,7 @@ const SessionSelector = ({
                       : 'bg-zinc-800 text-white hover:bg-zinc-700'
                   }`}
                 >
-                  {new Date(session.start_time).toLocaleTimeString('uk-UA', {
+                  {new Date(session.startTime).toLocaleTimeString('uk-UA', {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}

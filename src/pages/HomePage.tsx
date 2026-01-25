@@ -1,4 +1,5 @@
 import HeroSection from '../features/movies/components/HeroSection'
+import MoviesGrid from '../features/movies/components/MoviesGrid'
 
 const HomePage = () => {
   return (
@@ -6,10 +7,18 @@ const HomePage = () => {
       <HeroSection />
 
       <div className='container mx-auto px-4'>
-        <h2 className='mb-6 text-2xl font-bold text-white'>Зараз у кіно</h2>
-        <div className='grid h-64 w-full place-items-center rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 text-zinc-500'>
-          Тут буде список фільмів (Grid)
+        <div className='mb-8 flex items-end justify-between'>
+          <div>
+            <h2 className='text-2xl font-bold text-white sm:text-3xl'>
+              Зараз у кіно
+            </h2>
+            <p className='mt-1 text-zinc-400'>
+              Обирайте фільм та бронюйте найкращі місця
+            </p>
+          </div>
         </div>
+
+        <MoviesGrid />
       </div>
     </div>
   )

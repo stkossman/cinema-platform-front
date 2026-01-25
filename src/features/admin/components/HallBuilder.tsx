@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { Seat, SeatType } from '../../../types/hall'
-import { SEAT_TYPES } from '../../../common/constants/seatTypes'
 import { Plus, Save, Armchair } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -26,13 +25,13 @@ const HallBuilder = ({
 
   const handleCellClick = (x: number, y: number) => {
     const existingSeatIndex = seats.findIndex(
-      s => s.grid_x === x && s.grid_y === y,
+      s => s.gridX === x && s.gridY === y,
     )
 
     if (existingSeatIndex >= 0) {
       const existingSeat = seats[existingSeatIndex]
 
-      if (existingSeat.seat_type_id === selectedType.id) {
+      if (existingSeat.seatTypeId === selectedType.id) {
         const newSeats = [...seats]
         newSeats.splice(existingSeatIndex, 1)
         setSeats(newSeats)
@@ -40,7 +39,8 @@ const HallBuilder = ({
         const newSeats = [...seats]
         newSeats[existingSeatIndex] = {
           ...existingSeat,
-          seat_type_id: selectedType.id,
+          seatTypeId: selectedType.id,
+          seatTypeName: selectedType.name,
         }
         setSeats(newSeats)
       }
@@ -50,13 +50,13 @@ const HallBuilder = ({
 
       const newSeat: Seat = {
         id: crypto.randomUUID(),
-        hall_id: '',
-        seat_type_id: selectedType.id,
-        grid_x: x,
-        grid_y: y,
-        row_label: rowLabel,
+        row: rowLabel,
         number: seatNum,
-        status: 0,
+        gridX: x,
+        gridY: y,
+        status: 'Available',
+        seatTypeId: selectedType.id,
+        seatTypeName: selectedType.name,
       }
       setSeats([...seats, newSeat])
     }
@@ -135,9 +135,10 @@ const HallBuilder = ({
             const x = index % cols
             const y = Math.floor(index / cols)
 
-            const seat = seats.find(s => s.grid_x === x && s.grid_y === y)
+            const seat = seats.find(s => s.gridX === x && s.gridY === y)
+
             const seatType = seat
-              ? Object.values(SEAT_TYPES).find(t => t.id === seat.seat_type_id)
+              ? Object.values(SEAT_TYPES).find(t => t.id === seat.seatTypeId)
               : null
 
             return (
@@ -152,7 +153,7 @@ const HallBuilder = ({
                 )}
                 title={
                   seat
-                    ? `Row: ${seat.row_label}, Num: ${seat.number}`
+                    ? `Row: ${seat.row}, Num: ${seat.number}`
                     : `Empty (${x}, ${y})`
                 }
               >
