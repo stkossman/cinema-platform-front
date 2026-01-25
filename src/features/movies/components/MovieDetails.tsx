@@ -1,12 +1,24 @@
 import { Star, Calendar, Clock, Play, ArrowLeft } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { type Movie } from '../../../types/movie'
+import { useAuth } from '../../../features/auth/AuthContext'
 
 interface MovieDetailsProps {
   movie: Movie
 }
 
 const MovieDetails = ({ movie }: MovieDetailsProps) => {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+
+  const handleBookingClick = () => {
+    if (!user) {
+      navigate('/auth/login')
+    } else {
+      navigate(`/booking/${movie.id}`)
+    }
+  }
+
   return (
     <div className='relative min-h-screen bg-black text-white selection:bg-red-500/30'>
       <div className='relative h-[70vh] w-full overflow-hidden'>
@@ -66,8 +78,9 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
             </p>
 
             <div className='flex flex-wrap gap-4'>
-              <Link
-                to={`/booking/${movie.id}`}
+              <button
+                type='button'
+                onClick={handleBookingClick}
                 className='group flex items-center gap-3 rounded-full bg-white px-8 py-4 text-base font-bold text-black transition-all hover:scale-105 active:scale-95'
               >
                 <Play
@@ -75,7 +88,7 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
                   size={20}
                 />
                 Дивитися розклад
-              </Link>
+              </button>
               <button
                 type='button'
                 className='rounded-full border border-white/20 bg-white/5 px-8 py-4 text-base font-bold backdrop-blur-sm transition-colors hover:bg-white/10 hover:border-white'

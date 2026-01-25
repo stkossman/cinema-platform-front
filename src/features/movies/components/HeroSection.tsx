@@ -1,12 +1,16 @@
 import { Play, Info, Loader2 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { type Movie } from '../../../types/movie'
 import { moviesService } from '../../../services/moviesService'
+import { useAuth } from '../../../features/auth/AuthContext'
 
 const HeroSection = () => {
   const [movie, setMovie] = useState<Movie | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  const { user } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -24,6 +28,16 @@ const HeroSection = () => {
 
     fetchFeatured()
   }, [])
+
+  const handleBuyTicket = () => {
+    if (!movie) return
+
+    if (!user) {
+      navigate('/auth/login')
+    } else {
+      navigate(`/booking/${movie.id}`)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -72,13 +86,14 @@ const HeroSection = () => {
           </p>
 
           <div className='flex flex-wrap gap-4 pt-4'>
-            <Link
-              to={`/booking/${movie.id}`}
+            <button
+              type='button'
+              onClick={handleBuyTicket}
               className='group flex items-center gap-2 rounded-full bg-white px-8 py-4 text-base font-bold text-black transition-transform hover:scale-105 active:scale-95'
             >
               <Play className='size-5 fill-current' />
               Купити квиток
-            </Link>
+            </button>
 
             <Link
               to={`/movies/${movie.id}`}

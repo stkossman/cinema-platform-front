@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import type { Movie } from '../types/movie'
 import type { Session, Hall, Seat } from '../types/hall'
 import { moviesService } from '../services/moviesService'
@@ -8,9 +8,12 @@ import { Loader2, ArrowLeft, CheckCircle, Ticket } from 'lucide-react'
 
 import SessionSelector from '../features/booking/components/SessionSelector'
 import SeatSelector from '../features/booking/components/SeatSelector'
+import { useAuth } from '../features/auth/AuthContext'
 
 const BookingPage = () => {
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
+  const navigate = useNavigate()
 
   const [movie, setMovie] = useState<Movie | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
@@ -21,6 +24,12 @@ const BookingPage = () => {
   const [selectedSession, setSelectedSession] = useState<Session | null>(null)
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([])
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth/login', { replace: true })
+    }
+  }, [user, navigate])
 
   useEffect(() => {
     const init = async () => {
