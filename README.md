@@ -27,13 +27,24 @@ Check [cinema-platform-back](https://github.com/stkossman/cinema-platform-back) 
 
 ### Week 2
 - [x] **Pages:**
-	- [x] Move Details Page
-	- [x] Ticket Purchase (*Short Movie Info, Session Selection, Hall Map, Price Summary, Payment Simulation)
-	- [x] FAQ Page
-	- [x] Offers Page
+	- [x] Move Details Page ([#1](https://github.com/stkossman/cinema-platform-front/issues/1))
+	- [x] Ticket Purchase (*Short Movie Info, Session Selection, Hall Map, Price Summary, Payment Simulation) ([#2](https://github.com/stkossman/cinema-platform-front/issues/2))
+	- [x] FAQ Page ([#8](https://github.com/stkossman/cinema-platform-front/issues/8))
+	- [x] Offers Page ([#8](https://github.com/stkossman/cinema-platform-front/issues/8))
 - [x] Hall Builder
-- [x] Active Ticket & Order History on Profile Page
+- [x] Active Ticket & Order History on Profile Page ([#3](https://github.com/stkossman/cinema-platform-front/issues/3))
 
 ### Week 3
 > In development
-- [] Connect API and replace mock data
+- [x] Connect API and replace mock data ([#11](https://github.com/stkossman/cinema-platform-front/issues/11))
+- [x] Refactor Header ([#7](https://github.com/stkossman/cinema-platform-front/issues/7))
+- [x] Add Movies Page
+- [ ] Enhance Admin Panel ([#10](https://github.com/stkossman/cinema-platform-front/issues/10))
+- [ ] Improve API Integration ([#12](https://github.com/stkossman/cinema-platform-front/issues/12))
+	- [ ] Active Ticket & Order History
+	- [ ] Users
+	- [ ] Movie Genres
+	- [ ] Cast
+	- [ ] Movie Description
+	- [ ] CRUD
+	- [ ] A lot more..
