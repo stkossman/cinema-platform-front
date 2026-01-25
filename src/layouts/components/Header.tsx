@@ -4,8 +4,7 @@ import { Menu, X, LogOut, User } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
 
 const NAV_ITEMS = [
-  { label: 'Розклад', href: '/' },
-  { label: 'Фільми', href: '/' },
+  { label: 'Фільми', href: '/movies' },
   { label: 'Знижки', href: '/offers' },
   { label: 'Допомога', href: '/faq' },
   { label: 'Про нас', href: '/about' },
@@ -33,6 +32,7 @@ const Header = () => {
           Cinema<span className='text-red-600'>.</span>
         </Link>
 
+        {/* Desktop Nav */}
         <nav className='hidden gap-8 md:flex'>
           {NAV_ITEMS.map(item => (
             <Link
@@ -45,6 +45,7 @@ const Header = () => {
           ))}
         </nav>
 
+        {/* User / Auth Actions */}
         <div className='flex items-center gap-4'>
           {user ? (
             <div className='flex items-center gap-4'>
@@ -75,6 +76,7 @@ const Header = () => {
         </div>
       </div>
 
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className='absolute top-16 left-0 w-full border-b border-white/5 bg-black/95 backdrop-blur-xl md:hidden animate-in slide-in-from-top-5 fade-in duration-200'>
           <nav className='flex flex-col p-4 space-y-4'>
@@ -91,7 +93,6 @@ const Header = () => {
 
             <hr className='border-white/5' />
 
-            {/* Mobile Auth Actions */}
             {user ? (
               <div className='flex flex-col gap-3 pt-2'>
                 <div className='text-sm text-zinc-500 px-1'>Увійшов як:</div>

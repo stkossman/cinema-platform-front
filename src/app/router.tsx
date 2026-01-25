@@ -14,6 +14,7 @@ import FAQPage from '../pages/FAQPage'
 import OffersPage from '../pages/OffersPage'
 import HallsPage from '../features/admin/HallsPage'
 import BookingPage from '../pages/BookingPage'
+import MoviesPage from '../pages/MoviesPage'
 
 export const router = createBrowserRouter([
   {
@@ -56,6 +57,10 @@ export const router = createBrowserRouter([
       {
         path: 'booking/:id',
         element: <BookingPage />,
+      },
+      {
+        path: 'movies',
+        element: <MoviesPage />,
       },
     ],
   },
