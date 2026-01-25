@@ -7,7 +7,9 @@ import { clsx } from 'clsx'
 interface HallBuilderProps {
   initialRows?: number
   initialCols?: number
+  initialSeats?: Seat[]
   onSave: (hallData: { rows: number; cols: number; seats: Seat[] }) => void
+  isEditing?: boolean
 }
 
 const getSeatColor = (typeName: string = 'Standard') => {
@@ -22,15 +24,28 @@ const getSeatColor = (typeName: string = 'Standard') => {
 const HallBuilder = ({
   initialRows = 10,
   initialCols = 15,
+  initialSeats = [],
   onSave,
+  isEditing = false,
 }: HallBuilderProps) => {
   const [rows, setRows] = useState(initialRows)
   const [cols, setCols] = useState(initialCols)
-  const [seats, setSeats] = useState<Seat[]>([])
+
+  const [seats, setSeats] = useState<Seat[]>(initialSeats)
 
   const [availableSeatTypes, setAvailableSeatTypes] = useState<SeatType[]>([])
   const [selectedType, setSelectedType] = useState<SeatType | null>(null)
   const [isLoadingTypes, setIsLoadingTypes] = useState(true)
+
+  useEffect(() => {
+    if (initialSeats.length > 0) {
+      setSeats(initialSeats)
+      const maxX = Math.max(...initialSeats.map(s => s.gridX))
+      const maxY = Math.max(...initialSeats.map(s => s.gridY))
+      if (maxX >= cols) setCols(maxX + 1)
+      if (maxY >= rows) setRows(maxY + 1)
+    }
+  }, [initialSeats])
 
   useEffect(() => {
     const fetchTypes = async () => {
@@ -44,9 +59,7 @@ const HallBuilder = ({
             name: t.name,
             description: t.description,
           }))
-
           setAvailableSeatTypes(types)
-
           const standard = types.find(t =>
             t.name.toLowerCase().includes('standard'),
           )
@@ -135,31 +148,25 @@ const HallBuilder = ({
         </div>
 
         <div className='flex items-center gap-2'>
-          <span className='text-sm text-zinc-500 mr-2'>Тип місця:</span>
-
-          {isLoadingTypes ? (
-            <Loader2 className='h-4 w-4 animate-spin text-zinc-500' />
-          ) : (
-            availableSeatTypes.map(type => {
-              const colorClass = getSeatColor(type.name)
-              return (
-                <button
-                  type='button'
-                  key={type.id}
-                  onClick={() => setSelectedType(type)}
-                  className={clsx(
-                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border',
-                    selectedType?.id === type.id
-                      ? 'border-white bg-white/10 text-white'
-                      : 'border-transparent hover:bg-white/5 text-zinc-400',
-                  )}
-                >
-                  <div className={`h-4 w-4 rounded ${colorClass}`} />
-                  {type.name}
-                </button>
-              )
-            })
-          )}
+          {availableSeatTypes.map(type => {
+            const colorClass = getSeatColor(type.name)
+            return (
+              <button
+                type='button'
+                key={type.id}
+                onClick={() => setSelectedType(type)}
+                className={clsx(
+                  'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border',
+                  selectedType?.id === type.id
+                    ? 'border-white bg-white/10 text-white'
+                    : 'border-transparent hover:bg-white/5 text-zinc-400',
+                )}
+              >
+                <div className={`h-4 w-4 rounded ${colorClass}`} />
+                {type.name}
+              </button>
+            )
+          })}
         </div>
 
         <button
@@ -169,23 +176,19 @@ const HallBuilder = ({
           className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed'
         >
           <Save size={16} />
-          Зберегти залу
+          {isEditing ? 'Зберегти зміни' : 'Зберегти залу'}
         </button>
       </div>
 
       <div className='overflow-x-auto rounded-xl border border-white/10 bg-black p-8'>
         <div
           className='grid gap-2 mx-auto w-fit'
-          style={{
-            gridTemplateColumns: `repeat(${cols}, minmax(30px, 1fr))`,
-          }}
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(30px, 1fr))` }}
         >
           {Array.from({ length: rows * cols }).map((_, index) => {
             const x = index % cols
             const y = Math.floor(index / cols)
-
             const seat = seats.find(s => s.gridX === x && s.gridY === y)
-
             const typeName =
               seat?.seatTypeName || selectedType?.name || 'Standard'
             const colorClass = getSeatColor(typeName)
@@ -218,7 +221,6 @@ const HallBuilder = ({
             )
           })}
         </div>
-
         <div className='mt-8 w-full flex justify-center'>
           <div className='w-2/3 h-2 bg-gradient-to-r from-zinc-800 via-zinc-500 to-zinc-800 rounded-full opacity-50 shadow-[0_10px_20px_rgba(255,255,255,0.1)]' />
         </div>

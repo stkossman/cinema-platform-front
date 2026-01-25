@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import HallBuilder from '../../features/admin/components/HallBuilder'
 import { type Seat } from '../../types/hall'
+import { bookingService } from '../../services/bookingService'
 import {
   Armchair,
   Trash2,
@@ -9,6 +10,7 @@ import {
   Plus,
   Users,
   MonitorPlay,
+  Pencil,
 } from 'lucide-react'
 
 interface HallSummary {
@@ -18,9 +20,13 @@ interface HallSummary {
 }
 
 const HallsPage = () => {
-  const [isCreating, setIsCreating] = useState(false)
+  const [mode, setMode] = useState<'list' | 'create' | 'edit'>('list')
   const [halls, setHalls] = useState<HallSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  const [editingHallId, setEditingHallId] = useState<string | null>(null)
+  const [initialSeats, setInitialSeats] = useState<Seat[]>([])
+  const [isLoadingEditData, setIsLoadingEditData] = useState(false)
 
   const fetchHalls = async () => {
     setIsLoading(true)
@@ -43,44 +49,81 @@ const HallsPage = () => {
     fetchHalls()
   }, [])
 
+  const handleEditClick = async (hallId: string) => {
+    setIsLoadingEditData(true)
+    setEditingHallId(hallId)
+    setMode('edit')
+
+    try {
+      const hallData = await bookingService.getHallById(hallId)
+      setInitialSeats(hallData.seats)
+    } catch (error) {
+      console.error('Failed to load hall data', error)
+      alert('Помилка завантаження даних залу')
+      setMode('list')
+    } finally {
+      setIsLoadingEditData(false)
+    }
+  }
+
   const handleSaveHall = async (data: {
     rows: number
     cols: number
     seats: Seat[]
   }) => {
-    const hallName = prompt("Введіть назву залу (напр. 'Red Hall'):")
+    const hallName = prompt(
+      "Введіть назву залу (напр. 'Red Hall'):",
+      mode === 'edit' ? 'Оновлений зал' : '',
+    )
     if (!hallName) return
 
     try {
-      const newHallId = crypto.randomUUID()
+      let targetHallId = editingHallId
 
-      const { error: hallError } = await supabase.from('halls').insert({
-        id: newHallId,
-        name: hallName,
-        total_capacity: data.seats.length,
-      })
+      if (mode === 'create') {
+        targetHallId = crypto.randomUUID()
+        const { error: hallError } = await supabase.from('halls').insert({
+          id: targetHallId,
+          name: hallName,
+          total_capacity: data.seats.length,
+        })
+        if (hallError) throw hallError
+      } else if (mode === 'edit' && targetHallId) {
+        const { error: hallError } = await supabase
+          .from('halls')
+          .update({ name: hallName, total_capacity: data.seats.length })
+          .eq('id', targetHallId)
+        if (hallError) throw hallError
 
-      if (hallError) throw hallError
+        const { error: deleteError } = await supabase
+          .from('seats')
+          .delete()
+          .eq('hall_id', targetHallId)
+        if (deleteError) throw deleteError
+      }
 
-      const seatsToInsert = data.seats.map(s => ({
-        id: crypto.randomUUID(),
-        hall_id: newHallId,
-        row_label: s.row,
-        number: s.number,
-        grid_x: s.gridX,
-        grid_y: s.gridY,
-        seat_type_id: s.seatTypeId,
-        status: 0,
-      }))
+      if (targetHallId) {
+        const seatsToInsert = data.seats.map(s => ({
+          id: crypto.randomUUID(),
+          hall_id: targetHallId,
+          row_label: s.row,
+          number: s.number,
+          grid_x: s.gridX,
+          grid_y: s.gridY,
+          seat_type_id: s.seatTypeId,
+          status: 0,
+        }))
 
-      const { error: seatsError } = await supabase
-        .from('seats')
-        .insert(seatsToInsert)
+        const { error: seatsError } = await supabase
+          .from('seats')
+          .insert(seatsToInsert)
 
-      if (seatsError) throw seatsError
+        if (seatsError) throw seatsError
+      }
 
-      alert('Зал успішно створено!')
-      setIsCreating(false)
+      alert(mode === 'create' ? 'Зал створено!' : 'Зал оновлено!')
+      setMode('list')
+      setEditingHallId(null)
       fetchHalls()
     } catch (error: any) {
       console.error('Error saving hall:', error)
@@ -90,12 +133,9 @@ const HallsPage = () => {
 
   const handleDeleteHall = async (id: string) => {
     if (!confirm('Ви впевнені? Це видалить зал та всі його місця.')) return
-
     try {
       const { error } = await supabase.from('halls').delete().eq('id', id)
-
       if (error) throw error
-
       fetchHalls()
     } catch (error: any) {
       console.error('Error deleting hall:', error)
@@ -115,14 +155,21 @@ const HallsPage = () => {
 
         <button
           type='button'
-          onClick={() => setIsCreating(!isCreating)}
+          onClick={() => {
+            if (mode === 'list') {
+              setMode('create')
+              setInitialSeats([])
+            } else {
+              setMode('list')
+            }
+          }}
           className={`rounded-xl px-6 py-3 text-sm font-bold transition-all flex items-center gap-2 ${
-            isCreating
+            mode !== 'list'
               ? 'bg-zinc-800 text-white hover:bg-zinc-700'
               : 'bg-white text-black hover:bg-zinc-200'
           }`}
         >
-          {isCreating ? (
+          {mode !== 'list' ? (
             'Скасувати'
           ) : (
             <>
@@ -132,10 +179,23 @@ const HallsPage = () => {
         </button>
       </div>
 
-      {isCreating ? (
-        <div className='animate-in fade-in slide-in-from-top-4'>
-          <HallBuilder onSave={handleSaveHall} />
-        </div>
+      {mode !== 'list' ? (
+        isLoadingEditData ? (
+          <div className='flex justify-center py-20'>
+            <Loader2 className='h-8 w-8 animate-spin text-zinc-600' />
+          </div>
+        ) : (
+          <div className='animate-in fade-in slide-in-from-top-4'>
+            <h2 className='text-xl font-bold text-white mb-4'>
+              {mode === 'edit' ? 'Редагування залу' : 'Створення нового залу'}
+            </h2>
+            <HallBuilder
+              onSave={handleSaveHall}
+              initialSeats={initialSeats}
+              isEditing={mode === 'edit'}
+            />
+          </div>
+        )
       ) : (
         <>
           {isLoading && (
@@ -165,14 +225,25 @@ const HallsPage = () => {
                     <div className='rounded-lg bg-zinc-800 p-3 text-white'>
                       <MonitorPlay size={24} />
                     </div>
-                    <button
-                      type='button'
-                      onClick={() => handleDeleteHall(hall.id)}
-                      className='rounded p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-500 transition-colors'
-                      title='Видалити зал'
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className='flex gap-2'>
+                      <button
+                        type='button'
+                        onClick={() => handleEditClick(hall.id)}
+                        className='rounded p-2 text-zinc-500 hover:bg-white/10 hover:text-white transition-colors'
+                        title='Редагувати зал'
+                      >
+                        <Pencil size={18} />
+                      </button>
+
+                      <button
+                        type='button'
+                        onClick={() => handleDeleteHall(hall.id)}
+                        className='rounded p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-500 transition-colors'
+                        title='Видалити зал'
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
 
                   <h3 className='text-xl font-bold text-white mb-2'>
