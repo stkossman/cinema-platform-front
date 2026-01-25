@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import type { Seat, SeatType } from '../../../types/hall'
-import { Plus, Save, Armchair, Loader2 } from 'lucide-react'
+import { Plus, Save, Armchair } from 'lucide-react'
 import { clsx } from 'clsx'
 
 interface HallBuilderProps {
@@ -35,7 +35,7 @@ const HallBuilder = ({
 
   const [availableSeatTypes, setAvailableSeatTypes] = useState<SeatType[]>([])
   const [selectedType, setSelectedType] = useState<SeatType | null>(null)
-  const [isLoadingTypes, setIsLoadingTypes] = useState(true)
+  const [_isLoadingTypes, setIsLoadingTypes] = useState(true)
 
   useEffect(() => {
     if (initialSeats.length > 0) {
