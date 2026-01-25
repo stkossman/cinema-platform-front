@@ -1,12 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../../../lib/supabase'
 import type { Seat, SeatType } from '../../../types/hall'
-import { Plus, Save, Armchair } from 'lucide-react'
+import { Plus, Save, Armchair, Loader2 } from 'lucide-react'
 import { clsx } from 'clsx'
 
 interface HallBuilderProps {
   initialRows?: number
   initialCols?: number
   onSave: (hallData: { rows: number; cols: number; seats: Seat[] }) => void
+}
+
+const getSeatColor = (typeName: string = 'Standard') => {
+  const lowerName = typeName.toLowerCase()
+  if (lowerName.includes('vip') || lowerName.includes('lux'))
+    return 'bg-yellow-500'
+  if (lowerName.includes('love') || lowerName.includes('sofa'))
+    return 'bg-pink-500'
+  return 'bg-blue-600'
 }
 
 const HallBuilder = ({
@@ -16,14 +26,44 @@ const HallBuilder = ({
 }: HallBuilderProps) => {
   const [rows, setRows] = useState(initialRows)
   const [cols, setCols] = useState(initialCols)
-
-  const [selectedType, setSelectedType] = useState<SeatType>(
-    SEAT_TYPES.standard,
-  )
-
   const [seats, setSeats] = useState<Seat[]>([])
 
+  const [availableSeatTypes, setAvailableSeatTypes] = useState<SeatType[]>([])
+  const [selectedType, setSelectedType] = useState<SeatType | null>(null)
+  const [isLoadingTypes, setIsLoadingTypes] = useState(true)
+
+  useEffect(() => {
+    const fetchTypes = async () => {
+      try {
+        const { data, error } = await supabase.from('seat_types').select('*')
+        if (error) throw error
+
+        if (data && data.length > 0) {
+          const types: SeatType[] = data.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            description: t.description,
+          }))
+
+          setAvailableSeatTypes(types)
+
+          const standard = types.find(t =>
+            t.name.toLowerCase().includes('standard'),
+          )
+          setSelectedType(standard || types[0])
+        }
+      } catch (error) {
+        console.error('Failed to load seat types:', error)
+      } finally {
+        setIsLoadingTypes(false)
+      }
+    }
+    fetchTypes()
+  }, [])
+
   const handleCellClick = (x: number, y: number) => {
+    if (!selectedType) return
+
     const existingSeatIndex = seats.findIndex(
       s => s.gridX === x && s.gridY === y,
     )
@@ -96,28 +136,37 @@ const HallBuilder = ({
 
         <div className='flex items-center gap-2'>
           <span className='text-sm text-zinc-500 mr-2'>Тип місця:</span>
-          {Object.values(SEAT_TYPES).map(type => (
-            <button
-              type='button'
-              key={type.id}
-              onClick={() => setSelectedType(type)}
-              className={clsx(
-                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border',
-                selectedType.id === type.id
-                  ? 'border-white bg-white/10 text-white'
-                  : 'border-transparent hover:bg-white/5 text-zinc-400',
-              )}
-            >
-              <div className={`h-4 w-4 rounded ${type.color}`} />
-              {type.name}
-            </button>
-          ))}
+
+          {isLoadingTypes ? (
+            <Loader2 className='h-4 w-4 animate-spin text-zinc-500' />
+          ) : (
+            availableSeatTypes.map(type => {
+              const colorClass = getSeatColor(type.name)
+              return (
+                <button
+                  type='button'
+                  key={type.id}
+                  onClick={() => setSelectedType(type)}
+                  className={clsx(
+                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border',
+                    selectedType?.id === type.id
+                      ? 'border-white bg-white/10 text-white'
+                      : 'border-transparent hover:bg-white/5 text-zinc-400',
+                  )}
+                >
+                  <div className={`h-4 w-4 rounded ${colorClass}`} />
+                  {type.name}
+                </button>
+              )
+            })
+          )}
         </div>
 
         <button
           type='button'
           onClick={handleSave}
-          className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700'
+          disabled={seats.length === 0}
+          className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed'
         >
           <Save size={16} />
           Зберегти залу
@@ -137,9 +186,9 @@ const HallBuilder = ({
 
             const seat = seats.find(s => s.gridX === x && s.gridY === y)
 
-            const seatType = seat
-              ? Object.values(SEAT_TYPES).find(t => t.id === seat.seatTypeId)
-              : null
+            const typeName =
+              seat?.seatTypeName || selectedType?.name || 'Standard'
+            const colorClass = getSeatColor(typeName)
 
             return (
               <div
@@ -148,7 +197,7 @@ const HallBuilder = ({
                 className={clsx(
                   'h-8 w-8 rounded flex items-center justify-center cursor-pointer transition-all text-[10px] select-none',
                   seat
-                    ? `${seatType?.color} text-white shadow-lg`
+                    ? `${colorClass} text-white shadow-lg`
                     : 'bg-zinc-900 hover:bg-zinc-800 border border-white/5',
                 )}
                 title={
