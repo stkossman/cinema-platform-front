@@ -15,6 +15,7 @@ import OffersPage from '../pages/OffersPage'
 import HallsPage from '../features/admin/HallsPage'
 import BookingPage from '../pages/BookingPage'
 import MoviesPage from '../pages/MoviesPage'
+import SessionsPage from '../features/admin/SessionsPage'
 
 export const router = createBrowserRouter([
   {
@@ -78,6 +79,10 @@ export const router = createBrowserRouter([
           {
             path: 'halls',
             element: <HallsPage />,
+          },
+          {
+            path: 'sessions',
+            element: <SessionsPage />,
           },
         ],
       },
