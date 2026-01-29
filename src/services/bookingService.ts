@@ -1,4 +1,5 @@
 import { api } from '../lib/axios'
+import type { PaginatedResult } from '../types/common'
 import type { Hall, Session } from '../types/hall'
 
 interface SessionDto {
@@ -10,6 +11,8 @@ interface SessionDto {
   movieTitle: string
   hallId: string
   hallName: string
+  pricingId: string
+  pricingName: string
 }
 
 interface SeatDto {
@@ -33,10 +36,14 @@ interface HallDto {
 export const bookingService = {
   getSessionsByMovieId: async (movieId: string): Promise<Session[]> => {
     try {
-      const { data } = await api.get<SessionDto[]>(`/sessions/by-date`)
+      const { data } = await api.get<PaginatedResult<SessionDto>>(
+        `/sessions?pageNumber=1&pageSize=1000`,
+      )
 
-      return data
-        .filter(s => s.movieId === movieId)
+      const now = new Date()
+
+      return data.items
+        .filter(s => s.movieId === movieId && new Date(s.startTime) > now)
         .map(s => ({
           id: s.id,
           startTime: s.startTime,
@@ -48,6 +55,10 @@ export const bookingService = {
           hallName: s.hallName,
           priceBase: 150,
         }))
+        .sort(
+          (a, b) =>
+            new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+        )
     } catch (error) {
       console.error('API Error (Sessions):', error)
       return []

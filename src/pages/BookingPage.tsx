@@ -4,7 +4,13 @@ import type { Movie } from '../types/movie'
 import type { Session, Hall, Seat } from '../types/hall'
 import { moviesService } from '../services/moviesService'
 import { bookingService } from '../services/bookingService'
-import { Loader2, ArrowLeft, CheckCircle, Ticket } from 'lucide-react'
+import {
+  Loader2,
+  ArrowLeft,
+  CheckCircle,
+  Ticket,
+  CalendarX,
+} from 'lucide-react'
 
 import SessionSelector from '../features/booking/components/SessionSelector'
 import SeatSelector from '../features/booking/components/SeatSelector'
@@ -136,11 +142,32 @@ const BookingPage = () => {
         <div>
           {step === 1 && (
             <div className='animate-in fade-in slide-in-from-left-4'>
-              <SessionSelector
-                sessions={sessions}
-                selectedSession={selectedSession}
-                onSelect={setSelectedSession}
-              />
+              {sessions.length > 0 ? (
+                <SessionSelector
+                  sessions={sessions}
+                  selectedSession={selectedSession}
+                  onSelect={setSelectedSession}
+                />
+              ) : (
+                <div className='flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800 bg-zinc-900/30 p-12 text-center'>
+                  <div className='mb-4 rounded-full bg-zinc-800/50 p-4'>
+                    <CalendarX className='h-8 w-8 text-zinc-500' />
+                  </div>
+                  <h3 className='text-xl font-bold text-white'>
+                    Сеансів поки немає
+                  </h3>
+                  <p className='mt-2 max-w-xs text-sm text-zinc-400'>
+                    На жаль, на цей фільм зараз немає запланованих сеансів. Будь
+                    ласка, перевірте пізніше або оберіть інший фільм.
+                  </p>
+                  <Link
+                    to='/movies'
+                    className='mt-6 rounded-lg bg-white/10 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20'
+                  >
+                    Переглянути інші фільми
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
