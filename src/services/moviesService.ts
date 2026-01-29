@@ -15,12 +15,13 @@ export const moviesService = {
       id: data.id,
       title: data.title,
       tagline: '',
-      description: data.description || 'No description available.',
+      description: data.description || 'Опис відсутній.',
       backdropUrl: data.img_url || 'https://placehold.co/1920x1080',
       genres: ['Sci-Fi'],
       rating: data.rating,
       year: 2024,
       duration: data.duration_minutes,
+      videoUrl: data.video_url,
     }
   },
 
@@ -39,6 +40,7 @@ export const moviesService = {
       rating: m.rating,
       year: 2024,
       duration: m.duration_minutes,
+      videoUrl: m.video_url,
     }))
   },
 }

@@ -1,4 +1,4 @@
-import { Star, Calendar, Clock, Play, ArrowLeft } from 'lucide-react'
+import { Star, Calendar, Clock, Play, ArrowLeft, Tv } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { type Movie } from '../../../types/movie'
 import { useAuth } from '../../../features/auth/AuthContext'
@@ -89,12 +89,25 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
                 />
                 Дивитися розклад
               </button>
-              <button
-                type='button'
-                className='rounded-full border border-white/20 bg-white/5 px-8 py-4 text-base font-bold backdrop-blur-sm transition-colors hover:bg-white/10 hover:border-white'
-              >
-                Трейлер
-              </button>
+              {movie.videoUrl ? (
+                <a
+                  href={movie.videoUrl}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-8 py-4 text-base font-bold backdrop-blur-sm transition-colors hover:bg-white/10 hover:border-white'
+                >
+                  <Tv size={20} />
+                  Трейлер
+                </a>
+              ) : (
+                <button
+                  type='button'
+                  disabled
+                  className='cursor-not-allowed opacity-50 rounded-full border border-white/10 bg-white/5 px-8 py-4 text-base font-bold'
+                >
+                  Трейлер недоступний
+                </button>
+              )}
             </div>
           </div>
         </div>
