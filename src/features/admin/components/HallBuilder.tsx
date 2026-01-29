@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
-import type { Seat, SeatType } from '../../../types/hall'
-import { Plus, Save, Armchair } from 'lucide-react'
+import type { Seat, SeatType, Technology } from '../../../types/hall'
+
+import { Plus, Save, Armchair, Loader2, Cpu } from 'lucide-react'
 import { clsx } from 'clsx'
 
 interface HallBuilderProps {
   initialRows?: number
   initialCols?: number
   initialSeats?: Seat[]
-  onSave: (hallData: { rows: number; cols: number; seats: Seat[] }) => void
+  onSave: (hallData: {
+    rows: number
+    cols: number
+    seats: Seat[]
+    technologyIds: string[]
+    primarySeatTypeId: string
+  }) => void
   isEditing?: boolean
 }
 
@@ -30,12 +37,17 @@ const HallBuilder = ({
 }: HallBuilderProps) => {
   const [rows, setRows] = useState(initialRows)
   const [cols, setCols] = useState(initialCols)
-
   const [seats, setSeats] = useState<Seat[]>(initialSeats)
 
   const [availableSeatTypes, setAvailableSeatTypes] = useState<SeatType[]>([])
   const [selectedType, setSelectedType] = useState<SeatType | null>(null)
-  const [_isLoadingTypes, setIsLoadingTypes] = useState(true)
+
+  const [availableTechnologies, setAvailableTechnologies] = useState<
+    Technology[]
+  >([])
+  const [selectedTechIds, setSelectedTechIds] = useState<string[]>([])
+
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (initialSeats.length > 0) {
@@ -48,13 +60,18 @@ const HallBuilder = ({
   }, [initialSeats])
 
   useEffect(() => {
-    const fetchTypes = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase.from('seat_types').select('*')
-        if (error) throw error
+        const [typesResponse, techResponse] = await Promise.all([
+          supabase.from('seat_types').select('*'),
+          supabase.from('technologies').select('*'),
+        ])
 
-        if (data && data.length > 0) {
-          const types: SeatType[] = data.map((t: any) => ({
+        if (typesResponse.error) throw typesResponse.error
+        if (techResponse.error) throw techResponse.error
+
+        if (typesResponse.data) {
+          const types: SeatType[] = typesResponse.data.map((t: any) => ({
             id: t.id,
             name: t.name,
             description: t.description,
@@ -65,13 +82,23 @@ const HallBuilder = ({
           )
           setSelectedType(standard || types[0])
         }
+
+        if (techResponse.data) {
+          setAvailableTechnologies(
+            techResponse.data.map((t: any) => ({
+              id: t.id,
+              name: t.name,
+              type: t.type,
+            })),
+          )
+        }
       } catch (error) {
-        console.error('Failed to load seat types:', error)
+        console.error('Failed to load builder data:', error)
       } finally {
-        setIsLoadingTypes(false)
+        setIsLoading(false)
       }
     }
-    fetchTypes()
+    fetchData()
   }, [])
 
   const handleCellClick = (x: number, y: number) => {
@@ -83,7 +110,6 @@ const HallBuilder = ({
 
     if (existingSeatIndex >= 0) {
       const existingSeat = seats[existingSeatIndex]
-
       if (existingSeat.seatTypeId === selectedType.id) {
         const newSeats = [...seats]
         newSeats.splice(existingSeatIndex, 1)
@@ -100,7 +126,6 @@ const HallBuilder = ({
     } else {
       const rowLabel = String.fromCharCode(65 + y)
       const seatNum = x + 1
-
       const newSeat: Seat = {
         id: crypto.randomUUID(),
         row: rowLabel,
@@ -115,69 +140,121 @@ const HallBuilder = ({
     }
   }
 
+  const toggleTech = (id: string) => {
+    if (selectedTechIds.includes(id)) {
+      setSelectedTechIds(selectedTechIds.filter(t => t !== id))
+    } else {
+      setSelectedTechIds([...selectedTechIds, id])
+    }
+  }
+
   const handleSave = () => {
-    onSave({ rows, cols, seats })
+    const primaryTypeId = selectedType?.id || availableSeatTypes[0]?.id
+
+    if (!primaryTypeId) {
+      alert('Не завантажено типи місць!')
+      return
+    }
+
+    onSave({
+      rows,
+      cols,
+      seats,
+      technologyIds: selectedTechIds,
+      primarySeatTypeId: primaryTypeId,
+    })
   }
 
   return (
     <div className='space-y-6'>
-      <div className='flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-zinc-900 p-4'>
-        <div className='flex items-center gap-4'>
-          <div className='flex flex-col gap-1'>
-            <label className='text-xs text-zinc-500'>Рядів (Y)</label>
-            <input
-              type='number'
-              min={1}
-              max={30}
-              value={rows}
-              onChange={e => setRows(Number(e.target.value))}
-              className='w-20 rounded bg-black px-2 py-1 text-white border border-white/20'
-            />
+      <div className='flex flex-col gap-4 rounded-xl border border-white/10 bg-zinc-900 p-4'>
+        <div className='flex flex-wrap items-center justify-between gap-4'>
+          <div className='flex items-center gap-4'>
+            <div className='flex flex-col gap-1'>
+              <label className='text-xs text-zinc-500'>Рядів (Y)</label>
+              <input
+                type='number'
+                min={1}
+                max={30}
+                value={rows}
+                onChange={e => setRows(Number(e.target.value))}
+                className='w-20 rounded bg-black px-2 py-1 text-white border border-white/20'
+              />
+            </div>
+            <div className='flex flex-col gap-1'>
+              <label className='text-xs text-zinc-500'>Місць (X)</label>
+              <input
+                type='number'
+                min={1}
+                max={40}
+                value={cols}
+                onChange={e => setCols(Number(e.target.value))}
+                className='w-20 rounded bg-black px-2 py-1 text-white border border-white/20'
+              />
+            </div>
           </div>
-          <div className='flex flex-col gap-1'>
-            <label className='text-xs text-zinc-500'>Місць (X)</label>
-            <input
-              type='number'
-              min={1}
-              max={40}
-              value={cols}
-              onChange={e => setCols(Number(e.target.value))}
-              className='w-20 rounded bg-black px-2 py-1 text-white border border-white/20'
-            />
+
+          <div className='flex items-center gap-2'>
+            {availableSeatTypes.map(type => {
+              const colorClass = getSeatColor(type.name)
+              return (
+                <button
+                  type='button'
+                  key={type.id}
+                  onClick={() => setSelectedType(type)}
+                  className={clsx(
+                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border',
+                    selectedType?.id === type.id
+                      ? 'border-white bg-white/10 text-white'
+                      : 'border-transparent hover:bg-white/5 text-zinc-400',
+                  )}
+                >
+                  <div className={`h-4 w-4 rounded ${colorClass}`} />
+                  {type.name}
+                </button>
+              )
+            })}
           </div>
         </div>
 
-        <div className='flex items-center gap-2'>
-          {availableSeatTypes.map(type => {
-            const colorClass = getSeatColor(type.name)
-            return (
-              <button
-                type='button'
-                key={type.id}
-                onClick={() => setSelectedType(type)}
-                className={clsx(
-                  'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border',
-                  selectedType?.id === type.id
-                    ? 'border-white bg-white/10 text-white'
-                    : 'border-transparent hover:bg-white/5 text-zinc-400',
-                )}
-              >
-                <div className={`h-4 w-4 rounded ${colorClass}`} />
-                {type.name}
-              </button>
-            )
-          })}
-        </div>
+        <hr className='border-white/5' />
 
-        <button
-          type='button'
-          onClick={handleSave}
-          disabled={seats.length === 0}
-          className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed'
-        >
-          <Save size={16} />
-          {isEditing ? 'Зберегти зміни' : 'Зберегти залу'}
-        </button>
+        <div className='flex flex-wrap items-center justify-between gap-4'>
+          <div className='flex items-center gap-2'>
+            <span className='text-xs text-zinc-500 flex items-center gap-1'>
+              <Cpu size={14} /> Технології:
+            </span>
+            {isLoading ? (
+              <Loader2 className='animate-spin h-4 w-4 text-zinc-500' />
+            ) : (
+              availableTechnologies.map(tech => (
+                <button
+                  key={tech.id}
+                  type='button'
+                  onClick={() => toggleTech(tech.id)}
+                  className={clsx(
+                    'px-3 py-1 text-xs rounded-full border transition-all',
+                    selectedTechIds.includes(tech.id)
+                      ? 'bg-purple-500/20 border-purple-500 text-purple-200'
+                      : 'bg-black border-zinc-700 text-zinc-400 hover:border-zinc-500',
+                  )}
+                >
+                  {tech.name}
+                </button>
+              ))
+            )}
+          </div>
+
+          <button
+            type='button'
+            onClick={handleSave}
+            disabled={seats.length === 0}
+            className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed ml-auto'
+          >
+            <Save size={16} />
+            {isEditing ? 'Зберегти зміни' : 'Зберегти залу'}
+          </button>
+        </div>
       </div>
 
       <div className='overflow-x-auto rounded-xl border border-white/10 bg-black p-8'>

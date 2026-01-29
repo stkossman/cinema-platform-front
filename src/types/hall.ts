@@ -35,3 +35,9 @@ export interface Session {
   hallName: string
   priceBase?: number
 }
+
+export interface Technology {
+  id: string
+  name: string
+  type: string
+}

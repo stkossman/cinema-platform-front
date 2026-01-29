@@ -1,82 +1,91 @@
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/axios'
 import type { Hall, Session } from '../types/hall'
+
+interface SessionDto {
+  id: string
+  startTime: string
+  endTime: string
+  status: string
+  movieId: string
+  movieTitle: string
+  hallId: string
+  hallName: string
+}
+
+interface SeatDto {
+  id: string
+  row: string
+  number: number
+  gridX: number
+  gridY: number
+  status: string
+  seatTypeId: string
+  seatTypeName: string
+}
+
+interface HallDto {
+  id: string
+  name: string
+  capacity: number
+  seats: SeatDto[]
+}
 
 export const bookingService = {
   getSessionsByMovieId: async (movieId: string): Promise<Session[]> => {
     try {
-      const { data, error } = await supabase
-        .from('sessions')
-        .select(`
-          *,
-          hall:halls ( name ),
-          movie:movies ( title )
-        `)
-        .eq('movie_id', movieId)
-        .gte('start_time', new Date().toISOString())
+      const targetDate = new Date().toISOString().split('T')[0]
 
-      if (error) throw error
-      if (!data) return []
+      const { data } = await api.get<SessionDto[]>(
+        `/sessions?date=${targetDate}`,
+      )
 
-      console.log('Supabase Sessions:', data)
-
-      return data.map((s: any) => ({
-        id: s.id,
-        startTime: s.start_time,
-        endTime: s.end_time,
-        status: s.status.toString(),
-        movieId: s.movie_id,
-        movieTitle: s.movie?.title || 'Unknown Movie',
-        hallId: s.hall_id,
-        hallName: s.hall?.name || 'Unknown Hall',
-        priceBase: 150,
-      }))
+      return data
+        .filter(s => s.movieId === movieId)
+        .map(s => ({
+          id: s.id,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          status: s.status,
+          movieId: s.movieId,
+          movieTitle: s.movieTitle,
+          hallId: s.hallId,
+          hallName: s.hallName,
+          priceBase: 150,
+        }))
     } catch (error) {
-      console.error('Supabase Error (Sessions):', error)
+      console.error('API Error (Sessions):', error)
       return []
     }
   },
 
   getHallById: async (hallId: string): Promise<Hall> => {
     try {
-      const { data: hallData, error: hallError } = await supabase
-        .from('halls')
-        .select('*')
-        .eq('id', hallId)
-        .single()
+      const { data } = await api.get<HallDto>(`/halls/${hallId}`)
 
-      if (hallError) throw hallError
+      const seats = data.seats || []
 
-      const { data: seatsData, error: seatsError } = await supabase
-        .from('seats')
-        .select('*, seat_type:seat_types(name)')
-        .eq('hall_id', hallId)
-
-      if (seatsError) throw seatsError
-
-      const seats = seatsData || []
-
-      const maxGridX = seats.reduce((max, s) => Math.max(max, s.grid_x), 0)
-      const maxGridY = seats.reduce((max, s) => Math.max(max, s.grid_y), 0)
+      const maxGridX = seats.reduce((max, s) => Math.max(max, s.gridX), 0)
+      const maxGridY = seats.reduce((max, s) => Math.max(max, s.gridY), 0)
 
       return {
-        id: hallData.id,
-        name: hallData.name,
-        capacity: hallData.total_capacity,
+        id: data.id,
+        name: data.name,
+        capacity: data.capacity,
         rowsCount: maxGridY + 1,
         colsCount: maxGridX + 1,
-        seats: seats.map((s: any) => ({
+        seats: seats.map(s => ({
           id: s.id,
-          row: s.row_label,
+          row: s.row,
           number: s.number,
-          gridX: s.grid_x,
-          gridY: s.grid_y,
-          status: s.status === 1 ? 'Booked' : 'Available',
-          seatTypeId: s.seat_type_id,
-          seatTypeName: s.seat_type?.name || 'Standard',
+          gridX: s.gridX,
+          gridY: s.gridY,
+          status: s.status,
+          seatTypeId: s.seatTypeId,
+          seatTypeName: s.seatTypeName,
         })),
       }
     } catch (error) {
-      console.error('Supabase Error (Hall):', error)
+      console.error('API Error (Hall):', error)
       throw error
     }
   },

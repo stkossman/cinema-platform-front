@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import HallBuilder from '../../features/admin/components/HallBuilder'
 import { type Seat } from '../../types/hall'
 import { bookingService } from '../../services/bookingService'
+import { hallsService } from '../../services/hallsService'
 import {
   Armchair,
   Trash2,
@@ -16,7 +17,7 @@ import {
 interface HallSummary {
   id: string
   name: string
-  total_capacity: number
+  capacity: number
 }
 
 const HallsPage = () => {
@@ -31,13 +32,8 @@ const HallsPage = () => {
   const fetchHalls = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('halls')
-        .select('id, name, total_capacity')
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setHalls(data || [])
+      const data = await hallsService.getAll()
+      setHalls(data)
     } catch (error) {
       console.error('Error fetching halls:', error)
     } finally {
@@ -70,72 +66,53 @@ const HallsPage = () => {
     rows: number
     cols: number
     seats: Seat[]
+    technologyIds: string[]
+    primarySeatTypeId: string
   }) => {
-    const hallName = prompt(
-      "Введіть назву залу (напр. 'Red Hall'):",
-      mode === 'edit' ? 'Оновлений зал' : '',
-    )
+    const promptMessage =
+      mode === 'edit'
+        ? 'Введіть нову назву залу (Схема місць НЕ зміниться):'
+        : "Введіть назву залу (напр. 'Red Hall'):"
+
+    const currentName = halls.find(h => h.id === editingHallId)?.name || ''
+
+    const hallName = prompt(promptMessage, mode === 'edit' ? currentName : '')
+
     if (!hallName) return
 
     try {
-      let targetHallId = editingHallId
-
       if (mode === 'create') {
-        targetHallId = crypto.randomUUID()
-        const { error: hallError } = await supabase.from('halls').insert({
-          id: targetHallId,
-          name: hallName,
-          total_capacity: data.seats.length,
-        })
-        if (hallError) throw hallError
-      } else if (mode === 'edit' && targetHallId) {
-        const { error: hallError } = await supabase
-          .from('halls')
-          .update({ name: hallName, total_capacity: data.seats.length })
-          .eq('id', targetHallId)
-        if (hallError) throw hallError
-
-        const { error: deleteError } = await supabase
-          .from('seats')
-          .delete()
-          .eq('hall_id', targetHallId)
-        if (deleteError) throw deleteError
+        await hallsService.create(
+          hallName,
+          data.rows,
+          data.cols,
+          data.primarySeatTypeId,
+          data.technologyIds,
+        )
+        alert('Зал успішно створено!')
+      } else if (mode === 'edit' && editingHallId) {
+        await hallsService.update(editingHallId, hallName)
+        alert(
+          'Назву залу оновлено! (Зміна місць і технологій наразі не підтримується)',
+        )
       }
 
-      if (targetHallId) {
-        const seatsToInsert = data.seats.map(s => ({
-          id: crypto.randomUUID(),
-          hall_id: targetHallId,
-          row_label: s.row,
-          number: s.number,
-          grid_x: s.gridX,
-          grid_y: s.gridY,
-          seat_type_id: s.seatTypeId,
-          status: 0,
-        }))
-
-        const { error: seatsError } = await supabase
-          .from('seats')
-          .insert(seatsToInsert)
-
-        if (seatsError) throw seatsError
-      }
-
-      alert(mode === 'create' ? 'Зал створено!' : 'Зал оновлено!')
       setMode('list')
       setEditingHallId(null)
       fetchHalls()
     } catch (error: any) {
       console.error('Error saving hall:', error)
-      alert(`Помилка при збереженні: ${error.message}`)
+      const msg = error.response?.data?.errors
+        ? JSON.stringify(error.response.data.errors)
+        : error.message || 'Unknown error'
+      alert(`Помилка при збереженні: ${msg}`)
     }
   }
 
   const handleDeleteHall = async (id: string) => {
     if (!confirm('Ви впевнені? Це видалить зал та всі його місця.')) return
     try {
-      const { error } = await supabase.from('halls').delete().eq('id', id)
-      if (error) throw error
+      await hallsService.delete(id)
       fetchHalls()
     } catch (error: any) {
       console.error('Error deleting hall:', error)
@@ -149,7 +126,7 @@ const HallsPage = () => {
         <div>
           <h1 className='text-3xl font-bold text-white'>Управління залами</h1>
           <p className='text-zinc-400 mt-1'>
-            Створюйте схеми залів та керуйте місцями
+            Створюйте схеми залів та керуйте місцями (Local API)
           </p>
         </div>
 
@@ -189,6 +166,13 @@ const HallsPage = () => {
             <h2 className='text-xl font-bold text-white mb-4'>
               {mode === 'edit' ? 'Редагування залу' : 'Створення нового залу'}
             </h2>
+            {mode === 'edit' && (
+              <div className='mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 text-sm rounded-lg'>
+                Увага: Наразі режим редагування дозволяє змінювати лише{' '}
+                <strong>назву</strong> залу. Зміни у розстановці крісел чи
+                технологій не будуть збережені.
+              </div>
+            )}
             <HallBuilder
               onSave={handleSaveHall}
               initialSeats={initialSeats}
@@ -230,7 +214,7 @@ const HallsPage = () => {
                         type='button'
                         onClick={() => handleEditClick(hall.id)}
                         className='rounded p-2 text-zinc-500 hover:bg-white/10 hover:text-white transition-colors'
-                        title='Редагувати зал'
+                        title='Редагувати назву'
                       >
                         <Pencil size={18} />
                       </button>
@@ -255,7 +239,7 @@ const HallsPage = () => {
                     <span>
                       Місць:{' '}
                       <span className='text-white font-medium'>
-                        {hall.total_capacity}
+                        {hall.capacity}
                       </span>
                     </span>
                   </div>
