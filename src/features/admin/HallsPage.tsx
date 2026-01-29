@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabase'
 import HallBuilder from '../../features/admin/components/HallBuilder'
-import { type Seat } from '../../types/hall'
 import { bookingService } from '../../services/bookingService'
-import { hallsService } from '../../services/hallsService'
+import { hallsService, type HallSummaryDto } from '../../services/hallsService'
 import {
   Armchair,
   Trash2,
@@ -13,21 +11,18 @@ import {
   MonitorPlay,
   Pencil,
 } from 'lucide-react'
-
-interface HallSummary {
-  id: string
-  name: string
-  capacity: number
-}
+import type { Seat } from '../../types/hall'
 
 const HallsPage = () => {
   const [mode, setMode] = useState<'list' | 'create' | 'edit'>('list')
-  const [halls, setHalls] = useState<HallSummary[]>([])
+  const [halls, setHalls] = useState<HallSummaryDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const [editingHallId, setEditingHallId] = useState<string | null>(null)
   const [initialSeats, setInitialSeats] = useState<Seat[]>([])
   const [isLoadingEditData, setIsLoadingEditData] = useState(false)
+
+  const [isProcessingSeats, setIsProcessingSeats] = useState(false)
 
   const fetchHalls = async () => {
     setIsLoading(true)
@@ -54,7 +49,6 @@ const HallsPage = () => {
       const hallData = await bookingService.getHallById(hallId)
       setInitialSeats(hallData.seats)
     } catch (error) {
-      console.error('Failed to load hall data', error)
       alert('Помилка завантаження даних залу')
       setMode('list')
     } finally {
@@ -65,47 +59,85 @@ const HallsPage = () => {
   const handleSaveHall = async (data: {
     rows: number
     cols: number
-    seats: Seat[]
     technologyIds: string[]
     primarySeatTypeId: string
+    seatConfig: { gridX: number; gridY: number; seatTypeId: string }[]
   }) => {
     const promptMessage =
-      mode === 'edit'
-        ? 'Введіть нову назву залу (Схема місць НЕ зміниться):'
-        : "Введіть назву залу (напр. 'Red Hall'):"
-
+      mode === 'edit' ? 'Введіть нову назву залу:' : 'Введіть назву залу:'
     const currentName = halls.find(h => h.id === editingHallId)?.name || ''
-
     const hallName = prompt(promptMessage, mode === 'edit' ? currentName : '')
-
     if (!hallName) return
 
+    setIsProcessingSeats(true)
+
     try {
+      let targetHallId = editingHallId
+
       if (mode === 'create') {
-        await hallsService.create(
+        const createResult = await hallsService.create(
           hallName,
           data.rows,
           data.cols,
           data.primarySeatTypeId,
           data.technologyIds,
         )
-        alert('Зал успішно створено!')
+        targetHallId =
+          typeof createResult === 'string'
+            ? createResult
+            : createResult.id || createResult.value
+
+        alert('Зал створено. Застосовуємо типи місць...')
       } else if (mode === 'edit' && editingHallId) {
         await hallsService.update(editingHallId, hallName)
-        alert(
-          'Назву залу оновлено! (Зміна місць і технологій наразі не підтримується)',
-        )
       }
+
+      if (!targetHallId) throw new Error('Failed to resolve Hall ID')
+
+      const currentHallState = await bookingService.getHallById(targetHallId!)
+
+      const changesByType: Record<string, string[]> = {}
+
+      currentHallState.seats.forEach(seat => {
+        const targetConfig = data.seatConfig.find(
+          sc => sc.gridX === seat.gridX && sc.gridY === seat.gridY,
+        )
+
+        if (targetConfig && targetConfig.seatTypeId !== seat.seatTypeId) {
+          const typeId = targetConfig.seatTypeId
+          if (!changesByType[typeId]) changesByType[typeId] = []
+          changesByType[typeId].push(seat.id)
+        }
+      })
+
+      const typeIdsToUpdate = Object.keys(changesByType)
+      if (typeIdsToUpdate.length > 0) {
+        const promises = typeIdsToUpdate.map(typeId => {
+          return hallsService.batchChangeSeatType(
+            targetHallId!,
+            changesByType[typeId],
+            typeId,
+          )
+        })
+        await Promise.all(promises)
+      }
+
+      alert(
+        mode === 'create'
+          ? 'Зал успішно створено та налаштовано!'
+          : 'Зал оновлено!',
+      )
 
       setMode('list')
       setEditingHallId(null)
       fetchHalls()
     } catch (error: any) {
-      console.error('Error saving hall:', error)
       const msg = error.response?.data?.errors
         ? JSON.stringify(error.response.data.errors)
-        : error.message || 'Unknown error'
-      alert(`Помилка при збереженні: ${msg}`)
+        : error.message
+      alert(`Помилка: ${msg}`)
+    } finally {
+      setIsProcessingSeats(false)
     }
   }
 
@@ -115,8 +147,7 @@ const HallsPage = () => {
       await hallsService.delete(id)
       fetchHalls()
     } catch (error: any) {
-      console.error('Error deleting hall:', error)
-      alert("Не вдалося видалити зал. Можливо, є пов'язані сеанси.")
+      alert('Не вдалося видалити зал.')
     }
   }
 
@@ -126,19 +157,15 @@ const HallsPage = () => {
         <div>
           <h1 className='text-3xl font-bold text-white'>Управління залами</h1>
           <p className='text-zinc-400 mt-1'>
-            Створюйте схеми залів та керуйте місцями (Local API)
+            Створюйте схеми залів та керуйте місцями (API Generator)
           </p>
         </div>
 
         <button
           type='button'
           onClick={() => {
-            if (mode === 'list') {
-              setMode('create')
-              setInitialSeats([])
-            } else {
-              setMode('list')
-            }
+            setMode(mode === 'list' ? 'create' : 'list')
+            setInitialSeats([])
           }}
           className={`rounded-xl px-6 py-3 text-sm font-bold transition-all flex items-center gap-2 ${
             mode !== 'list'
@@ -156,6 +183,20 @@ const HallsPage = () => {
         </button>
       </div>
 
+      {isProcessingSeats && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm'>
+          <div className='text-center'>
+            <Loader2 className='h-12 w-12 animate-spin text-white mx-auto mb-4' />
+            <p className='text-white font-medium'>
+              Застосування конфігурації місць...
+            </p>
+            <p className='text-zinc-400 text-sm'>
+              Це може зайняти кілька секунд
+            </p>
+          </div>
+        </div>
+      )}
+
       {mode !== 'list' ? (
         isLoadingEditData ? (
           <div className='flex justify-center py-20'>
@@ -167,10 +208,9 @@ const HallsPage = () => {
               {mode === 'edit' ? 'Редагування залу' : 'Створення нового залу'}
             </h2>
             {mode === 'edit' && (
-              <div className='mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 text-sm rounded-lg'>
-                Увага: Наразі режим редагування дозволяє змінювати лише{' '}
-                <strong>назву</strong> залу. Зміни у розстановці крісел чи
-                технологій не будуть збережені.
+              <div className='mb-4 p-3 bg-blue-500/10 border border-blue-500/20 text-blue-200 text-sm rounded-lg'>
+                <strong>Режим редагування:</strong> Ви можете змінювати назву та
+                перефарбовувати типи місць. Розміри залу змінити не можна.
               </div>
             )}
             <HallBuilder
@@ -192,9 +232,7 @@ const HallsPage = () => {
             <div className='rounded-xl border border-dashed border-zinc-800 bg-zinc-900/30 p-12 text-center'>
               <Armchair className='mx-auto h-12 w-12 text-zinc-700 mb-4' />
               <h3 className='text-xl font-medium text-white'>Немає залів</h3>
-              <p className='text-zinc-500 mt-2'>
-                Створіть свій перший зал, щоб почати планувати сеанси.
-              </p>
+              <p className='text-zinc-500 mt-2'>Створіть свій перший зал.</p>
             </div>
           )}
 
@@ -214,7 +252,7 @@ const HallsPage = () => {
                         type='button'
                         onClick={() => handleEditClick(hall.id)}
                         className='rounded p-2 text-zinc-500 hover:bg-white/10 hover:text-white transition-colors'
-                        title='Редагувати назву'
+                        title='Редагувати'
                       >
                         <Pencil size={18} />
                       </button>
@@ -223,7 +261,7 @@ const HallsPage = () => {
                         type='button'
                         onClick={() => handleDeleteHall(hall.id)}
                         className='rounded p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-500 transition-colors'
-                        title='Видалити зал'
+                        title='Видалити'
                       >
                         <Trash2 size={18} />
                       </button>
@@ -244,8 +282,6 @@ const HallsPage = () => {
                     </span>
                   </div>
                 </div>
-
-                <div className='absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none' />
               </div>
             ))}
           </div>

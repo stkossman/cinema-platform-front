@@ -33,11 +33,7 @@ interface HallDto {
 export const bookingService = {
   getSessionsByMovieId: async (movieId: string): Promise<Session[]> => {
     try {
-      const targetDate = new Date().toISOString().split('T')[0]
-
-      const { data } = await api.get<SessionDto[]>(
-        `/sessions?date=${targetDate}`,
-      )
+      const { data } = await api.get<SessionDto[]>(`/sessions/by-date`)
 
       return data
         .filter(s => s.movieId === movieId)
@@ -64,8 +60,19 @@ export const bookingService = {
 
       const seats = data.seats || []
 
-      const maxGridX = seats.reduce((max, s) => Math.max(max, s.gridX), 0)
-      const maxGridY = seats.reduce((max, s) => Math.max(max, s.gridY), 0)
+      const mappedSeats = seats.map(s => ({
+        id: s.id,
+        row: s.row,
+        number: s.number,
+        gridX: s.gridX - 1,
+        gridY: s.gridY - 1,
+        status: s.status,
+        seatTypeId: s.seatTypeId,
+        seatTypeName: s.seatTypeName,
+      }))
+
+      const maxGridX = mappedSeats.reduce((max, s) => Math.max(max, s.gridX), 0)
+      const maxGridY = mappedSeats.reduce((max, s) => Math.max(max, s.gridY), 0)
 
       return {
         id: data.id,
@@ -73,16 +80,7 @@ export const bookingService = {
         capacity: data.capacity,
         rowsCount: maxGridY + 1,
         colsCount: maxGridX + 1,
-        seats: seats.map(s => ({
-          id: s.id,
-          row: s.row,
-          number: s.number,
-          gridX: s.gridX,
-          gridY: s.gridY,
-          status: s.status,
-          seatTypeId: s.seatTypeId,
-          seatTypeName: s.seatTypeName,
-        })),
+        seats: mappedSeats,
       }
     } catch (error) {
       console.error('API Error (Hall):', error)

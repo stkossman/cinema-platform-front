@@ -1,5 +1,6 @@
 import { api } from '../lib/axios'
 import type { Seat } from '../types/hall'
+import type { PaginatedResult } from '../types/common'
 
 interface CreateSeatDto {
   row: string
@@ -22,20 +23,24 @@ interface UpdateHallRequest {
   name: string
 }
 
-interface HallSummaryDto {
+export interface HallSummaryDto {
   id: string
   name: string
   capacity: number
 }
 
+interface BatchChangeSeatTypeRequest {
+  hallId: string
+  seatIds: string[]
+  newSeatTypeId: string
+}
+
 export const hallsService = {
   getAll: async (): Promise<HallSummaryDto[]> => {
-    const { data } = await api.get<HallSummaryDto[]>('/halls')
-    return data
-  },
-
-  delete: async (id: string) => {
-    await api.delete(`/halls/${id}`)
+    const { data } = await api.get<PaginatedResult<HallSummaryDto>>(
+      '/halls?pageNumber=1&pageSize=100',
+    )
+    return data.items
   },
 
   create: async (
@@ -52,9 +57,21 @@ export const hallsService = {
       seatTypeId,
       technologyIds,
     }
-
     const { data } = await api.post('/halls', payload)
     return data
+  },
+
+  batchChangeSeatType: async (
+    hallId: string,
+    seatIds: string[],
+    newSeatTypeId: string,
+  ) => {
+    const payload: BatchChangeSeatTypeRequest = {
+      hallId,
+      seatIds,
+      newSeatTypeId,
+    }
+    await api.put('/seats/batch-change-type', payload)
   },
 
   update: async (id: string, name: string) => {
@@ -63,5 +80,9 @@ export const hallsService = {
       name,
     }
     await api.put(`/halls/${id}`, payload)
+  },
+
+  delete: async (id: string) => {
+    await api.delete(`/halls/${id}`)
   },
 }

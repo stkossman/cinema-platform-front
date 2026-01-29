@@ -1,20 +1,29 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { seatTypesService } from '../../../services/seatTypesService'
 import type { Seat, SeatType, Technology } from '../../../types/hall'
 
-import { Plus, Save, Armchair, Loader2, Cpu } from 'lucide-react'
+import {
+  Save,
+  Armchair,
+  Loader2,
+  Cpu,
+  Ruler,
+  MousePointer2,
+  PaintBucket,
+} from 'lucide-react'
 import { clsx } from 'clsx'
 
 interface HallBuilderProps {
   initialRows?: number
   initialCols?: number
   initialSeats?: Seat[]
-  onSave: (hallData: {
+  onSave: (data: {
     rows: number
     cols: number
-    seats: Seat[]
     technologyIds: string[]
     primarySeatTypeId: string
+    seatConfig: { gridX: number; gridY: number; seatTypeId: string }[]
   }) => void
   isEditing?: boolean
 }
@@ -29,58 +38,43 @@ const getSeatColor = (typeName: string = 'Standard') => {
 }
 
 const HallBuilder = ({
-  initialRows = 10,
-  initialCols = 15,
+  initialRows = 5,
+  initialCols = 8,
   initialSeats = [],
   onSave,
   isEditing = false,
 }: HallBuilderProps) => {
   const [rows, setRows] = useState(initialRows)
   const [cols, setCols] = useState(initialCols)
-  const [seats, setSeats] = useState<Seat[]>(initialSeats)
 
   const [availableSeatTypes, setAvailableSeatTypes] = useState<SeatType[]>([])
-  const [selectedType, setSelectedType] = useState<SeatType | null>(null)
+  const [selectedPaintType, setSelectedPaintType] = useState<SeatType | null>(
+    null,
+  )
 
   const [availableTechnologies, setAvailableTechnologies] = useState<
     Technology[]
   >([])
   const [selectedTechIds, setSelectedTechIds] = useState<string[]>([])
 
-  const [isLoading, setIsLoading] = useState(true)
+  const [gridConfig, setGridConfig] = useState<Map<string, string>>(new Map())
 
-  useEffect(() => {
-    if (initialSeats.length > 0) {
-      setSeats(initialSeats)
-      const maxX = Math.max(...initialSeats.map(s => s.gridX))
-      const maxY = Math.max(...initialSeats.map(s => s.gridY))
-      if (maxX >= cols) setCols(maxX + 1)
-      if (maxY >= rows) setRows(maxY + 1)
-    }
-  }, [initialSeats])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [typesResponse, techResponse] = await Promise.all([
-          supabase.from('seat_types').select('*'),
+        const [typesData, techResponse] = await Promise.all([
+          seatTypesService.getAll(),
           supabase.from('technologies').select('*'),
         ])
 
-        if (typesResponse.error) throw typesResponse.error
-        if (techResponse.error) throw techResponse.error
-
-        if (typesResponse.data) {
-          const types: SeatType[] = typesResponse.data.map((t: any) => ({
-            id: t.id,
-            name: t.name,
-            description: t.description,
-          }))
-          setAvailableSeatTypes(types)
-          const standard = types.find(t =>
+        if (typesData) {
+          setAvailableSeatTypes(typesData)
+          const standard = typesData.find(t =>
             t.name.toLowerCase().includes('standard'),
           )
-          setSelectedType(standard || types[0])
+          setSelectedPaintType(standard || typesData[0])
         }
 
         if (techResponse.data) {
@@ -101,44 +95,20 @@ const HallBuilder = ({
     fetchData()
   }, [])
 
-  const handleCellClick = (x: number, y: number) => {
-    if (!selectedType) return
+  useEffect(() => {
+    if (initialSeats.length > 0) {
+      const maxX = Math.max(...initialSeats.map(s => s.gridX))
+      const maxY = Math.max(...initialSeats.map(s => s.gridY))
+      setCols(maxX + 1)
+      setRows(maxY + 1)
 
-    const existingSeatIndex = seats.findIndex(
-      s => s.gridX === x && s.gridY === y,
-    )
-
-    if (existingSeatIndex >= 0) {
-      const existingSeat = seats[existingSeatIndex]
-      if (existingSeat.seatTypeId === selectedType.id) {
-        const newSeats = [...seats]
-        newSeats.splice(existingSeatIndex, 1)
-        setSeats(newSeats)
-      } else {
-        const newSeats = [...seats]
-        newSeats[existingSeatIndex] = {
-          ...existingSeat,
-          seatTypeId: selectedType.id,
-          seatTypeName: selectedType.name,
-        }
-        setSeats(newSeats)
-      }
-    } else {
-      const rowLabel = String.fromCharCode(65 + y)
-      const seatNum = x + 1
-      const newSeat: Seat = {
-        id: crypto.randomUUID(),
-        row: rowLabel,
-        number: seatNum,
-        gridX: x,
-        gridY: y,
-        status: 'Available',
-        seatTypeId: selectedType.id,
-        seatTypeName: selectedType.name,
-      }
-      setSeats([...seats, newSeat])
+      const newMap = new Map<string, string>()
+      initialSeats.forEach(s => {
+        newMap.set(`${s.gridX}-${s.gridY}`, s.seatTypeId)
+      })
+      setGridConfig(newMap)
     }
-  }
+  }, [initialSeats])
 
   const toggleTech = (id: string) => {
     if (selectedTechIds.includes(id)) {
@@ -148,86 +118,119 @@ const HallBuilder = ({
     }
   }
 
-  const handleSave = () => {
-    const primaryTypeId = selectedType?.id || availableSeatTypes[0]?.id
+  const handleCellClick = (x: number, y: number) => {
+    if (!selectedPaintType) return
 
-    if (!primaryTypeId) {
-      alert('Не завантажено типи місць!')
-      return
+    const key = `${x}-${y}`
+    const newMap = new Map(gridConfig)
+
+    newMap.set(key, selectedPaintType.id)
+    setGridConfig(newMap)
+  }
+
+  const handleSave = () => {
+    if (!availableSeatTypes.length) return
+
+    const primaryType =
+      availableSeatTypes.find(t => t.name.toLowerCase().includes('standard')) ||
+      availableSeatTypes[0]
+
+    const configArray: { gridX: number; gridY: number; seatTypeId: string }[] =
+      []
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const key = `${x}-${y}`
+        const typeId = gridConfig.get(key) || primaryType.id
+        configArray.push({ gridX: x, gridY: y, seatTypeId: typeId })
+      }
     }
 
     onSave({
       rows,
       cols,
-      seats,
       technologyIds: selectedTechIds,
-      primarySeatTypeId: primaryTypeId,
+      primarySeatTypeId: primaryType.id,
+      seatConfig: configArray,
     })
   }
 
   return (
     <div className='space-y-6'>
-      <div className='flex flex-col gap-4 rounded-xl border border-white/10 bg-zinc-900 p-4'>
-        <div className='flex flex-wrap items-center justify-between gap-4'>
-          <div className='flex items-center gap-4'>
-            <div className='flex flex-col gap-1'>
-              <label className='text-xs text-zinc-500'>Рядів (Y)</label>
-              <input
-                type='number'
-                min={1}
-                max={30}
-                value={rows}
-                onChange={e => setRows(Number(e.target.value))}
-                className='w-20 rounded bg-black px-2 py-1 text-white border border-white/20'
-              />
-            </div>
-            <div className='flex flex-col gap-1'>
-              <label className='text-xs text-zinc-500'>Місць (X)</label>
-              <input
-                type='number'
-                min={1}
-                max={40}
-                value={cols}
-                onChange={e => setCols(Number(e.target.value))}
-                className='w-20 rounded bg-black px-2 py-1 text-white border border-white/20'
-              />
+      <div className='flex flex-col gap-6 rounded-xl border border-white/10 bg-zinc-900 p-6'>
+        <div className='flex flex-wrap gap-8'>
+          <div className='flex flex-col gap-3'>
+            <h4 className='text-sm font-medium text-zinc-400 flex items-center gap-2'>
+              <Ruler size={16} /> Розміри залу
+            </h4>
+            <div className='flex gap-4'>
+              <div className='flex flex-col gap-1'>
+                <label className='text-xs text-zinc-500'>Рядів</label>
+                <input
+                  type='number'
+                  min={1}
+                  max={20}
+                  value={rows}
+                  onChange={e => setRows(Number(e.target.value))}
+                  disabled={isEditing}
+                  className='w-20 rounded bg-black px-3 py-2 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                />
+              </div>
+              <div className='flex flex-col gap-1'>
+                <label className='text-xs text-zinc-500'>Місць в ряду</label>
+                <input
+                  type='number'
+                  min={1}
+                  max={30}
+                  value={cols}
+                  onChange={e => setCols(Number(e.target.value))}
+                  disabled={isEditing}
+                  className='w-20 rounded bg-black px-3 py-2 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                />
+              </div>
             </div>
           </div>
 
-          <div className='flex items-center gap-2'>
-            {availableSeatTypes.map(type => {
-              const colorClass = getSeatColor(type.name)
-              return (
-                <button
-                  type='button'
-                  key={type.id}
-                  onClick={() => setSelectedType(type)}
-                  className={clsx(
-                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border',
-                    selectedType?.id === type.id
-                      ? 'border-white bg-white/10 text-white'
-                      : 'border-transparent hover:bg-white/5 text-zinc-400',
-                  )}
-                >
-                  <div className={`h-4 w-4 rounded ${colorClass}`} />
-                  {type.name}
-                </button>
-              )
-            })}
+          <div className='flex flex-col gap-3'>
+            <h4 className='text-sm font-medium text-zinc-400 flex items-center gap-2'>
+              <PaintBucket size={16} /> Тип для малювання
+            </h4>
+            <div className='flex flex-wrap gap-2'>
+              {availableSeatTypes.map(type => {
+                const colorClass = getSeatColor(type.name)
+                const isSelected = selectedPaintType?.id === type.id
+                return (
+                  <button
+                    type='button'
+                    key={type.id}
+                    onClick={() => setSelectedPaintType(type)}
+                    className={clsx(
+                      'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border',
+                      isSelected
+                        ? 'border-white bg-white/10 text-white shadow-lg'
+                        : 'border-transparent hover:bg-white/5 text-zinc-400',
+                    )}
+                  >
+                    <div
+                      className={`h-4 w-4 rounded ${colorClass} ${isSelected ? 'ring-2 ring-white ring-offset-2 ring-offset-black' : ''}`}
+                    />
+                    {type.name}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
 
         <hr className='border-white/5' />
 
         <div className='flex flex-wrap items-center justify-between gap-4'>
-          <div className='flex items-center gap-2'>
-            <span className='text-xs text-zinc-500 flex items-center gap-1'>
-              <Cpu size={14} /> Технології:
+          <div className='flex flex-col gap-2'>
+            <span className='text-xs text-zinc-500 flex items-center gap-1 uppercase tracking-wider'>
+              <Cpu size={12} /> Технології
             </span>
-            {isLoading ? (
-              <Loader2 className='animate-spin h-4 w-4 text-zinc-500' />
-            ) : (
-              availableTechnologies.map(tech => (
+            <div className='flex flex-wrap gap-2'>
+              {availableTechnologies.map(tech => (
                 <button
                   key={tech.id}
                   type='button'
@@ -241,64 +244,64 @@ const HallBuilder = ({
                 >
                   {tech.name}
                 </button>
-              ))
-            )}
+              ))}
+            </div>
           </div>
 
           <button
             type='button'
             onClick={handleSave}
-            disabled={seats.length === 0}
-            className='flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed ml-auto'
+            className='flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 text-sm font-bold text-white hover:bg-green-700 ml-auto shadow-lg shadow-green-900/20'
           >
-            <Save size={16} />
-            {isEditing ? 'Зберегти зміни' : 'Зберегти залу'}
+            <Save size={18} />
+            {isEditing ? 'Зберегти зміни' : 'Згенерувати зал'}
           </button>
         </div>
       </div>
 
-      <div className='overflow-x-auto rounded-xl border border-white/10 bg-black p-8'>
+      <div className='relative overflow-hidden rounded-xl border border-white/10 bg-black p-8'>
+        <div className='absolute top-4 right-4 text-xs text-zinc-500 flex items-center gap-1'>
+          <MousePointer2 size={12} /> Натисніть, щоб змінити тип
+        </div>
+
         <div
-          className='grid gap-2 mx-auto w-fit'
+          className='grid gap-2 mx-auto w-fit transition-all duration-300'
           style={{ gridTemplateColumns: `repeat(${cols}, minmax(30px, 1fr))` }}
         >
-          {Array.from({ length: rows * cols }).map((_, index) => {
-            const x = index % cols
-            const y = Math.floor(index / cols)
-            const seat = seats.find(s => s.gridX === x && s.gridY === y)
-            const typeName =
-              seat?.seatTypeName || selectedType?.name || 'Standard'
-            const colorClass = getSeatColor(typeName)
+          {Array.from({ length: rows * cols }).map((_, i) => {
+            const x = i % cols
+            const y = Math.floor(i / cols)
+
+            const configTypeId = gridConfig.get(`${x}-${y}`)
+            const typeObj = configTypeId
+              ? availableSeatTypes.find(t => t.id === configTypeId)
+              : null
+            const displayType =
+              typeObj ||
+              availableSeatTypes.find(t =>
+                t.name.toLowerCase().includes('standard'),
+              )
+
+            const colorClass = getSeatColor(displayType?.name)
 
             return (
               <div
                 key={`${x}-${y}`}
                 onClick={() => handleCellClick(x, y)}
                 className={clsx(
-                  'h-8 w-8 rounded flex items-center justify-center cursor-pointer transition-all text-[10px] select-none',
-                  seat
-                    ? `${colorClass} text-white shadow-lg`
-                    : 'bg-zinc-900 hover:bg-zinc-800 border border-white/5',
+                  'h-8 w-8 rounded flex items-center justify-center text-[10px] select-none shadow-lg cursor-pointer hover:opacity-80 transition-transform active:scale-95',
+                  colorClass,
+                  'text-white',
                 )}
-                title={
-                  seat
-                    ? `Row: ${seat.row}, Num: ${seat.number}`
-                    : `Empty (${x}, ${y})`
-                }
+                title={`Row: ${y + 1}, Num: ${x + 1} (${displayType?.name})`}
               >
-                {seat ? (
-                  <Armchair size={16} fill='currentColor' />
-                ) : (
-                  <Plus
-                    size={10}
-                    className='text-zinc-700 opacity-0 hover:opacity-100'
-                  />
-                )}
+                <Armchair size={16} fill='currentColor' />
               </div>
             )
           })}
         </div>
-        <div className='mt-8 w-full flex justify-center'>
+
+        <div className='mt-10 w-full flex justify-center'>
           <div className='w-2/3 h-2 bg-gradient-to-r from-zinc-800 via-zinc-500 to-zinc-800 rounded-full opacity-50 shadow-[0_10px_20px_rgba(255,255,255,0.1)]' />
         </div>
         <p className='text-center text-xs text-zinc-500 mt-2 uppercase tracking-widest'>
@@ -307,8 +310,8 @@ const HallBuilder = ({
       </div>
 
       <div className='text-zinc-400 text-sm'>
-        Всього місць:{' '}
-        <span className='text-white font-bold'>{seats.length}</span>
+        Всього буде створено місць:{' '}
+        <span className='text-white font-bold'>{rows * cols}</span>
       </div>
     </div>
   )
