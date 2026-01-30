@@ -39,12 +39,13 @@ Check [cinema-platform-back](https://github.com/stkossman/cinema-platform-back) 
 - [x] Connect API and replace mock data ([#11](https://github.com/stkossman/cinema-platform-front/issues/11))
 - [x] Refactor Header ([#7](https://github.com/stkossman/cinema-platform-front/issues/7))
 - [x] Add Movies Page
+- [ ] Full API Integration ([#12](https://github.com/stkossman/cinema-platform-front/issues/12))
 - [ ] Enhance Admin Panel ([#10](https://github.com/stkossman/cinema-platform-front/issues/10))
-- [ ] Improve API Integration ([#12](https://github.com/stkossman/cinema-platform-front/issues/12))
-	- [ ] Active Ticket & Order History
-	- [ ] Users
-	- [ ] Movie Genres
-	- [ ] Cast
-	- [ ] Movie Description
-	- [ ] CRUD
-	- [ ] A lot more..
+	- [ ] Stats Page
+	- [ ] Users Page
+	- [ ] Movies Page
+- [ ] Filter movies by genre/duration ([#13](https://github.com/stkossman/cinema-platform-front/issues/13))
+
+### Week 4
+> In development
+- [ ] Fill Offers Page ([#14](https://github.com/stkossman/cinema-platform-front/issues/14))
