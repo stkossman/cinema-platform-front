@@ -30,10 +30,11 @@ const LoginPage = () => {
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true)
     try {
-      await login(data.email)
-      navigate('/')
+      await login({ email: data.email, password: data.password })
+      navigate('/profile')
     } catch (error) {
       console.error(error)
+      alert('Помилка входу: ' + (error.message || 'Перевірте дані'))
     } finally {
       setIsSubmitting(false)
     }

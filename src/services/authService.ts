@@ -1,81 +1,93 @@
+import { api } from '../lib/axios'
 import type { User, AuthResponse } from '../types/auth'
+import { jwtDecode } from 'jwt-decode'
 
-const STORAGE_KEY = 'cinema_user'
+const ACCESS_TOKEN_KEY = 'cinema_access_token'
+const REFRESH_TOKEN_KEY = 'cinema_refresh_token'
 
 export const authService = {
-  login: async (email: string): Promise<AuthResponse> => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const mockUser: User = {
-          id: '1',
-          email,
-          name: 'Андрій',
-          surname: 'Коссман',
-          role: email.includes('admin') ? 'admin' : 'user',
-        }
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser))
-
-        resolve({
-          user: mockUser,
-          token: 'mock_jwt_token_12345',
-        })
-      }, 800)
+  login: async (email: string, password: string): Promise<User> => {
+    const { data } = await api.post<AuthResponse>('/auth/login', {
+      email,
+      password,
     })
+
+    authService.setTokens(data.accessToken, data.refreshToken)
+
+    return authService.getUserFromToken(data.accessToken)!
   },
 
   register: async (
     email: string,
-    name: string,
-    surname: string,
-  ): Promise<AuthResponse> => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const newUser: User = {
-          id: Math.random().toString(36).substr(2, 9),
-          email,
-          name,
-          surname,
-          role: 'user',
-        }
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser))
-
-        resolve({
-          user: newUser,
-          token: 'mock_jwt_token_new_user',
-        })
-      }, 800)
+    password: string,
+    firstName: string,
+    lastName: string,
+  ): Promise<void> => {
+    await api.post<{ userId: string }>('/auth/register', {
+      email,
+      password,
+      firstName,
+      lastName,
     })
   },
 
-  getCurrentUser: (): User | null => {
-    const data = localStorage.getItem(STORAGE_KEY)
-    return data ? JSON.parse(data) : null
+  refreshToken: async (): Promise<string | null> => {
+    const currentRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
+    if (!currentRefreshToken) return null
+
+    try {
+      const { data } = await api.post<AuthResponse>('/auth/refresh-token', {
+        token: currentRefreshToken,
+      })
+
+      authService.setTokens(data.accessToken, data.refreshToken)
+      return data.accessToken
+    } catch (error) {
+      console.error('Refresh failed', error)
+      authService.logout()
+      return null
+    }
+  },
+
+  setTokens: (accessToken: string, refreshToken: string) => {
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
   },
 
   logout: () => {
-    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(ACCESS_TOKEN_KEY)
+    localStorage.removeItem(REFRESH_TOKEN_KEY)
+    window.location.href = '/auth/login'
   },
 
-  updateProfile: async (id: string, data: Partial<User>): Promise<User> => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const stored = localStorage.getItem(STORAGE_KEY)
-        if (!stored) throw new Error('User not found')
+  getAccessToken: () => localStorage.getItem(ACCESS_TOKEN_KEY),
 
-        const currentUser = JSON.parse(stored)
+  getCurrentUser: (): User | null => {
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY)
+    if (!token) return null
+    return authService.getUserFromToken(token)
+  },
 
-        if (currentUser.id !== id) {
-          throw new Error('User ID mismatch')
-        }
+  getUserFromToken: (token: string): User | null => {
+    try {
+      const decoded = jwtDecode<any>(token)
 
-        const updatedUser = { ...currentUser, ...data }
+      const role =
+        decoded.role ||
+        decoded[
+          'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+        ] ||
+        'User'
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser))
-
-        resolve(updatedUser)
-      }, 600)
-    })
+      return {
+        id: decoded.sub || '',
+        email: decoded.email || '',
+        name: decoded.firstName || decoded.given_name || 'User',
+        surname: decoded.lastName || decoded.family_name || '',
+        role: typeof role === 'string' ? role.toLocaleLowerCase() : 'user',
+      }
+    } catch (e) {
+      return null
+    }
   },
 }

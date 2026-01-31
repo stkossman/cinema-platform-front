@@ -9,8 +9,8 @@ import { Loader2 } from 'lucide-react'
 
 const registerSchema = z
   .object({
-    name: z.string().min(2, "Ім'я занадто коротке"),
-    surname: z.string().min(2, 'Прізвище занадто коротке'),
+    firstName: z.string().min(2, "Ім'я занадто коротке"),
+    lastName: z.string().min(2, 'Прізвище занадто коротке'),
     email: z.string().email('Невірний формат email'),
     password: z.string().min(6, 'Пароль має бути мінімум 6 символів'),
     confirmPassword: z.string(),
@@ -38,10 +38,20 @@ const RegisterPage = () => {
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true)
     try {
-      await registerUser(data.email, data.name, data.surname)
-      navigate('/')
-    } catch (error) {
+      await registerUser({
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+      })
+
+      alert('Реєстрація успішна! Тепер увійдіть у свій акаунт.')
+      navigate('/auth/login')
+    } catch (error: any) {
       console.error(error)
+      const message =
+        error.response?.data?.title || error.message || 'Помилка реєстрації'
+      alert(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -64,14 +74,14 @@ const RegisterPage = () => {
             <Input
               label="Ім'я"
               placeholder='Андрій'
-              error={errors.name?.message}
-              {...register('name')}
+              error={errors.firstName?.message}
+              {...register('firstName')}
             />
             <Input
               label='Прізвище'
               placeholder='Шевченко'
-              error={errors.surname?.message}
-              {...register('surname')}
+              error={errors.lastName?.message}
+              {...register('lastName')}
             />
           </div>
 

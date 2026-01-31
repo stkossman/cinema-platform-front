@@ -3,10 +3,10 @@ export interface User {
   email: string
   name: string
   surname: string
-  role: 'user' | 'admin'
+  role: string
 }
 
 export interface AuthResponse {
-  user: User
-  token: string
+  accessToken: string
+  refreshToken: string
 }

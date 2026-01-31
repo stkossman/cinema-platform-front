@@ -7,13 +7,25 @@ import {
 } from 'react'
 import { type User } from '../../types/auth'
 import { authService } from '../../services/authService'
+import { api } from '../../lib/axios'
+
+interface LoginParams {
+  email: string
+  password: string
+}
+interface RegisterParams {
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+}
 
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (email: string) => Promise<void>
-  register: (email: string, name: string, surname: string) => Promise<void>
+  login: (params: LoginParams) => Promise<void>
+  register: (params: RegisterParams) => Promise<void>
   logout: () => void
   updateUserData: (data: Partial<User>) => Promise<void>
 }
@@ -21,42 +33,38 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>({
-    id: 'd0e9c8b7-a6f5-4e4d-3c2b-1a0b9c8d7e6f',
-    name: 'Andrii',
-    surname: 'Kossman',
-    email: 'admin@gmail.com',
-    role: 'admin',
-  })
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser()
-    if (currentUser) {
-      setUser(currentUser)
-    }
+    setUser(currentUser)
     setIsLoading(false)
   }, [])
 
-  const login = async (email: string) => {
-    const response = await authService.login(email)
-    setUser(response.user)
+  const login = async ({ email, password }: LoginParams) => {
+    const user = await authService.login(email, password)
+    setUser(user)
   }
 
-  const register = async (email: string, name: string, surname: string) => {
-    const response = await authService.register(email, name, surname)
-    setUser(response.user)
+  const register = async ({
+    email,
+    password,
+    firstName,
+    lastName,
+  }: RegisterParams) => {
+    await authService.register(email, password, firstName, lastName)
   }
 
   const logout = () => {
     authService.logout()
     setUser(null)
+    delete api.defaults.headers.common['Authorization']
   }
 
   const updateUserData = async (data: Partial<User>) => {
     if (!user) return
-    const updatedUser = await authService.updateProfile(user.id, data)
-    setUser(updatedUser)
+    await authService.updateProfile(user.id, data)
   }
 
   return (

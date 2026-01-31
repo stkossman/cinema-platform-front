@@ -88,22 +88,7 @@ const ProfilePage = () => {
   })
 
   const onSubmit = async (data: ProfileFormData) => {
-    setIsSubmitting(true)
-    try {
-      const updatePayload = {
-        name: data.name,
-        surname: data.surname,
-        email: data.email,
-        ...(data.newPassword ? { password: data.newPassword } : {}),
-      }
-      await updateUserData(updatePayload)
-      setSuccessMessage('Профіль успішно оновлено!')
-      setTimeout(() => setSuccessMessage(''), 3000)
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setIsSubmitting(false)
-    }
+    alert('Редагування профілю тимчасово недоступне на сервері.')
   }
 
   if (!user) return null
@@ -241,27 +226,23 @@ const ProfilePage = () => {
                 </h3>
               </div>
 
-              <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+              <div className='mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-200 text-sm'>
+                Редагування профілю тимчасово вимкнено.
+              </div>
+
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className='space-y-6 opacity-60 grayscale pointer-events-none'
+              >
                 <div className='grid gap-4 md:grid-cols-2'>
-                  <Input
-                    label="Ім'я"
-                    placeholder="Ваше ім'я"
-                    error={errors.name?.message}
-                    {...register('name')}
-                  />
-                  <Input
-                    label='Прізвище'
-                    placeholder='Ваше прізвище'
-                    error={errors.surname?.message}
-                    {...register('surname')}
-                  />
+                  <Input label="Ім'я" disabled {...register('name')} />
+                  <Input label='Прізвище' disabled {...register('surname')} />
                 </div>
 
                 <Input
                   label='Email'
                   type='email'
-                  placeholder='email@example.com'
-                  error={errors.email?.message}
+                  disabled
                   {...register('email')}
                 />
 
@@ -287,17 +268,11 @@ const ProfilePage = () => {
                 <div className='flex justify-end pt-2'>
                   <button
                     type='submit'
-                    disabled={isSubmitting}
-                    className='flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-bold text-black transition-all hover:bg-zinc-200 disabled:opacity-70'
+                    disabled
+                    className='flex items-center gap-2 rounded-lg bg-zinc-700 px-6 py-3 text-sm font-bold text-zinc-400 cursor-not-allowed'
                   >
-                    {isSubmitting ? (
-                      <Loader2 className='h-4 w-4 animate-spin' />
-                    ) : (
-                      <>
-                        <Save className='h-4 w-4' />
-                        Зберегти зміни
-                      </>
-                    )}
+                    <Save className='h-4 w-4' />
+                    Зберегти зміни
                   </button>
                 </div>
               </form>

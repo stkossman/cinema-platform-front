@@ -12,11 +12,11 @@ const AdminRoute = () => {
     )
   }
 
-  if (!user || user.role !== 'admin') {
-    return <Navigate to='/' replace />
+  if (user && user.role.toLowerCase() === 'admin') {
+    return <Outlet />
   }
 
-  return <Outlet />
+  return <Navigate to='/' replace />
 }
 
 export default AdminRoute
