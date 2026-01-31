@@ -16,7 +16,6 @@ import HallsPage from '../features/admin/HallsPage'
 import BookingPage from '../pages/BookingPage'
 import MoviesPage from '../pages/MoviesPage'
 import SessionsPage from '../features/admin/SessionsPage'
-import { Users } from 'lucide-react'
 import UsersPage from '../features/admin/UsersPage'
 
 export const router = createBrowserRouter([

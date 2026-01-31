@@ -6,7 +6,6 @@ import type { Seat, SeatType, Technology } from '../../../types/hall'
 import {
   Save,
   Armchair,
-  Loader2,
   Cpu,
   Ruler,
   MousePointer2,
@@ -59,7 +58,7 @@ const HallBuilder = ({
 
   const [gridConfig, setGridConfig] = useState<Map<string, string>>(new Map())
 
-  const [isLoading, setIsLoading] = useState(true)
+  const [_isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {

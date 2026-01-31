@@ -1,14 +1,5 @@
 import { api } from '../lib/axios'
-import type { Seat } from '../types/hall'
 import type { PaginatedResult } from '../types/common'
-
-interface CreateSeatDto {
-  row: string
-  number: number
-  gridX: number
-  gridY: number
-  seatTypeId: string
-}
 
 interface CreateHallRequest {
   name: string

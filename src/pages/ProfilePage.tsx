@@ -32,7 +32,7 @@ type ProfileFormData = z.infer<typeof profileSchema>
 type TabType = 'settings' | 'active-tickets' | 'history'
 
 const ProfilePage = () => {
-  const { user, updateUserData, logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
 
   const [activeTab, setActiveTab] = useState<TabType>('active-tickets')
@@ -41,8 +41,8 @@ const ProfilePage = () => {
   const [historyOrders, setHistoryOrders] = useState<OrderItem[]>([])
   const [isLoadingTickets, setIsLoadingTickets] = useState(false)
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
+  const [_isSubmitting, _setIsSubmitting] = useState(false)
+  const [successMessage, _setSuccessMessage] = useState('')
 
   useEffect(() => {
     if (!user) {
@@ -87,7 +87,7 @@ const ProfilePage = () => {
     },
   })
 
-  const onSubmit = async (data: ProfileFormData) => {
+  const onSubmit = async (_data: ProfileFormData) => {
     alert('Редагування профілю тимчасово недоступне на сервері.')
   }
 

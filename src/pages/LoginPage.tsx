@@ -32,7 +32,7 @@ const LoginPage = () => {
     try {
       await login({ email: data.email, password: data.password })
       navigate('/profile')
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
       alert('Помилка входу: ' + (error.message || 'Перевірте дані'))
     } finally {

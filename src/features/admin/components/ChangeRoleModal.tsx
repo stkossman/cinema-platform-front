@@ -20,13 +20,8 @@ const ChangeRoleModal = ({
 
   if (!isOpen || !user) return null
 
-  const currentRole = user.role === 'Admin' ? 'Admin' : 'User'
-  const targetRole =
-    selectedRole === currentRole
-      ? currentRole === 'Admin'
-        ? 'User'
-        : 'Admin'
-      : selectedRole
+  // const currentRole = user.role === 'Admin' ? 'Admin' : 'User'
+  // const targetRole = selectedRole === currentRole ? currentRole === 'Admin' ? 'User' : 'Admin' : selectedRole
 
   const handleSave = async () => {
     setIsLoading(true)

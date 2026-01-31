@@ -6,7 +6,6 @@ import {
 import {
   Search,
   Loader2,
-  Shield,
   User as UserIcon,
   MoreHorizontal,
   ShieldCheck,

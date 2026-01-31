@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateUserData = async (data: Partial<User>) => {
     if (!user) return
-    await authService.updateProfile(user.id, data)
+    alert('Редагування профілю тимчасово недоступне.')
   }
 
   return (
