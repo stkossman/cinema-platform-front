@@ -6,11 +6,10 @@ import { type Session } from '../../../types/hall'
 interface MovieCardProps {
   movie: Movie
   sessions: Session[]
-  technologies: string[] // Новий проп: список технологій (IMAX, 3D...)
+  technologies: string[]
 }
 
 const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
-  // Фільтруємо майбутні сеанси
   const nextSessions = sessions
     .filter(s => new Date(s.startTime) > new Date())
     .sort(
@@ -21,7 +20,6 @@ const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
 
   return (
     <div className='group relative bg-[var(--bg-card)] rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[var(--color-primary)]/10 h-full flex flex-col border border-white/5'>
-      {/* Poster */}
       <div className='relative aspect-[2/3] overflow-hidden'>
         <img
           src={movie.backdropUrl}
@@ -30,7 +28,6 @@ const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
           loading='lazy'
         />
 
-        {/* Overlay Button */}
         <div className='absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]'>
           <Link
             to={`/movies/${movie.id}`}
@@ -40,14 +37,12 @@ const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
           </Link>
         </div>
 
-        {/* Rating */}
         <div className='absolute top-3 left-3 bg-black/80 backdrop-blur-md text-[var(--color-primary)] text-xs font-bold px-2.5 py-1.5 rounded-lg border border-[var(--color-primary)]/30 flex items-center gap-1'>
           <Star size={12} fill='currentColor' />
           {movie.rating}
         </div>
       </div>
 
-      {/* Info */}
       <div className='p-5 flex flex-col flex-grow'>
         <h3 className='text-xl font-bold text-white mb-2 leading-tight group-hover:text-[var(--color-primary)] transition-colors line-clamp-2'>
           {movie.title}
@@ -57,7 +52,6 @@ const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
         </p>
 
         <div className='mt-auto space-y-4'>
-          {/* Showtimes */}
           <div className='flex flex-wrap gap-2'>
             {nextSessions.length > 0 ? (
               nextSessions.map(st => (
@@ -84,7 +78,6 @@ const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
             )}
           </div>
 
-          {/* Tech badges (Real data) */}
           {technologies.length > 0 && (
             <div className='flex gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-2 border-t border-white/5'>
               {technologies.map(t => (

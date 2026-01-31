@@ -101,7 +101,7 @@ const MoviesPage = () => {
                     <td className='px-6 py-4 text-right'>
                       <Link
                         to={`/movies/${movie.id}`}
-                        className='inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-xs font-bold text-[var(--color-on-primary)] transition-all hover:brightness-110 hover:shadow-[0_0_15px_rgba(163,230,53,0.3)]'
+                        className='inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-xs font-bold text-[var(--color-on-primary)] transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(220,38,38,0.4)]'
                       >
                         Детальніше <ArrowRight size={14} />
                       </Link>
