@@ -1,110 +1,248 @@
-import { Play, Info, Loader2 } from 'lucide-react'
+import { Play, Info, Loader2, Star, Calendar, Clock } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { type Movie } from '../../../types/movie'
 import { moviesService } from '../../../services/moviesService'
 import { useAuth } from '../../../features/auth/AuthContext'
 
-const HeroSection = () => {
-  const [movie, setMovie] = useState<Movie | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+const AUTO_PLAY_INTERVAL = 8000
 
+const HeroSection = () => {
+  const [movies, setMovies] = useState<Movie[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAnimating, setIsAnimating] = useState(false)
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
   const { user } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        const movies = await moviesService.getAll()
-        if (movies.length > 0) {
-          setMovie(movies[0])
+        const allMovies = await moviesService.getAll()
+        if (allMovies.length > 0) {
+          setMovies(allMovies.slice(0, 5))
         }
       } catch (error) {
-        console.error('Failed to load hero movie', error)
+        console.error('Failed to load hero movies', error)
       } finally {
         setIsLoading(false)
       }
     }
-
     fetchFeatured()
   }, [])
 
+  useEffect(() => {
+    if (movies.length === 0) return
+
+    startTimer()
+
+    return () => stopTimer()
+  }, [currentIndex, movies.length])
+
+  const startTimer = () => {
+    stopTimer()
+    timerRef.current = setInterval(() => {
+      handleNext()
+    }, AUTO_PLAY_INTERVAL)
+  }
+
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+    }
+  }
+
+  const handleNext = () => {
+    setIsAnimating(true)
+    setTimeout(() => {
+      setCurrentIndex(prev => (prev + 1) % movies.length)
+      setIsAnimating(false)
+    }, 500)
+  }
+
+  const handleManualSelect = (index: number) => {
+    if (index === currentIndex) return
+    stopTimer()
+    setIsAnimating(true)
+    setTimeout(() => {
+      setCurrentIndex(index)
+      setIsAnimating(false)
+      startTimer()
+    }, 300)
+  }
+
   const handleBuyTicket = () => {
-    if (!movie) return
+    const activeMovie = movies[currentIndex]
+    if (!activeMovie) return
 
     if (!user) {
       navigate('/auth/login')
     } else {
-      navigate(`/booking/${movie.id}`)
+      navigate(`/booking/${activeMovie.id}`)
     }
   }
 
   if (isLoading) {
     return (
-      <div className='flex h-[85vh] w-full items-center justify-center bg-zinc-950'>
-        <Loader2 className='h-10 w-10 animate-spin text-zinc-700' />
+      <div className='flex h-[85vh] w-full items-center justify-center bg-[var(--bg-main)]'>
+        <Loader2 className='h-12 w-12 animate-spin text-[var(--color-primary)]' />
       </div>
     )
   }
 
-  if (!movie) return null
+  if (movies.length === 0) return null
+
+  const activeMovie = movies[currentIndex]
 
   return (
-    <section className='relative h-[85vh] w-full overflow-hidden'>
-      <div className='absolute inset-0'>
+    <section className='relative h-[85vh] w-full overflow-hidden bg-black group'>
+      <div className='absolute inset-0 transition-opacity duration-700 ease-in-out'>
         <img
-          src={movie.backdropUrl}
-          alt={movie.title}
-          className='h-full w-full object-cover object-center'
+          key={activeMovie.id}
+          src={activeMovie.backdropUrl}
+          alt={activeMovie.title}
+          className={`h-full w-full object-cover object-center transition-transform duration-[20s] ease-linear scale-105 group-hover:scale-110 animate-in fade-in zoom-in-95 duration-1000`}
         />
-        <div className='absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent' />
-        <div className='absolute inset-0 bg-gradient-to-r from-zinc-950/80 via-transparent to-transparent' />
+
+        <div className='absolute inset-0 bg-gradient-to-t from-[var(--bg-main)] via-[var(--bg-main)]/50 to-transparent' />
+        <div className='absolute inset-0 bg-gradient-to-r from-[var(--bg-main)]/90 via-[var(--bg-main)]/20 to-transparent' />
+
+        <div className='hidden lg:block absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-[var(--bg-main)]/90 to-transparent pointer-events-none' />
       </div>
 
-      <div className='relative container mx-auto flex h-full flex-col justify-end px-4 pb-20'>
-        <div className='max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700'>
-          <div className='flex items-center gap-3 text-xs font-semibold uppercase tracking-wider text-zinc-300'>
-            <span className='rounded bg-white/10 px-2 py-1 backdrop-blur-sm'>
-              {movie.year}
-            </span>
-            <span className='rounded bg-yellow-500/80 px-2 py-1 text-black'>
-              IMDb {movie.rating}
-            </span>
-            <div className='flex gap-2'>
-              {movie.genres.map(genre => (
-                <span key={genre}>{genre}</span>
-              ))}
+      <div className='relative container mx-auto flex h-full items-end pb-20 px-4'>
+        <div className='grid w-full lg:grid-cols-[1fr_350px] gap-12'>
+          <div
+            className={`max-w-3xl space-y-6 transition-all duration-500 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}
+          >
+            <div className='flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-wider text-zinc-300'>
+              <span className='bg-[var(--color-primary)] text-white px-2 py-1 rounded shadow-[0_0_15px_rgba(239,68,68,0.4)]'>
+                Прем'єра
+              </span>
+              <span className='flex items-center gap-1 bg-white/10 backdrop-blur-md px-2 py-1 rounded border border-white/10'>
+                <Star size={12} className='text-yellow-500 fill-yellow-500' />{' '}
+                {activeMovie.rating}
+              </span>
+              <span className='flex items-center gap-1 bg-white/10 backdrop-blur-md px-2 py-1 rounded border border-white/10'>
+                <Calendar size={12} /> {activeMovie.year}
+              </span>
+              <span className='flex items-center gap-1 bg-white/10 backdrop-blur-md px-2 py-1 rounded border border-white/10'>
+                <Clock size={12} /> {activeMovie.duration} хв
+              </span>
+            </div>
+
+            <h1 className='text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-tight drop-shadow-2xl'>
+              {activeMovie.title}
+            </h1>
+
+            <p className='line-clamp-3 text-lg text-zinc-300 sm:text-xl max-w-2xl drop-shadow-md'>
+              {activeMovie.description}
+            </p>
+
+            <div className='flex flex-wrap gap-4 pt-4'>
+              <button
+                type='button'
+                onClick={handleBuyTicket}
+                className='group flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-8 py-4 text-base font-bold text-white transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] active:scale-95'
+              >
+                <Play className='size-5 fill-current' />
+                Купити квиток
+              </button>
+
+              <Link
+                to={`/movies/${activeMovie.id}`}
+                className='flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-8 py-4 text-base font-bold text-white backdrop-blur-md transition-colors hover:bg-white/20 hover:border-white active:scale-95'
+              >
+                <Info className='size-5' />
+                Детальніше
+              </Link>
             </div>
           </div>
 
-          <h1 className='text-5xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl'>
-            {movie.title}
-          </h1>
+          <div className='hidden lg:flex flex-col justify-end gap-3'>
+            <h3 className='text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2 pl-1'>
+              Далі у прокаті
+            </h3>
 
-          <p className='line-clamp-3 text-lg text-zinc-300 sm:text-xl'>
-            {movie.description}
-          </p>
+            {movies.map((m, idx) => {
+              const isActive = idx === currentIndex
+              return (
+                <button
+                  type='button'
+                  key={m.id}
+                  onClick={() => handleManualSelect(idx)}
+                  className={`group relative flex items-center gap-4 p-2 rounded-xl transition-all duration-300 text-left border ${
+                    isActive
+                      ? 'bg-white/10 border-white/20 scale-105 shadow-xl'
+                      : 'bg-transparent border-transparent hover:bg-white/5 opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <div className='relative h-16 w-12 shrink-0 overflow-hidden rounded-lg bg-zinc-800'>
+                    <img
+                      src={m.backdropUrl}
+                      alt={m.title}
+                      className='h-full w-full object-cover'
+                    />
+                    {isActive && (
+                      <div className='absolute inset-0 bg-black/40 flex items-center justify-center'>
+                        <div className='w-2 h-2 bg-[var(--color-primary)] rounded-full animate-ping'></div>
+                      </div>
+                    )}
+                  </div>
 
-          <div className='flex flex-wrap gap-4 pt-4'>
-            <button
-              type='button'
-              onClick={handleBuyTicket}
-              className='group flex items-center gap-2 rounded-full bg-white px-8 py-4 text-base font-bold text-black transition-transform hover:scale-105 active:scale-95'
-            >
-              <Play className='size-5 fill-current' />
-              Купити квиток
-            </button>
+                  <div className='flex-1 min-w-0'>
+                    <div
+                      className={`font-bold text-sm truncate transition-colors ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`}
+                    >
+                      {m.title}
+                    </div>
+                    <div className='text-xs text-zinc-500 truncate'>
+                      {m.genres[0]} • {m.year}
+                    </div>
+                  </div>
 
-            <Link
-              to={`/movies/${movie.id}`}
-              className='flex items-center gap-2 rounded-full bg-white/10 px-8 py-4 text-base font-bold text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95'
-            >
-              <Info className='size-5' />
-              Детальніше
-            </Link>
+                  {isActive && (
+                    <div className='absolute bottom-0 left-2 right-2 h-[2px] bg-white/10 rounded-full overflow-hidden'>
+                      <div
+                        className='h-full bg-[var(--color-primary)] origin-left animate-progress'
+                        style={{ animationDuration: `${AUTO_PLAY_INTERVAL}ms` }}
+                      ></div>
+                    </div>
+                  )}
+                </button>
+              )
+            })}
           </div>
         </div>
+
+        <div className='lg:hidden absolute bottom-8 left-0 right-0 flex justify-center gap-2'>
+          {movies.map((_, idx) => (
+            <button
+              type='button'
+              key={idx}
+              onClick={() => handleManualSelect(idx)}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                idx === currentIndex
+                  ? 'w-8 bg-[var(--color-primary)]'
+                  : 'w-2 bg-white/20'
+              }`}
+            />
+          ))}
+        </div>
       </div>
+
+      <style>{`
+        @keyframes progress {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+        }
+        .animate-progress {
+            animation-name: progress;
+            animation-timing-function: linear;
+        }
+      `}</style>
     </section>
   )
 }
