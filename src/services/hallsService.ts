@@ -18,6 +18,7 @@ export interface HallSummaryDto {
   id: string
   name: string
   capacity: number
+  technologies?: { id: string; name: string }[]
 }
 
 interface BatchChangeSeatTypeRequest {
