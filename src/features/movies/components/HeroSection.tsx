@@ -1,88 +1,18 @@
 import { Play, Info, Loader2, Star, Calendar, Clock } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useEffect, useState, useRef } from 'react'
-import { type Movie } from '../../../types/movie'
-import { moviesService } from '../../../services/moviesService'
-import { useAuth } from '../../../features/auth/AuthContext'
-
-const AUTO_PLAY_INTERVAL = 8000
+import { Link } from 'react-router-dom'
+import { useHeroSlider } from '../hooks/useHeroSlider'
 
 const HeroSection = () => {
-  const [movies, setMovies] = useState<Movie[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAnimating, setIsAnimating] = useState(false)
-
-  const timerRef = useRef<number | null>(null)
-  const { user } = useAuth()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    const fetchFeatured = async () => {
-      try {
-        const allMovies = await moviesService.getAll()
-        if (allMovies.length > 0) {
-          setMovies(allMovies.slice(0, 5))
-        }
-      } catch (error) {
-        console.error('Failed to load hero movies', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchFeatured()
-  }, [])
-
-  useEffect(() => {
-    if (movies.length === 0) return
-
-    startTimer()
-
-    return () => stopTimer()
-  }, [currentIndex, movies.length])
-
-  const startTimer = () => {
-    stopTimer()
-    timerRef.current = setInterval(() => {
-      handleNext()
-    }, AUTO_PLAY_INTERVAL)
-  }
-
-  const stopTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-    }
-  }
-
-  const handleNext = () => {
-    setIsAnimating(true)
-    setTimeout(() => {
-      setCurrentIndex(prev => (prev + 1) % movies.length)
-      setIsAnimating(false)
-    }, 500)
-  }
-
-  const handleManualSelect = (index: number) => {
-    if (index === currentIndex) return
-    stopTimer()
-    setIsAnimating(true)
-    setTimeout(() => {
-      setCurrentIndex(index)
-      setIsAnimating(false)
-      startTimer()
-    }, 300)
-  }
-
-  const handleBuyTicket = () => {
-    const activeMovie = movies[currentIndex]
-    if (!activeMovie) return
-
-    if (!user) {
-      navigate('/auth/login')
-    } else {
-      navigate(`/booking/${activeMovie.id}`)
-    }
-  }
+  const {
+    movies,
+    activeMovie,
+    currentIndex,
+    isLoading,
+    isAnimating,
+    handleManualSelect,
+    handleBuyTicket,
+    AUTO_PLAY_INTERVAL,
+  } = useHeroSlider()
 
   if (isLoading) {
     return (
@@ -93,8 +23,6 @@ const HeroSection = () => {
   }
 
   if (movies.length === 0) return null
-
-  const activeMovie = movies[currentIndex]
 
   return (
     <section className='relative h-[85vh] w-full overflow-hidden bg-black group'>
@@ -108,7 +36,6 @@ const HeroSection = () => {
 
         <div className='absolute inset-0 bg-gradient-to-t from-[var(--bg-main)] via-[var(--bg-main)]/50 to-transparent' />
         <div className='absolute inset-0 bg-gradient-to-r from-[var(--bg-main)]/90 via-[var(--bg-main)]/20 to-transparent' />
-
         <div className='hidden lg:block absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-[var(--bg-main)]/90 to-transparent pointer-events-none' />
       </div>
 

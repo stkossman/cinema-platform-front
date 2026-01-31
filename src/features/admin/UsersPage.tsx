@@ -1,8 +1,5 @@
-import { useState, useEffect } from 'react'
-import {
-  adminUsersService,
-  type UserDto,
-} from '../../services/adminUsersService'
+import { useState, useMemo } from 'react'
+import { useUsers } from './hooks/useUsers'
 import {
   Search,
   Loader2,
@@ -12,43 +9,24 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import ChangeRoleModal from './components/ChangeRoleModal'
+import { type UserDto } from '../../services/adminUsersService'
 
 const UsersPage = () => {
   const { user: currentUser } = useAuth()
-  const [users, setUsers] = useState<UserDto[]>([])
-  const [filteredUsers, setFilteredUsers] = useState<UserDto[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const { users, isLoading, changeUserRole } = useUsers()
 
+  const [searchQuery, setSearchQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<UserDto | null>(null)
 
-  const fetchUsers = async () => {
-    setIsLoading(true)
-    try {
-      const data = await adminUsersService.getAll()
-      setUsers(data)
-      setFilteredUsers(data)
-    } catch (error) {
-      console.error('Failed to fetch users', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchUsers()
-  }, [])
-
-  useEffect(() => {
+  const filteredUsers = useMemo(() => {
     const lowerQuery = searchQuery.toLowerCase()
-    const filtered = users.filter(
+    return users.filter(
       u =>
         u.email.toLowerCase().includes(lowerQuery) ||
         u.firstName.toLowerCase().includes(lowerQuery) ||
         u.lastName.toLowerCase().includes(lowerQuery),
     )
-    setFilteredUsers(filtered)
   }, [searchQuery, users])
 
   const handleEditClick = (user: UserDto) => {
@@ -56,20 +34,16 @@ const UsersPage = () => {
     setIsModalOpen(true)
   }
 
-  const handleRoleChange = async (
+  const onConfirmRoleChange = async (
     userId: string,
     newRole: 'Admin' | 'User',
   ) => {
-    try {
-      await adminUsersService.changeRole(userId, newRole)
-      setUsers(prev =>
-        prev.map(u => (u.id === userId ? { ...u, role: newRole } : u)),
-      )
+    const result = await changeUserRole(userId, newRole)
+    if (result.success) {
       alert(`Роль користувача успішно змінено на ${newRole}`)
-    } catch (error: any) {
-      const msg = error.response?.data || 'Помилка зміни ролі'
-      alert(msg)
-      throw error
+    } else {
+      alert(result.error)
+      throw new Error(result.error)
     }
   }
 
@@ -177,11 +151,6 @@ const UsersPage = () => {
                           onClick={() => handleEditClick(user)}
                           disabled={isMe}
                           className='p-2 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed transition-all'
-                          title={
-                            isMe
-                              ? 'Ви не можете змінити свою роль'
-                              : 'Змінити роль'
-                          }
                         >
                           <MoreHorizontal size={20} />
                         </button>
@@ -199,7 +168,7 @@ const UsersPage = () => {
         isOpen={isModalOpen}
         user={editingUser}
         onClose={() => setIsModalOpen(false)}
-        onConfirm={handleRoleChange}
+        onConfirm={onConfirmRoleChange}
       />
     </div>
   )

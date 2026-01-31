@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import {
   X,
   Loader2,
@@ -8,13 +7,7 @@ import {
   Film,
   MonitorPlay,
 } from 'lucide-react'
-import { moviesService } from '../../../services/moviesService'
-import { hallsService } from '../../../services/hallsService'
-import {
-  adminSessionsService,
-  type PricingLookupDto,
-} from '../../../services/adminSessionsService'
-import type { Movie } from '../../../types/movie'
+import { useCreateSession } from '../hooks/useCreateSession'
 
 interface CreateSessionModalProps {
   isOpen: boolean
@@ -27,82 +20,24 @@ const CreateSessionModal = ({
   onClose,
   onSuccess,
 }: CreateSessionModalProps) => {
-  const [movies, setMovies] = useState<Movie[]>([])
-  const [halls, setHalls] = useState<any[]>([])
-  const [pricings, setPricings] = useState<PricingLookupDto[]>([])
-
-  const [isLoadingData, setIsLoadingData] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const [movieId, setMovieId] = useState('')
-  const [hallId, setHallId] = useState('')
-  const [pricingId, setPricingId] = useState('')
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('')
-
-  useEffect(() => {
-    if (isOpen) {
-      loadData()
-      setDate('')
-      setTime('')
-    }
-  }, [isOpen])
-
-  const loadData = async () => {
-    setIsLoadingData(true)
-    try {
-      const [m, h, p] = await Promise.all([
-        moviesService.getAll(),
-        hallsService.getAll(),
-        adminSessionsService.getPricingsLookup(),
-      ])
-
-      setMovies(m)
-      setHalls(h)
-      setPricings(p)
-
-      if (m.length > 0) setMovieId(m[0].id)
-      if (h.length > 0) setHallId(h[0].id)
-      if (p.length > 0) setPricingId(p[0].id)
-    } catch (e) {
-      console.error(e)
-      alert('Помилка завантаження даних (фільми/зали/ціни)')
-    } finally {
-      setIsLoadingData(false)
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!date || !time || !movieId || !hallId || !pricingId) {
-      alert('Будь ласка, заповніть всі поля')
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      const startDateTime = new Date(`${date}T${time}`)
-
-      await adminSessionsService.create({
-        movieId,
-        hallId,
-        pricingId,
-        startTime: startDateTime.toISOString(),
-      })
-
-      onSuccess()
-      onClose()
-    } catch (error: any) {
-      console.error(error)
-      const msg =
-        error.response?.data?.errors?.Description ||
-        error.message ||
-        'Unknown error'
-      alert(`Не вдалося створити сеанс: ${msg}`)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  const {
+    movies,
+    halls,
+    pricings,
+    movieId,
+    setMovieId,
+    hallId,
+    setHallId,
+    pricingId,
+    setPricingId,
+    date,
+    setDate,
+    time,
+    setTime,
+    isLoadingData,
+    isSubmitting,
+    submit,
+  } = useCreateSession(isOpen, onSuccess, onClose)
 
   if (!isOpen) return null
 
@@ -125,7 +60,7 @@ const CreateSessionModal = ({
             <Loader2 className='h-8 w-8 animate-spin text-[var(--text-muted)]' />
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className='space-y-5'>
+          <form onSubmit={submit} className='space-y-5'>
             <div>
               <label className='text-xs font-medium text-[var(--text-muted)] mb-1.5 flex items-center gap-2'>
                 <Film size={14} /> Фільм

@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useAuth } from '../features/auth/AuthContext'
 import Input from '../common/components/Input'
 import {
   Loader2,
@@ -14,11 +12,10 @@ import {
   History,
   Settings,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { type OrderItem } from '../types/order'
 import TicketCard from '../features/profile/components/TicketCard'
-import { ordersService } from '../services/ordersService'
+import { useProfile, type TabType } from '../features/profile/hooks/useProfile'
 
 const profileSchema = z.object({
   name: z.string().min(2, "Ім'я занадто коротке"),
@@ -29,49 +26,16 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>
 
-type TabType = 'settings' | 'active-tickets' | 'history'
-
 const ProfilePage = () => {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
-
-  const [activeTab, setActiveTab] = useState<TabType>('active-tickets')
-
-  const [activeTickets, setActiveTickets] = useState<OrderItem[]>([])
-  const [historyOrders, setHistoryOrders] = useState<OrderItem[]>([])
-  const [isLoadingTickets, setIsLoadingTickets] = useState(false)
-
-  const [_isSubmitting, _setIsSubmitting] = useState(false)
-  const [successMessage, _setSuccessMessage] = useState('')
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/')
-    }
-  }, [user, navigate])
-
-  useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user) return
-
-      setIsLoadingTickets(true)
-      try {
-        const allOrders = await ordersService.getUserOrders(user.id)
-
-        const active = allOrders.filter(o => o.status === 'active')
-        const history = allOrders.filter(o => o.status !== 'active')
-
-        setActiveTickets(active)
-        setHistoryOrders(history)
-      } catch (error) {
-        console.error('Failed to load orders', error)
-      } finally {
-        setIsLoadingTickets(false)
-      }
-    }
-
-    fetchOrders()
-  }, [user])
+  const {
+    user,
+    logout,
+    activeTab,
+    setActiveTab,
+    activeTickets,
+    historyOrders,
+    isLoadingTickets,
+  } = useProfile()
 
   const {
     register,
@@ -115,8 +79,7 @@ const ProfilePage = () => {
                 to='/admin'
                 className='mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3 text-sm font-bold text-black transition-all hover:bg-zinc-200'
               >
-                <LayoutDashboard size={16} />
-                Адмін-панель
+                <LayoutDashboard size={16} /> Адмін-панель
               </Link>
             )}
 
@@ -125,53 +88,37 @@ const ProfilePage = () => {
               onClick={() => logout()}
               className='mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-error)]/20 bg-[var(--color-error)]/10 py-2 text-sm font-medium text-[var(--color-error)] transition-colors hover:bg-[var(--color-error)]/20'
             >
-              <LogOut size={16} />
-              Вийти
+              <LogOut size={16} /> Вийти
             </button>
           </div>
         </div>
 
         <div>
           <div className='mb-6 flex overflow-x-auto rounded-xl border border-white/5 bg-[var(--bg-card)] p-1 backdrop-blur-xl no-scrollbar'>
-            <button
-              type='button'
-              onClick={() => setActiveTab('active-tickets')}
-              className={clsx(
-                'flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg py-2.5 text-sm font-medium transition-all',
-                activeTab === 'active-tickets'
-                  ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20'
-                  : 'text-[var(--text-muted)] hover:text-white hover:bg-white/5',
-              )}
-            >
-              <Ticket size={16} />
-              Активні квитки
-            </button>
-            <button
-              type='button'
-              onClick={() => setActiveTab('history')}
-              className={clsx(
-                'flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg py-2.5 text-sm font-medium transition-all',
-                activeTab === 'history'
-                  ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20'
-                  : 'text-[var(--text-muted)] hover:text-white hover:bg-white/5',
-              )}
-            >
-              <History size={16} />
-              Історія
-            </button>
-            <button
-              type='button'
-              onClick={() => setActiveTab('settings')}
-              className={clsx(
-                'flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg py-2.5 text-sm font-medium transition-all',
-                activeTab === 'settings'
-                  ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20'
-                  : 'text-[var(--text-muted)] hover:text-white hover:bg-white/5',
-              )}
-            >
-              <Settings size={16} />
-              Налаштування
-            </button>
+            {(['active-tickets', 'history', 'settings'] as TabType[]).map(
+              tab => (
+                <button
+                  key={tab}
+                  type='button'
+                  onClick={() => setActiveTab(tab)}
+                  className={clsx(
+                    'flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg py-2.5 text-sm font-medium transition-all',
+                    activeTab === tab
+                      ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20'
+                      : 'text-[var(--text-muted)] hover:text-white hover:bg-white/5',
+                  )}
+                >
+                  {tab === 'active-tickets' && <Ticket size={16} />}
+                  {tab === 'history' && <History size={16} />}
+                  {tab === 'settings' && <Settings size={16} />}
+                  {tab === 'active-tickets'
+                    ? 'Активні квитки'
+                    : tab === 'history'
+                      ? 'Історія'
+                      : 'Налаштування'}
+                </button>
+              ),
+            )}
           </div>
 
           {activeTab === 'active-tickets' && (
@@ -190,9 +137,6 @@ const ProfilePage = () => {
                   <h3 className='text-lg font-medium text-white'>
                     У вас немає активних квитків
                   </h3>
-                  <p className='text-sm text-[var(--text-muted)] max-w-xs mt-2'>
-                    Схоже, ви ще не запланували похід у кіно. Перегляньте афішу!
-                  </p>
                   <Link
                     to='/'
                     className='mt-6 rounded-full bg-[var(--color-primary)] px-6 py-2 text-sm font-bold text-white hover:bg-[var(--color-primary-hover)] transition-colors shadow-lg shadow-[var(--color-primary)]/20'
@@ -217,6 +161,7 @@ const ProfilePage = () => {
               )}
             </div>
           )}
+
           {activeTab === 'settings' && (
             <div className='rounded-2xl border border-white/5 bg-[var(--bg-card)] p-6 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-300'>
               <div className='mb-6 flex items-center gap-2 border-b border-white/5 pb-4'>
@@ -225,11 +170,9 @@ const ProfilePage = () => {
                   Особисті дані
                 </h3>
               </div>
-
               <div className='mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-200 text-sm'>
                 Редагування профілю тимчасово вимкнено.
               </div>
-
               <form
                 onSubmit={handleSubmit(onSubmit)}
                 className='space-y-6 opacity-60 grayscale pointer-events-none'
@@ -238,41 +181,31 @@ const ProfilePage = () => {
                   <Input label="Ім'я" disabled {...register('name')} />
                   <Input label='Прізвище' disabled {...register('surname')} />
                 </div>
-
                 <Input
                   label='Email'
                   type='email'
                   disabled
                   {...register('email')}
                 />
-
                 <div className='pt-4'>
                   <h4 className='mb-4 text-sm font-medium text-[var(--text-muted)] uppercase tracking-widest'>
                     Безпека
                   </h4>
                   <Input
-                    label="Новий пароль (необов'язково)"
+                    label='Новий пароль'
                     type='password'
                     placeholder='Залиште пустим, щоб не змінювати'
                     error={errors.newPassword?.message}
                     {...register('newPassword')}
                   />
                 </div>
-
-                {successMessage && (
-                  <div className='rounded-lg bg-green-500/10 p-3 text-sm text-green-500 text-center animate-in fade-in'>
-                    {successMessage}
-                  </div>
-                )}
-
                 <div className='flex justify-end pt-2'>
                   <button
                     type='submit'
                     disabled
                     className='flex items-center gap-2 rounded-lg bg-zinc-700 px-6 py-3 text-sm font-bold text-zinc-400 cursor-not-allowed'
                   >
-                    <Save className='h-4 w-4' />
-                    Зберегти зміни
+                    <Save className='h-4 w-4' /> Зберегти зміни
                   </button>
                 </div>
               </form>

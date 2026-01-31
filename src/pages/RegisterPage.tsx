@@ -1,64 +1,15 @@
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../features/auth/AuthContext'
+import { Link } from 'react-router-dom'
 import Input from '../common/components/Input'
 import { Loader2 } from 'lucide-react'
-
-const registerSchema = z
-  .object({
-    firstName: z.string().min(2, "Ім'я занадто коротке"),
-    lastName: z.string().min(2, 'Прізвище занадто коротке'),
-    email: z
-      .string()
-      .min(1, 'Введіть email')
-      .refine(val => val.includes('@'), 'Невірний формат email'),
-    password: z.string().min(6, 'Пароль має бути мінімум 6 символів'),
-    confirmPassword: z.string(),
-  })
-  .refine(data => data.password === data.confirmPassword, {
-    message: 'Паролі не співпадають',
-    path: ['confirmPassword'],
-  })
-
-type RegisterFormData = z.infer<typeof registerSchema>
+import { useRegister } from '../features/auth/hooks/useRegister'
 
 const RegisterPage = () => {
-  const { register: registerUser } = useAuth()
-  const navigate = useNavigate()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const { form, isSubmitting, onSubmit } = useRegister()
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-  })
-
-  const onSubmit = async (data: RegisterFormData) => {
-    setIsSubmitting(true)
-    try {
-      await registerUser({
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-      })
-
-      alert('Реєстрація успішна! Тепер увійдіть у свій акаунт.')
-      navigate('/auth/login')
-    } catch (error: any) {
-      console.error(error)
-      const message =
-        error.response?.data?.title || error.message || 'Помилка реєстрації'
-      alert(message)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  } = form
 
   return (
     <div className='flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12 bg-[var(--bg-main)]'>
