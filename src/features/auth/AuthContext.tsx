@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     delete api.defaults.headers.common['Authorization']
   }
 
-  const updateUserData = async (data: Partial<User>) => {
+  const updateUserData = async (_data: Partial<User>) => {
     if (!user) return
     alert('Редагування профілю тимчасово недоступне.')
   }
