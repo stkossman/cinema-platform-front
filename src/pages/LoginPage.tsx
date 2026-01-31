@@ -8,7 +8,7 @@ import Input from '../common/components/Input'
 import { Loader2 } from 'lucide-react'
 
 const loginSchema = z.object({
-  email: z.string().email('Невірний формат email'),
+  email: z.string().refine(val => val.includes('@'), 'Невірний формат email'),
   password: z.string().min(6, 'Пароль має бути мінімум 6 символів'),
 })
 
