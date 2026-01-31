@@ -89,12 +89,14 @@ const SessionsPage = () => {
       <div className='flex flex-wrap items-center justify-between gap-4'>
         <div>
           <h1 className='text-3xl font-bold text-white'>Розклад сеансів</h1>
-          <p className='text-zinc-400 mt-1'>Планування та керування показами</p>
+          <p className='text-[var(--text-muted)] mt-1'>
+            Планування та керування показами
+          </p>
         </div>
         <button
           type='button'
           onClick={() => setIsCreateModalOpen(true)}
-          className='flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-xl font-bold hover:bg-zinc-200 transition-colors shadow-lg shadow-white/5'
+          className='flex items-center gap-2 bg-[var(--color-primary)] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[var(--color-primary-hover)] transition-all shadow-lg shadow-[var(--color-primary)]/20'
         >
           <Plus size={18} /> Додати сеанс
         </button>
@@ -102,17 +104,17 @@ const SessionsPage = () => {
 
       {isLoading ? (
         <div className='py-20 flex justify-center'>
-          <Loader2 className='h-8 w-8 animate-spin text-zinc-500' />
+          <Loader2 className='h-8 w-8 animate-spin text-[var(--color-primary)]' />
         </div>
       ) : (
         <div className='space-y-10 animate-in fade-in slide-in-from-bottom-4'>
           {Object.keys(groupedSessions).length === 0 && (
-            <div className='flex flex-col items-center justify-center py-20 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/30'>
-              <Calendar className='h-12 w-12 text-zinc-600 mb-4' />
+            <div className='flex flex-col items-center justify-center py-20 border border-dashed border-white/10 rounded-xl bg-[var(--bg-card)]/50'>
+              <Calendar className='h-12 w-12 text-[var(--text-muted)] mb-4' />
               <div className='text-xl font-medium text-white'>
                 Сеансів не знайдено
               </div>
-              <p className='text-zinc-500 mt-2'>
+              <p className='text-[var(--text-muted)] mt-2'>
                 Створіть перший сеанс, натиснувши кнопку зверху.
               </p>
             </div>
@@ -125,9 +127,9 @@ const SessionsPage = () => {
 
             return (
               <div key={dateKey} className='relative'>
-                <div className='sticky top-0 z-10 flex items-center gap-4 bg-zinc-950/95 py-4 backdrop-blur-md border-b border-white/10 mb-4'>
+                <div className='sticky top-0 z-10 flex items-center gap-4 bg-[var(--bg-main)]/95 py-4 backdrop-blur-md border-b border-white/5 mb-4'>
                   <div
-                    className={`text-xl font-bold flex items-center gap-2 ${isToday ? 'text-green-500' : 'text-white'}`}
+                    className={`text-xl font-bold flex items-center gap-2 ${isToday ? 'text-[var(--color-success)]' : 'text-white'}`}
                   >
                     {dateObj.toLocaleDateString('uk-UA', {
                       day: 'numeric',
@@ -136,11 +138,11 @@ const SessionsPage = () => {
                     })}
                   </div>
                   {isToday && (
-                    <span className='bg-green-500/10 text-green-500 text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider'>
+                    <span className='bg-[var(--color-success)]/10 text-[var(--color-success)] text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider'>
                       Сьогодні
                     </span>
                   )}
-                  <div className='h-px bg-white/10 flex-1'></div>
+                  <div className='h-px bg-white/5 flex-1'></div>
                 </div>
 
                 <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
@@ -152,17 +154,24 @@ const SessionsPage = () => {
                     return (
                       <div
                         key={session.id}
-                        className={`group relative bg-zinc-900 border rounded-xl p-5 transition-all hover:-translate-y-1 hover:shadow-xl ${isCancelled ? 'border-red-900/30 opacity-70' : 'border-white/5 hover:border-white/20'}`}
+                        className={`group relative bg-[var(--bg-card)] border rounded-xl p-5 transition-all hover:-translate-y-1 hover:shadow-xl ${
+                          isCancelled
+                            ? 'border-[var(--color-error)]/30 opacity-70'
+                            : 'border-white/5 hover:border-[var(--color-primary)]/30'
+                        }`}
                       >
                         {isCancelled && (
-                          <div className='absolute top-0 right-0 bg-red-500/10 text-red-500 text-[10px] font-bold px-2 py-1 rounded-bl-xl border-b border-l border-red-500/20 uppercase tracking-wider'>
+                          <div className='absolute top-0 right-0 bg-[var(--color-error)]/10 text-[var(--color-error)] text-[10px] font-bold px-2 py-1 rounded-bl-xl border-b border-l border-[var(--color-error)]/20 uppercase tracking-wider'>
                             Скасовано
                           </div>
                         )}
 
                         <div className='flex gap-4'>
-                          <div className='h-20 w-14 bg-zinc-800 rounded-lg flex items-center justify-center shrink-0 border border-white/5 shadow-inner'>
-                            <Film size={20} className='text-zinc-600' />
+                          <div className='h-20 w-14 bg-[var(--bg-hover)] rounded-lg flex items-center justify-center shrink-0 border border-white/5 shadow-inner'>
+                            <Film
+                              size={20}
+                              className='text-[var(--text-muted)]'
+                            />
                           </div>
 
                           <div className='flex-1 min-w-0'>
@@ -174,14 +183,17 @@ const SessionsPage = () => {
                             </h3>
 
                             <div className='flex items-center gap-2 mt-2'>
-                              <div className='bg-white/10 px-2 py-1 rounded text-white font-mono text-sm font-bold flex items-center gap-1.5'>
-                                <Clock size={12} className='text-zinc-400' />
+                              <div className='bg-white/5 border border-white/5 px-2 py-1 rounded text-white font-mono text-sm font-bold flex items-center gap-1.5'>
+                                <Clock
+                                  size={12}
+                                  className='text-[var(--color-primary)]'
+                                />
                                 {start.toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit',
                                 })}
                               </div>
-                              <span className='text-zinc-600 text-xs font-mono'>
+                              <span className='text-[var(--text-muted)] text-xs font-mono'>
                                 →{' '}
                                 {end.toLocaleTimeString([], {
                                   hour: '2-digit',
@@ -190,7 +202,7 @@ const SessionsPage = () => {
                               </span>
                             </div>
 
-                            <div className='flex flex-wrap items-center gap-3 mt-3 text-sm text-zinc-400'>
+                            <div className='flex flex-wrap items-center gap-3 mt-3 text-sm text-[var(--text-muted)]'>
                               <div
                                 className='flex items-center gap-1.5'
                                 title='Зал'
@@ -200,9 +212,9 @@ const SessionsPage = () => {
                                   {session.hallName}
                                 </span>
                               </div>
-                              <div className='h-3 w-px bg-zinc-700'></div>
+                              <div className='h-3 w-px bg-white/10'></div>
                               <div
-                                className='text-xs bg-zinc-800 px-2 py-0.5 rounded-full text-zinc-300 border border-white/5 truncate max-w-[120px]'
+                                className='text-xs bg-white/5 px-2 py-0.5 rounded-full border border-white/5 truncate max-w-[120px]'
                                 title='Тариф'
                               >
                                 {session.pricingName}
@@ -218,7 +230,7 @@ const SessionsPage = () => {
                               onClick={() =>
                                 handleReschedule(session.id, session.startTime)
                               }
-                              className='p-2 bg-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:bg-blue-600 shadow-lg transition-colors'
+                              className='p-2 bg-[var(--bg-hover)] rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-blue-600 shadow-lg transition-colors'
                               title='Перенести час'
                             >
                               <Edit size={16} />
@@ -226,7 +238,7 @@ const SessionsPage = () => {
                             <button
                               type='button'
                               onClick={() => handleDelete(session.id)}
-                              className='p-2 bg-zinc-800 rounded-lg text-zinc-400 hover:text-white hover:bg-red-600 shadow-lg transition-colors'
+                              className='p-2 bg-[var(--bg-hover)] rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-[var(--color-error)] shadow-lg transition-colors'
                               title='Скасувати сеанс'
                             >
                               <Trash2 size={16} />

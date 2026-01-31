@@ -11,7 +11,10 @@ const registerSchema = z
   .object({
     firstName: z.string().min(2, "Ім'я занадто коротке"),
     lastName: z.string().min(2, 'Прізвище занадто коротке'),
-    email: z.string().email('Невірний формат email'),
+    email: z
+      .string()
+      .min(1, 'Введіть email')
+      .refine(val => val.includes('@'), 'Невірний формат email'),
     password: z.string().min(6, 'Пароль має бути мінімум 6 символів'),
     confirmPassword: z.string(),
   })
@@ -58,13 +61,13 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className='flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12'>
-      <div className='w-full max-w-md space-y-8 rounded-2xl border border-white/10 bg-black/50 p-8 backdrop-blur-xl'>
+    <div className='flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12 bg-[var(--bg-main)]'>
+      <div className='w-full max-w-md space-y-8 rounded-2xl border border-white/10 bg-[var(--bg-card)] p-8 backdrop-blur-xl shadow-2xl'>
         <div className='text-center'>
           <h2 className='text-3xl font-bold tracking-tight text-white'>
             Створити акаунт
           </h2>
-          <p className='mt-2 text-sm text-zinc-400'>
+          <p className='mt-2 text-sm text-[var(--text-muted)]'>
             Приєднуйтесь до Cinema Community
           </p>
         </div>
@@ -112,7 +115,7 @@ const RegisterPage = () => {
           <button
             type='submit'
             disabled={isSubmitting}
-            className='mt-4 flex w-full items-center justify-center rounded-lg bg-white py-3 text-sm font-bold text-black transition-all hover:bg-zinc-200 disabled:opacity-70'
+            className='mt-4 flex w-full items-center justify-center rounded-lg bg-white py-3 text-sm font-bold text-black transition-all hover:bg-zinc-200 disabled:opacity-70 shadow-lg'
           >
             {isSubmitting ? (
               <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -122,11 +125,11 @@ const RegisterPage = () => {
           </button>
         </form>
 
-        <p className='text-center text-sm text-zinc-400'>
+        <p className='text-center text-sm text-[var(--text-muted)]'>
           Вже є акаунт?{' '}
           <Link
             to='/auth/login'
-            className='font-medium text-white hover:text-red-500 transition-colors'
+            className='font-bold text-white hover:text-[var(--color-primary)] transition-colors'
           >
             Увійти
           </Link>

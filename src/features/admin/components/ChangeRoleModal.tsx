@@ -20,9 +20,6 @@ const ChangeRoleModal = ({
 
   if (!isOpen || !user) return null
 
-  // const currentRole = user.role === 'Admin' ? 'Admin' : 'User'
-  // const targetRole = selectedRole === currentRole ? currentRole === 'Admin' ? 'User' : 'Admin' : selectedRole
-
   const handleSave = async () => {
     setIsLoading(true)
     try {
@@ -37,18 +34,18 @@ const ChangeRoleModal = ({
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
-      <div className='w-full max-w-md rounded-xl border border-white/10 bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95'>
+      <div className='w-full max-w-md rounded-xl border border-white/10 bg-[var(--bg-card)] p-6 shadow-2xl animate-in zoom-in-95'>
         <div className='flex justify-between items-start mb-6'>
           <div>
             <h2 className='text-xl font-bold text-white'>Зміна ролі</h2>
-            <p className='text-zinc-400 text-sm mt-1'>
+            <p className='text-[var(--text-muted)] text-sm mt-1'>
               Користувач: <span className='text-white'>{user.email}</span>
             </p>
           </div>
           <button
             type='button'
             onClick={onClose}
-            className='text-zinc-500 hover:text-white'
+            className='text-[var(--text-muted)] hover:text-white'
           >
             <X size={20} />
           </button>
@@ -57,7 +54,11 @@ const ChangeRoleModal = ({
         <div className='grid grid-cols-2 gap-4 mb-8'>
           <div
             onClick={() => setSelectedRole('User')}
-            className={`cursor-pointer rounded-xl border p-4 transition-all ${selectedRole === 'User' ? 'bg-white text-black border-white' : 'bg-zinc-950 border-white/10 hover:border-white/30 text-zinc-400'}`}
+            className={`cursor-pointer rounded-xl border p-4 transition-all ${
+              selectedRole === 'User'
+                ? 'bg-white text-black border-white'
+                : 'bg-[var(--bg-main)] border-white/5 hover:border-white/20 text-[var(--text-muted)]'
+            }`}
           >
             <div className='flex justify-between items-start'>
               <Shield
@@ -72,15 +73,19 @@ const ChangeRoleModal = ({
             </div>
             <div className='mt-3 font-bold'>User</div>
             <div
-              className={`text-xs mt-1 ${selectedRole === 'User' ? 'text-zinc-600' : 'text-zinc-500'}`}
+              className={`text-xs mt-1 ${selectedRole === 'User' ? 'text-zinc-600' : 'text-[var(--text-muted)]'}`}
             >
-              Звичайний доступ, бронювання квитків
+              Звичайний доступ
             </div>
           </div>
 
           <div
             onClick={() => setSelectedRole('Admin')}
-            className={`cursor-pointer rounded-xl border p-4 transition-all ${selectedRole === 'Admin' ? 'bg-purple-600 text-white border-purple-500' : 'bg-zinc-950 border-white/10 hover:border-purple-500/50 text-zinc-400'}`}
+            className={`cursor-pointer rounded-xl border p-4 transition-all ${
+              selectedRole === 'Admin'
+                ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
+                : 'bg-[var(--bg-main)] border-white/5 hover:border-[var(--color-primary)]/50 text-[var(--text-muted)]'
+            }`}
           >
             <div className='flex justify-between items-start'>
               <ShieldAlert
@@ -95,9 +100,9 @@ const ChangeRoleModal = ({
             </div>
             <div className='mt-3 font-bold'>Admin</div>
             <div
-              className={`text-xs mt-1 ${selectedRole === 'Admin' ? 'text-purple-200' : 'text-zinc-500'}`}
+              className={`text-xs mt-1 ${selectedRole === 'Admin' ? 'text-white/80' : 'text-[var(--text-muted)]'}`}
             >
-              Повний доступ до адмін-панелі
+              Повний доступ
             </div>
           </div>
         </div>
@@ -106,7 +111,7 @@ const ChangeRoleModal = ({
           <button
             type='button'
             onClick={onClose}
-            className='px-4 py-2 text-zinc-400 hover:text-white text-sm font-medium'
+            className='px-4 py-2 text-[var(--text-muted)] hover:text-white text-sm font-medium'
           >
             Скасувати
           </button>

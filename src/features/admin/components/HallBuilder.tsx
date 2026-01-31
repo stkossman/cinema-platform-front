@@ -33,7 +33,7 @@ const getSeatColor = (typeName: string = 'Standard') => {
     return 'bg-yellow-500'
   if (lowerName.includes('love') || lowerName.includes('sofa'))
     return 'bg-pink-500'
-  return 'bg-blue-600'
+  return 'bg-[var(--color-primary)]'
 }
 
 const HallBuilder = ({
@@ -156,15 +156,17 @@ const HallBuilder = ({
 
   return (
     <div className='space-y-6'>
-      <div className='flex flex-col gap-6 rounded-xl border border-white/10 bg-zinc-900 p-6'>
+      <div className='flex flex-col gap-6 rounded-xl border border-white/10 bg-[var(--bg-card)] p-6'>
         <div className='flex flex-wrap gap-8'>
           <div className='flex flex-col gap-3'>
-            <h4 className='text-sm font-medium text-zinc-400 flex items-center gap-2'>
+            <h4 className='text-sm font-medium text-[var(--text-muted)] flex items-center gap-2'>
               <Ruler size={16} /> Розміри залу
             </h4>
             <div className='flex gap-4'>
               <div className='flex flex-col gap-1'>
-                <label className='text-xs text-zinc-500'>Рядів</label>
+                <label className='text-xs text-[var(--text-muted)]'>
+                  Рядів
+                </label>
                 <input
                   type='number'
                   min={1}
@@ -172,11 +174,13 @@ const HallBuilder = ({
                   value={rows}
                   onChange={e => setRows(Number(e.target.value))}
                   disabled={isEditing}
-                  className='w-20 rounded bg-black px-3 py-2 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                  className='w-20 rounded bg-[var(--bg-main)] px-3 py-2 text-white border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed focus:border-[var(--color-primary)] focus:outline-none'
                 />
               </div>
               <div className='flex flex-col gap-1'>
-                <label className='text-xs text-zinc-500'>Місць в ряду</label>
+                <label className='text-xs text-[var(--text-muted)]'>
+                  Місць в ряду
+                </label>
                 <input
                   type='number'
                   min={1}
@@ -184,14 +188,14 @@ const HallBuilder = ({
                   value={cols}
                   onChange={e => setCols(Number(e.target.value))}
                   disabled={isEditing}
-                  className='w-20 rounded bg-black px-3 py-2 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                  className='w-20 rounded bg-[var(--bg-main)] px-3 py-2 text-white border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed focus:border-[var(--color-primary)] focus:outline-none'
                 />
               </div>
             </div>
           </div>
 
           <div className='flex flex-col gap-3'>
-            <h4 className='text-sm font-medium text-zinc-400 flex items-center gap-2'>
+            <h4 className='text-sm font-medium text-[var(--text-muted)] flex items-center gap-2'>
               <PaintBucket size={16} /> Тип для малювання
             </h4>
             <div className='flex flex-wrap gap-2'>
@@ -207,11 +211,11 @@ const HallBuilder = ({
                       'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border',
                       isSelected
                         ? 'border-white bg-white/10 text-white shadow-lg'
-                        : 'border-transparent hover:bg-white/5 text-zinc-400',
+                        : 'border-transparent hover:bg-white/5 text-[var(--text-muted)]',
                     )}
                   >
                     <div
-                      className={`h-4 w-4 rounded ${colorClass} ${isSelected ? 'ring-2 ring-white ring-offset-2 ring-offset-black' : ''}`}
+                      className={`h-4 w-4 rounded ${colorClass} ${isSelected ? 'ring-2 ring-white ring-offset-2 ring-offset-[var(--bg-card)]' : ''}`}
                     />
                     {type.name}
                   </button>
@@ -225,7 +229,7 @@ const HallBuilder = ({
 
         <div className='flex flex-wrap items-center justify-between gap-4'>
           <div className='flex flex-col gap-2'>
-            <span className='text-xs text-zinc-500 flex items-center gap-1 uppercase tracking-wider'>
+            <span className='text-xs text-[var(--text-muted)] flex items-center gap-1 uppercase tracking-wider'>
               <Cpu size={12} /> Технології
             </span>
             <div className='flex flex-wrap gap-2'>
@@ -237,8 +241,8 @@ const HallBuilder = ({
                   className={clsx(
                     'px-3 py-1 text-xs rounded-full border transition-all',
                     selectedTechIds.includes(tech.id)
-                      ? 'bg-purple-500/20 border-purple-500 text-purple-200'
-                      : 'bg-black border-zinc-700 text-zinc-400 hover:border-zinc-500',
+                      ? 'bg-[var(--color-primary)]/20 border-[var(--color-primary)] text-[var(--color-primary)]'
+                      : 'bg-[var(--bg-main)] border-white/10 text-[var(--text-muted)] hover:border-white/30',
                   )}
                 >
                   {tech.name}
@@ -250,7 +254,7 @@ const HallBuilder = ({
           <button
             type='button'
             onClick={handleSave}
-            className='flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 text-sm font-bold text-white hover:bg-green-700 ml-auto shadow-lg shadow-green-900/20'
+            className='flex items-center gap-2 rounded-lg bg-[var(--color-success)] px-6 py-3 text-sm font-bold text-white hover:brightness-110 ml-auto shadow-lg shadow-[var(--color-success)]/20'
           >
             <Save size={18} />
             {isEditing ? 'Зберегти зміни' : 'Згенерувати зал'}
@@ -258,8 +262,8 @@ const HallBuilder = ({
         </div>
       </div>
 
-      <div className='relative overflow-hidden rounded-xl border border-white/10 bg-black p-8'>
-        <div className='absolute top-4 right-4 text-xs text-zinc-500 flex items-center gap-1'>
+      <div className='relative overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)] p-8'>
+        <div className='absolute top-4 right-4 text-xs text-[var(--text-muted)] flex items-center gap-1'>
           <MousePointer2 size={12} /> Натисніть, щоб змінити тип
         </div>
 
@@ -301,14 +305,14 @@ const HallBuilder = ({
         </div>
 
         <div className='mt-10 w-full flex justify-center'>
-          <div className='w-2/3 h-2 bg-gradient-to-r from-zinc-800 via-zinc-500 to-zinc-800 rounded-full opacity-50 shadow-[0_10px_20px_rgba(255,255,255,0.1)]' />
+          <div className='w-2/3 h-2 bg-gradient-to-r from-transparent via-[var(--color-primary)]/50 to-transparent rounded-full shadow-[0_5px_15px_rgba(239,68,68,0.2)]' />
         </div>
-        <p className='text-center text-xs text-zinc-500 mt-2 uppercase tracking-widest'>
+        <p className='text-center text-xs text-[var(--text-muted)] mt-2 uppercase tracking-widest'>
           Екран
         </p>
       </div>
 
-      <div className='text-zinc-400 text-sm'>
+      <div className='text-[var(--text-muted)] text-sm'>
         Всього буде створено місць:{' '}
         <span className='text-white font-bold'>{rows * cols}</span>
       </div>

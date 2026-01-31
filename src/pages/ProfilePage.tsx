@@ -101,14 +101,14 @@ const ProfilePage = () => {
 
       <div className='grid gap-8 lg:grid-cols-[300px_1fr]'>
         <div className='space-y-6'>
-          <div className='rounded-2xl border border-white/10 bg-black/50 p-6 text-center backdrop-blur-xl'>
-            <div className='mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-zinc-800 text-3xl font-bold text-white ring-4 ring-black'>
+          <div className='rounded-2xl border border-white/5 bg-[var(--bg-card)] p-6 text-center backdrop-blur-xl shadow-xl'>
+            <div className='mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-zinc-800 text-3xl font-bold text-white ring-4 ring-black shadow-inner'>
               {initials}
             </div>
             <h2 className='text-xl font-bold text-white'>
               {user.name} {user.surname}
             </h2>
-            <p className='text-sm text-zinc-400'>{user.email}</p>
+            <p className='text-sm text-[var(--text-muted)]'>{user.email}</p>
 
             {user.role === 'admin' && (
               <Link
@@ -123,7 +123,7 @@ const ProfilePage = () => {
             <button
               type='button'
               onClick={() => logout()}
-              className='mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-500/20'
+              className='mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-error)]/20 bg-[var(--color-error)]/10 py-2 text-sm font-medium text-[var(--color-error)] transition-colors hover:bg-[var(--color-error)]/20'
             >
               <LogOut size={16} />
               Вийти
@@ -132,15 +132,15 @@ const ProfilePage = () => {
         </div>
 
         <div>
-          <div className='mb-6 flex overflow-x-auto rounded-xl border border-white/10 bg-black/50 p-1 backdrop-blur-xl'>
+          <div className='mb-6 flex overflow-x-auto rounded-xl border border-white/5 bg-[var(--bg-card)] p-1 backdrop-blur-xl no-scrollbar'>
             <button
               type='button'
               onClick={() => setActiveTab('active-tickets')}
               className={clsx(
                 'flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg py-2.5 text-sm font-medium transition-all',
                 activeTab === 'active-tickets'
-                  ? 'bg-zinc-800 text-white shadow'
-                  : 'text-zinc-400 hover:text-white',
+                  ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20'
+                  : 'text-[var(--text-muted)] hover:text-white hover:bg-white/5',
               )}
             >
               <Ticket size={16} />
@@ -152,12 +152,12 @@ const ProfilePage = () => {
               className={clsx(
                 'flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg py-2.5 text-sm font-medium transition-all',
                 activeTab === 'history'
-                  ? 'bg-zinc-800 text-white shadow'
-                  : 'text-zinc-400 hover:text-white',
+                  ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20'
+                  : 'text-[var(--text-muted)] hover:text-white hover:bg-white/5',
               )}
             >
               <History size={16} />
-              Історія замовлень
+              Історія
             </button>
             <button
               type='button'
@@ -165,8 +165,8 @@ const ProfilePage = () => {
               className={clsx(
                 'flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg py-2.5 text-sm font-medium transition-all',
                 activeTab === 'settings'
-                  ? 'bg-zinc-800 text-white shadow'
-                  : 'text-zinc-400 hover:text-white',
+                  ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20'
+                  : 'text-[var(--text-muted)] hover:text-white hover:bg-white/5',
               )}
             >
               <Settings size={16} />
@@ -178,24 +178,24 @@ const ProfilePage = () => {
             <div className='space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300'>
               {isLoadingTickets ? (
                 <div className='flex py-12 justify-center'>
-                  <Loader2 className='animate-spin text-zinc-500' />
+                  <Loader2 className='animate-spin text-[var(--color-primary)]' />
                 </div>
               ) : activeTickets.length > 0 ? (
                 activeTickets.map(ticket => (
                   <TicketCard key={ticket.id} order={ticket} />
                 ))
               ) : (
-                <div className='flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-zinc-900/30 py-16 text-center'>
-                  <Ticket className='mb-4 h-12 w-12 text-zinc-600' />
+                <div className='flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-[var(--bg-card)]/50 py-16 text-center'>
+                  <Ticket className='mb-4 h-12 w-12 text-[var(--text-muted)] opacity-50' />
                   <h3 className='text-lg font-medium text-white'>
                     У вас немає активних квитків
                   </h3>
-                  <p className='text-sm text-zinc-500 max-w-xs mt-2'>
+                  <p className='text-sm text-[var(--text-muted)] max-w-xs mt-2'>
                     Схоже, ви ще не запланували похід у кіно. Перегляньте афішу!
                   </p>
                   <Link
                     to='/'
-                    className='mt-6 rounded-full bg-white px-6 py-2 text-sm font-bold text-black hover:bg-zinc-200'
+                    className='mt-6 rounded-full bg-[var(--color-primary)] px-6 py-2 text-sm font-bold text-white hover:bg-[var(--color-primary-hover)] transition-colors shadow-lg shadow-[var(--color-primary)]/20'
                   >
                     Вибрати фільм
                   </Link>
@@ -211,16 +211,16 @@ const ProfilePage = () => {
                   <TicketCard key={order.id} order={order} isHistory />
                 ))
               ) : (
-                <div className='rounded-2xl border border-white/5 bg-zinc-900/30 py-12 text-center text-zinc-500'>
+                <div className='rounded-2xl border border-white/5 bg-[var(--bg-card)]/50 py-12 text-center text-[var(--text-muted)]'>
                   Історія замовлень порожня
                 </div>
               )}
             </div>
           )}
           {activeTab === 'settings' && (
-            <div className='rounded-2xl border border-white/10 bg-black/50 p-6 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-300'>
+            <div className='rounded-2xl border border-white/5 bg-[var(--bg-card)] p-6 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-300'>
               <div className='mb-6 flex items-center gap-2 border-b border-white/5 pb-4'>
-                <User className='h-5 w-5 text-zinc-400' />
+                <User className='h-5 w-5 text-[var(--color-primary)]' />
                 <h3 className='text-lg font-medium text-white'>
                   Особисті дані
                 </h3>
@@ -247,7 +247,7 @@ const ProfilePage = () => {
                 />
 
                 <div className='pt-4'>
-                  <h4 className='mb-4 text-sm font-medium text-zinc-500 uppercase tracking-widest'>
+                  <h4 className='mb-4 text-sm font-medium text-[var(--text-muted)] uppercase tracking-widest'>
                     Безпека
                   </h4>
                   <Input

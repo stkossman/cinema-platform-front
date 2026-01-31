@@ -78,16 +78,18 @@ const UsersPage = () => {
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-3xl font-bold text-white'>Користувачі</h1>
-          <p className='text-zinc-400 mt-1'>Управління доступом та ролями</p>
+          <p className='text-[var(--text-muted)] mt-1'>
+            Управління доступом та ролями
+          </p>
         </div>
-        <div className='text-sm text-zinc-500'>
+        <div className='text-sm text-[var(--text-muted)]'>
           Всього: <span className='text-white font-bold'>{users.length}</span>
         </div>
       </div>
 
       <div className='relative'>
         <Search
-          className='absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500'
+          className='absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]'
           size={20}
         />
         <input
@@ -95,18 +97,18 @@ const UsersPage = () => {
           placeholder="Пошук за ім'ям або email..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className='w-full rounded-xl bg-zinc-900 border border-white/5 py-3 pl-10 pr-4 text-white placeholder-zinc-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/20'
+          className='w-full rounded-xl bg-[var(--bg-card)] border border-white/5 py-3 pl-10 pr-4 text-white placeholder-[var(--text-muted)] focus:border-[var(--color-primary)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]/50'
         />
       </div>
 
       {isLoading ? (
         <div className='flex justify-center py-20'>
-          <Loader2 className='animate-spin text-zinc-500 h-8 w-8' />
+          <Loader2 className='animate-spin text-[var(--color-primary)] h-8 w-8' />
         </div>
       ) : (
-        <div className='rounded-xl border border-white/5 bg-zinc-900/50 overflow-hidden backdrop-blur-sm'>
+        <div className='rounded-xl border border-white/5 bg-[var(--bg-card)] overflow-hidden backdrop-blur-sm shadow-xl'>
           <table className='w-full text-left text-sm'>
-            <thead className='bg-white/5 text-zinc-400 font-medium uppercase text-xs tracking-wider'>
+            <thead className='bg-white/5 text-[var(--text-muted)] font-medium uppercase text-xs tracking-wider'>
               <tr>
                 <th className='px-6 py-4'>Користувач</th>
                 <th className='px-6 py-4'>Роль</th>
@@ -118,7 +120,7 @@ const UsersPage = () => {
                 <tr>
                   <td
                     colSpan={3}
-                    className='px-6 py-12 text-center text-zinc-500'
+                    className='px-6 py-12 text-center text-[var(--text-muted)]'
                   >
                     Користувачів не знайдено
                   </td>
@@ -134,12 +136,12 @@ const UsersPage = () => {
                   return (
                     <tr
                       key={user.id}
-                      className='group hover:bg-white/[0.02] transition-colors'
+                      className='group hover:bg-[var(--bg-hover)] transition-colors'
                     >
                       <td className='px-6 py-4'>
                         <div className='flex items-center gap-4'>
                           <div
-                            className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-white shadow-inner ${isAdmin ? 'bg-gradient-to-br from-purple-600 to-indigo-700' : 'bg-zinc-700'}`}
+                            className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-white shadow-inner ${isAdmin ? 'bg-gradient-to-br from-[var(--color-primary)] to-red-900' : 'bg-white/10'}`}
                           >
                             {initials}
                           </div>
@@ -147,12 +149,12 @@ const UsersPage = () => {
                             <div className='font-bold text-white flex items-center gap-2'>
                               {user.firstName} {user.lastName}
                               {isMe && (
-                                <span className='text-[10px] bg-white/10 px-1.5 rounded text-zinc-300'>
+                                <span className='text-[10px] bg-white/10 px-1.5 rounded text-[var(--text-muted)]'>
                                   Ви
                                 </span>
                               )}
                             </div>
-                            <div className='text-zinc-500 text-xs'>
+                            <div className='text-[var(--text-muted)] text-xs'>
                               {user.email}
                             </div>
                           </div>
@@ -160,11 +162,11 @@ const UsersPage = () => {
                       </td>
                       <td className='px-6 py-4'>
                         {isAdmin ? (
-                          <span className='inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 px-3 py-1 text-xs font-bold text-purple-400 border border-purple-500/20'>
+                          <span className='inline-flex items-center gap-1.5 rounded-full bg-[var(--color-primary)]/10 px-3 py-1 text-xs font-bold text-[var(--color-primary)] border border-[var(--color-primary)]/20'>
                             <ShieldCheck size={12} /> Admin
                           </span>
                         ) : (
-                          <span className='inline-flex items-center gap-1.5 rounded-full bg-zinc-500/10 px-3 py-1 text-xs font-bold text-zinc-400 border border-zinc-500/20'>
+                          <span className='inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-xs font-bold text-[var(--text-muted)] border border-white/10'>
                             <UserIcon size={12} /> User
                           </span>
                         )}
@@ -174,7 +176,7 @@ const UsersPage = () => {
                           type='button'
                           onClick={() => handleEditClick(user)}
                           disabled={isMe}
-                          className='p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed transition-all'
+                          className='p-2 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed transition-all'
                           title={
                             isMe
                               ? 'Ви не можете змінити свою роль'

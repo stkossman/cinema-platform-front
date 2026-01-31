@@ -102,21 +102,23 @@ const BookingPage = () => {
 
   if (isLoading && !movie) {
     return (
-      <div className='flex h-screen items-center justify-center bg-zinc-950 text-white'>
-        <Loader2 className='animate-spin' />
+      <div className='flex h-screen items-center justify-center bg-[var(--bg-main)] text-white'>
+        <Loader2 className='animate-spin text-[var(--color-primary)]' />
       </div>
     )
   }
 
   if (step === 3) {
     return (
-      <div className='flex h-screen flex-col items-center justify-center bg-zinc-950 px-4 text-center'>
-        <CheckCircle className='mb-6 h-24 w-24 text-green-500 animate-in zoom-in' />
+      <div className='flex h-screen flex-col items-center justify-center bg-[var(--bg-main)] px-4 text-center'>
+        <CheckCircle className='mb-6 h-24 w-24 text-[var(--color-success)] animate-in zoom-in' />
         <h1 className='text-4xl font-bold text-white'>Оплата успішна!</h1>
-        <p className='mt-4 text-zinc-400'>Ваші квитки відправлено на пошту.</p>
+        <p className='mt-4 text-[var(--text-muted)]'>
+          Ваші квитки відправлено на пошту.
+        </p>
         <Link
           to='/'
-          className='mt-8 rounded-full bg-white px-8 py-3 font-bold text-black hover:bg-zinc-200'
+          className='mt-8 rounded-full bg-white px-8 py-3 font-bold text-black hover:bg-zinc-200 shadow-lg shadow-white/10'
         >
           На головну
         </Link>
@@ -125,12 +127,12 @@ const BookingPage = () => {
   }
 
   return (
-    <div className='min-h-screen bg-zinc-950 text-zinc-100'>
-      <header className='border-b border-white/5 bg-black p-4'>
+    <div className='min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]'>
+      <header className='border-b border-white/5 bg-[var(--bg-card)] p-4'>
         <div className='container mx-auto flex items-center justify-between'>
           <Link
             to={`/movies/${id}`}
-            className='flex items-center gap-2 text-sm text-zinc-400 hover:text-white'
+            className='flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-white transition-colors'
           >
             <ArrowLeft size={16} /> Назад до фільму
           </Link>
@@ -149,20 +151,20 @@ const BookingPage = () => {
                   onSelect={setSelectedSession}
                 />
               ) : (
-                <div className='flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800 bg-zinc-900/30 p-12 text-center'>
-                  <div className='mb-4 rounded-full bg-zinc-800/50 p-4'>
-                    <CalendarX className='h-8 w-8 text-zinc-500' />
+                <div className='flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-[var(--bg-card)]/30 p-12 text-center'>
+                  <div className='mb-4 rounded-full bg-white/5 p-4'>
+                    <CalendarX className='h-8 w-8 text-[var(--text-muted)]' />
                   </div>
                   <h3 className='text-xl font-bold text-white'>
                     Сеансів поки немає
                   </h3>
-                  <p className='mt-2 max-w-xs text-sm text-zinc-400'>
+                  <p className='mt-2 max-w-xs text-sm text-[var(--text-muted)]'>
                     На жаль, на цей фільм зараз немає запланованих сеансів. Будь
                     ласка, перевірте пізніше або оберіть інший фільм.
                   </p>
                   <Link
                     to='/movies'
-                    className='mt-6 rounded-lg bg-white/10 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20'
+                    className='mt-6 rounded-lg bg-[var(--color-primary)] px-6 py-2 text-sm font-bold text-white transition-all hover:bg-[var(--color-primary-hover)] shadow-lg shadow-[var(--color-primary)]/20'
                   >
                     Переглянути інші фільми
                   </Link>
@@ -182,48 +184,56 @@ const BookingPage = () => {
           )}
         </div>
 
-        <div className='h-fit rounded-xl border border-white/10 bg-zinc-900/50 p-6 backdrop-blur-sm sticky top-24'>
+        <div className='h-fit rounded-xl border border-white/5 bg-[var(--bg-card)] p-6 backdrop-blur-sm sticky top-24 shadow-2xl'>
           <h3 className='mb-4 text-lg font-bold text-white'>Ваше замовлення</h3>
 
           <div className='mb-6 flex gap-4 border-b border-white/5 pb-6'>
             <img
               src={movie?.backdropUrl}
               alt={movie?.title}
-              className='h-20 w-14 rounded object-cover'
+              className='h-20 w-14 rounded object-cover shadow-md'
             />
             <div>
               <div className='font-bold text-white line-clamp-1'>
                 {movie?.title}
               </div>
-              <div className='text-xs text-zinc-400'>
+              <div className='text-xs text-[var(--text-muted)]'>
                 {movie?.year} • {movie?.genres[0]}
               </div>
             </div>
           </div>
 
-          {selectedSession && (
+          {selectedSession ? (
             <div className='mb-4 text-sm'>
-              <div className='text-zinc-500'>Сеанс:</div>
-              <div className='text-white'>
+              <div className='text-[var(--text-muted)]'>Сеанс:</div>
+              <div className='text-white font-medium'>
                 {new Date(selectedSession.startTime).toLocaleDateString()} о{' '}
                 {new Date(selectedSession.startTime).toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}
               </div>
-              <div className='text-zinc-500 mt-2'>Зал:</div>
-              <div className='text-white'>{selectedSession.hallName}</div>
+              <div className='text-[var(--text-muted)] mt-2'>Зал:</div>
+              <div className='text-white font-medium'>
+                {selectedSession.hallName}
+              </div>
+            </div>
+          ) : (
+            <div className='mb-4 text-sm italic text-[var(--text-muted)] opacity-50'>
+              Оберіть сеанс
             </div>
           )}
 
           {selectedSeats.length > 0 && (
             <div className='mb-6 border-t border-white/5 pt-4'>
-              <div className='text-xs text-zinc-500 mb-2'>Обрані місця:</div>
+              <div className='text-xs text-[var(--text-muted)] mb-2'>
+                Обрані місця:
+              </div>
               <div className='flex flex-wrap gap-2'>
                 {selectedSeats.map(s => (
                   <span
                     key={s.id}
-                    className='rounded bg-white/10 px-2 py-1 text-xs'
+                    className='rounded border border-white/10 bg-white/5 px-2 py-1 text-xs text-white'
                   >
                     Ряд {s.row} / {s.number}
                   </span>
@@ -232,9 +242,9 @@ const BookingPage = () => {
             </div>
           )}
 
-          <div className='mt-auto pt-4 border-t border-white/10'>
+          <div className='mt-auto pt-4 border-t border-white/5'>
             <div className='flex justify-between items-center mb-4'>
-              <span className='text-zinc-400'>До сплати:</span>
+              <span className='text-[var(--text-muted)]'>До сплати:</span>
               <span className='text-2xl font-bold text-white'>
                 ₴ {totalPrice}
               </span>
@@ -245,7 +255,7 @@ const BookingPage = () => {
                 type='button'
                 disabled={!selectedSession}
                 onClick={() => setStep(2)}
-                className='w-full rounded-lg bg-white py-3 font-bold text-black hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                className='w-full rounded-lg bg-white py-3 font-bold text-black hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
               >
                 Обрати місця
               </button>
@@ -254,7 +264,7 @@ const BookingPage = () => {
                 type='button'
                 disabled={selectedSeats.length === 0 || isProcessingPayment}
                 onClick={handlePayment}
-                className='flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 py-3 font-bold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                className='flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] py-3 font-bold text-white hover:bg-[var(--color-primary-hover)] shadow-lg shadow-[var(--color-primary)]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all'
               >
                 {isProcessingPayment ? (
                   <Loader2 className='animate-spin' />
@@ -270,7 +280,7 @@ const BookingPage = () => {
               <button
                 type='button'
                 onClick={handleChangeSession}
-                className='w-full mt-2 py-2 text-sm text-zinc-400 hover:text-white'
+                className='w-full mt-2 py-2 text-sm text-[var(--text-muted)] hover:text-white transition-colors'
               >
                 Змінити сеанс
               </button>
