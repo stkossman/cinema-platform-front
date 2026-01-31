@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { moviesService } from '../services/moviesService'
 import { bookingService } from '../services/bookingService'
-import { hallsService } from '../services/hallsService' // <--- IMPORT
+import { hallsService } from '../services/hallsService'
 import { type Movie } from '../types/movie'
 import { type Session } from '../types/hall'
 import MovieCard from '../features/movies/components/MovieCard'
+import PromoSection from '../features/home/components/PromoSection'
 import { Loader2, Ticket, Play, Film } from 'lucide-react'
 
 interface MovieWithMeta extends Movie {
@@ -208,6 +209,8 @@ const HomePage = () => {
           </div>
         )}
       </div>
+
+      <PromoSection />
     </div>
   )
 }
