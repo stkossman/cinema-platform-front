@@ -38,78 +38,105 @@ const FAQPage = () => {
   }
 
   return (
-    <div className='min-h-screen bg-[var(--bg-main)] px-4 py-16 text-[var(--text-main)]'>
+    <div className='min-h-screen bg-[var(--bg-main)] px-4 py-20 text-[var(--text-main)]'>
       <div className='container mx-auto max-w-3xl'>
-        <div className='mb-12 text-center space-y-4'>
-          <div className='mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]'>
-            <HelpCircle size={32} />
+        <div className='mb-16 text-center space-y-6 animate-in fade-in slide-in-from-top-10 duration-700'>
+          <div className='mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-[var(--color-primary)] to-red-900 shadow-[0_0_40px_rgba(239,68,68,0.4)] transform rotate-3'>
+            <HelpCircle size={40} className='text-white' />
           </div>
-          <h1 className='text-4xl font-bold tracking-tight text-white sm:text-5xl'>
-            Поширені запитання
+          <h1 className='text-4xl sm:text-6xl font-black tracking-tighter text-white'>
+            Поширені{' '}
+            <span className='text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] to-orange-500'>
+              запитання
+            </span>
           </h1>
-          <p className='text-[var(--text-muted)]'>
-            Ми зібрали відповіді на найпопулярніші питання наших глядачів.
+          <p className='text-lg text-[var(--text-muted)] max-w-xl mx-auto leading-relaxed'>
+            Ми зібрали відповіді на найпопулярніші питання, щоб ваш похід у кіно
+            був максимально комфортним.
           </p>
         </div>
 
         <div className='space-y-4'>
-          {FAQ_ITEMS.map((item, index) => (
-            <div
-              key={index}
-              className='overflow-hidden rounded-xl border border-white/5 bg-[var(--bg-card)] transition-colors hover:border-white/10'
-            >
-              <button
-                type='button'
-                onClick={() => toggleItem(index)}
-                className='flex w-full items-center justify-between px-6 py-5 text-left font-medium text-white focus:outline-none hover:text-[var(--color-primary)] transition-colors'
-              >
-                <span>{item.question}</span>
-                <ChevronDown
-                  className={clsx(
-                    'ml-4 h-5 w-5 text-[var(--text-muted)] transition-transform duration-300',
-                    openIndex === index &&
-                      'rotate-180 text-[var(--color-primary)]',
-                  )}
-                />
-              </button>
-
+          {FAQ_ITEMS.map((item, index) => {
+            const isOpen = openIndex === index
+            return (
               <div
+                key={index}
                 className={clsx(
-                  'grid transition-[grid-template-rows] duration-300 ease-out',
-                  openIndex === index ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+                  'overflow-hidden rounded-2xl border transition-all duration-300',
+                  isOpen
+                    ? 'bg-[var(--bg-card)] border-[var(--color-primary)]/30 shadow-[0_0_20px_-5px_rgba(239,68,68,0.1)]'
+                    : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10',
                 )}
               >
-                <div className='overflow-hidden'>
-                  <div className='px-6 pb-5 text-[var(--text-muted)] leading-relaxed border-t border-white/5 pt-4'>
-                    {item.answer}
+                <button
+                  type='button'
+                  onClick={() => toggleItem(index)}
+                  className='flex w-full items-center justify-between px-6 py-5 text-left focus:outline-none group'
+                >
+                  <span
+                    className={clsx(
+                      'font-bold text-lg transition-colors',
+                      isOpen
+                        ? 'text-white'
+                        : 'text-zinc-300 group-hover:text-white',
+                    )}
+                  >
+                    {item.question}
+                  </span>
+                  <div
+                    className={clsx(
+                      'p-2 rounded-full transition-all duration-300',
+                      isOpen
+                        ? 'bg-[var(--color-primary)] text-white rotate-180'
+                        : 'bg-white/5 text-zinc-500 group-hover:bg-white/10 group-hover:text-white',
+                    )}
+                  >
+                    <ChevronDown size={20} />
+                  </div>
+                </button>
+
+                <div
+                  className={clsx(
+                    'grid transition-[grid-template-rows] duration-300 ease-out',
+                    isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+                  )}
+                >
+                  <div className='overflow-hidden'>
+                    <div className='px-6 pb-6 pt-0 text-[var(--text-muted)] leading-relaxed text-base border-t border-white/5 mt-2'>
+                      <div className='pt-4'>{item.answer}</div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
-        <div className='mt-16 rounded-2xl border border-white/10 bg-gradient-to-br from-[var(--bg-card)] to-black p-8 text-center shadow-2xl'>
-          <h3 className='mb-2 text-xl font-bold text-white'>
+        <div className='mt-16 rounded-3xl border border-white/10 bg-gradient-to-br from-[var(--bg-card)] to-black p-10 text-center shadow-2xl relative overflow-hidden group'>
+          <div className='absolute top-0 right-0 w-64 h-64 bg-[var(--color-primary)]/10 rounded-full blur-[80px] group-hover:bg-[var(--color-primary)]/20 transition-colors duration-500'></div>
+
+          <h3 className='mb-3 text-2xl font-bold text-white relative z-10'>
             Не знайшли відповіді?
           </h3>
-          <p className='mb-6 text-[var(--text-muted)]'>
-            Наша підтримка завжди на зв'язку.
+          <p className='mb-8 text-[var(--text-muted)] relative z-10'>
+            Наша служба підтримки працює 24/7 і готова допомогти.
           </p>
-          <div className='flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-8'>
+
+          <div className='flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6 relative z-10'>
             <a
               href='tel:+380000000000'
-              className='flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--color-primary)] transition-colors'
+              className='flex items-center gap-3 rounded-xl bg-white px-6 py-3 font-bold text-black hover:bg-zinc-200 transition-colors shadow-lg'
             >
               <Phone size={18} />
-              +38 (000) 000-00-00
+              Зателефонувати
             </a>
             <a
-              href='mailto:an.stawski@outlook.com'
-              className='flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--color-primary)] transition-colors'
+              href='mailto:support@cinema.ua'
+              className='flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-6 py-3 font-bold text-white hover:bg-white/10 hover:border-white/20 transition-all'
             >
               <Mail size={18} />
-              an.stawski@outlook.com
+              Написати нам
             </a>
           </div>
         </div>
