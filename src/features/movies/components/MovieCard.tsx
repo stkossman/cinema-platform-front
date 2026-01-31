@@ -19,19 +19,19 @@ const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
     .slice(0, 3)
 
   return (
-    <div className='group relative bg-[var(--bg-card)] rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[var(--color-primary)]/10 h-full flex flex-col border border-white/5'>
+    <div className='group relative bg-[var(--bg-card)] rounded-xl overflow-hidden shadow-lg transition-all duration-500 hover:-translate-y-1 hover:shadow-xl hover:shadow-[var(--color-primary)]/5 h-full flex flex-col border border-white/5'>
       <div className='relative aspect-[2/3] overflow-hidden'>
         <img
           src={movie.backdropUrl}
           alt={movie.title}
-          className='w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110'
+          className='w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105'
           loading='lazy'
         />
 
-        <div className='absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]'>
+        <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[1px]'>
           <Link
             to={`/movies/${movie.id}`}
-            className='bg-[var(--color-primary)] text-white font-bold py-3 px-8 rounded-full transform scale-90 group-hover:scale-100 transition-transform shadow-[0_0_20px_rgba(239,68,68,0.5)]'
+            className='bg-[var(--color-primary)] text-white font-bold py-3 px-8 rounded-full transform scale-95 group-hover:scale-100 transition-all duration-300 shadow-lg shadow-[var(--color-primary)]/30 hover:brightness-110'
           >
             Детальніше
           </Link>
@@ -44,7 +44,7 @@ const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
       </div>
 
       <div className='p-5 flex flex-col flex-grow'>
-        <h3 className='text-xl font-bold text-white mb-2 leading-tight group-hover:text-[var(--color-primary)] transition-colors line-clamp-2'>
+        <h3 className='text-xl font-bold text-white mb-2 leading-tight group-hover:text-[var(--color-primary)] transition-colors duration-300 line-clamp-2'>
           {movie.title}
         </h3>
         <p className='text-sm text-[var(--text-muted)] mb-5 line-clamp-1'>
