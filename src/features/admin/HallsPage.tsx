@@ -53,7 +53,7 @@ const HallsPage = () => {
 
   const onSaveClick = async (data: any) => {
     if (mode === 'list') return
-    
+
     const promptMessage =
       mode === 'edit' ? 'Введіть нову назву залу:' : 'Введіть назву залу:'
     const currentName = halls.find(h => h.id === editingHallId)?.name || ''

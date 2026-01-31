@@ -1,4 +1,5 @@
 import { type Session } from '../../../types/hall'
+import { Clock } from 'lucide-react'
 
 interface SessionSelectorProps {
   sessions: Session[]
@@ -22,53 +23,86 @@ const SessionSelector = ({
   )
 
   return (
-    <div className='space-y-6'>
-      <h2 className='text-xl font-bold text-white flex items-center gap-2'>
-        <span className='w-1 h-6 bg-[var(--color-primary)] rounded-full'></span>
-        Оберіть сеанс
-      </h2>
+    <div className='space-y-8 animate-in fade-in slide-in-from-left-4 duration-500'>
+      <div className='flex items-center gap-3'>
+        <div className='h-8 w-1 bg-[var(--color-primary)] rounded-full shadow-[0_0_15px_var(--color-primary)]'></div>
+        <h2 className='text-2xl font-bold text-white'>Оберіть сеанс</h2>
+      </div>
 
-      <div className='space-y-6'>
-        {Object.entries(grouped).map(([date, sessionsInDate]) => (
-          <div key={date} className='space-y-3'>
-            <h3 className='text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider pl-1'>
-              {new Date(date).toLocaleDateString('uk-UA', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
-            </h3>
+      <div className='space-y-8'>
+        {Object.entries(grouped).map(([date, sessionsInDate]) => {
+          const dateObj = new Date(date)
+          const isToday = new Date().toDateString() === dateObj.toDateString()
 
-            <div className='flex flex-wrap gap-3'>
-              {sessionsInDate.map(session => (
-                <button
-                  type='button'
-                  key={session.id}
-                  onClick={() => onSelect(session)}
-                  className={`
-                    relative overflow-hidden rounded-xl px-6 py-3 text-sm font-bold transition-all duration-200 border
-                    ${
-                      selectedSession?.id === session.id
-                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/30 scale-105'
-                        : 'bg-[var(--bg-card)] border-white/5 text-zinc-300 hover:border-[var(--color-primary)]/50 hover:text-white hover:bg-white/5'
-                    }
-                  `}
-                >
-                  {new Date(session.startTime).toLocaleTimeString('uk-UA', {
-                    hour: '2-digit',
-                    minute: '2-digit',
+          return (
+            <div key={date} className='space-y-4'>
+              <div className='flex items-baseline gap-3'>
+                <h3 className='text-lg font-bold text-white capitalize'>
+                  {dateObj.toLocaleDateString('uk-UA', {
+                    weekday: 'long',
                   })}
+                </h3>
+                <span className='text-sm font-medium text-[var(--text-muted)]'>
+                  {dateObj.toLocaleDateString('uk-UA', {
+                    day: 'numeric',
+                    month: 'long',
+                  })}
+                </span>
+                {isToday && (
+                  <span className='ml-2 text-[10px] font-bold uppercase tracking-wider bg-[var(--color-success)]/10 text-[var(--color-success)] px-2 py-0.5 rounded border border-[var(--color-success)]/20'>
+                    Сьогодні
+                  </span>
+                )}
+              </div>
 
-                  <div
-                    className={`text-[10px] mt-0.5 font-medium ${selectedSession?.id === session.id ? 'text-white/80' : 'text-zinc-500'}`}
-                  >
-                    {session.priceBase || 150} ₴
-                  </div>
-                </button>
-              ))}
+              <div className='flex flex-wrap gap-3'>
+                {sessionsInDate.map(session => {
+                  const isSelected = selectedSession?.id === session.id
+                  const time = new Date(session.startTime).toLocaleTimeString(
+                    'uk-UA',
+                    {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    },
+                  )
+
+                  return (
+                    <button
+                      type='button'
+                      key={session.id}
+                      onClick={() => onSelect(session)}
+                      className={`
+                                group relative overflow-hidden rounded-xl px-5 py-3 transition-all duration-300 border flex flex-col items-center min-w-[100px]
+                                ${
+                                  isSelected
+                                    ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] scale-105'
+                                    : 'bg-[var(--bg-card)] border-white/10 text-zinc-400 hover:border-white/30 hover:text-white hover:bg-white/5'
+                                }
+                            `}
+                    >
+                      <div className='flex items-center gap-1.5 text-lg font-bold leading-none'>
+                        <Clock
+                          size={14}
+                          className={
+                            isSelected
+                              ? 'text-white'
+                              : 'text-[var(--color-primary)]'
+                          }
+                        />
+                        {time}
+                      </div>
+                      <div
+                        className={`text-[10px] font-medium mt-1 uppercase tracking-wide transition-colors ${isSelected ? 'text-white/80' : 'text-[var(--text-muted)] group-hover:text-zinc-300'}`}
+                      >
+                        {session.priceBase || 150} ₴
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
