@@ -1,7 +1,10 @@
 import { TicketPercent, Sparkles, CreditCard } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext'
 
 const PromoSection = () => {
+  const { user } = useAuth()
+
   return (
     <div className='w-full py-20 relative overflow-hidden'>
       <div className='container mx-auto px-4'>
@@ -24,18 +27,18 @@ const PromoSection = () => {
               </h2>
 
               <p className='text-lg text-[var(--text-muted)] max-w-lg mx-auto md:mx-0 leading-relaxed'>
-                Реєструйся на платформі та отримуй доступ до закритих
-                передпродажів, накопичуй бонуси за кожен квиток та отримуй
-                попкорн у подарунок!
+                {user
+                  ? 'Як учасник клубу, ви вже маєте доступ до ексклюзивних пропозицій. Перевірте свій кабінет, щоб не пропустити нові бонуси!'
+                  : 'Реєструйся на платформі та отримуй доступ до закритих передпродажів, накопичуй бонуси за кожен квиток та отримуй попкорн у подарунок!'}
               </p>
 
               <div className='flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-2'>
                 <Link
-                  to='/auth/register'
+                  to={user ? '/offers' : '/auth/register'}
                   className='bg-[var(--color-primary)] text-white font-bold py-4 px-8 rounded-xl hover:brightness-110 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:scale-105 active:scale-95 flex items-center justify-center gap-2'
                 >
                   <TicketPercent size={20} />
-                  Отримати знижку
+                  {user ? 'До знижок' : 'Отримати знижку'}
                 </Link>
                 <Link
                   to='/offers'
@@ -69,8 +72,8 @@ const PromoSection = () => {
                     <div className='text-[10px] text-[var(--text-muted)] uppercase'>
                       Card Holder
                     </div>
-                    <div className='text-sm font-bold text-white tracking-wider'>
-                      ANDRII STAVSKYI
+                    <div className='text-sm font-bold text-white tracking-wider uppercase'>
+                      {user ? `${user.name} ${user.surname}` : 'YOUR NAME'}
                     </div>
                   </div>
                   <span className='text-xl font-bold text-[var(--color-primary)]'>
