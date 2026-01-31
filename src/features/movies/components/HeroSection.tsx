@@ -13,7 +13,7 @@ const HeroSection = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isAnimating, setIsAnimating] = useState(false)
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const timerRef = useRef<number | null>(null)
   const { user } = useAuth()
   const navigate = useNavigate()
 
