@@ -42,7 +42,7 @@ Check [cinema-platform-back](https://github.com/stkossman/cinema-platform-back) 
 - [ ] Full API Integration ([#12](https://github.com/stkossman/cinema-platform-front/issues/12))
 - [ ] Enhance Admin Panel ([#10](https://github.com/stkossman/cinema-platform-front/issues/10))
 	- [ ] Stats Page
-	- [ ] Users Page
+	- [x] Users Page
 	- [ ] Movies Page
 - [ ] Filter movies by genre/duration ([#13](https://github.com/stkossman/cinema-platform-front/issues/13))
 
