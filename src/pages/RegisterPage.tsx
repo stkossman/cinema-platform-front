@@ -9,13 +9,10 @@ import { Loader2, Ticket, ArrowRight } from 'lucide-react'
 
 const registerSchema = z
   .object({
-    firstName: z.string().min(2, "Ім'я занадто коротке"),
-    lastName: z.string().min(2, 'Прізвище занадто коротке'),
-    email: z
-      .string()
-      .min(1, 'Введіть email')
-      .refine(val => val.includes('@'), 'Невірний формат email'),
-    password: z.string().min(6, 'Пароль має бути мінімум 6 символів'),
+    firstName: z.string().min(1, "Введіть ім'я"),
+    lastName: z.string().min(1, 'Введіть прізвище'),
+    email: z.string().email('Невірний формат email'),
+    password: z.string().min(6, 'Пароль мінімум 6 символів'),
     confirmPassword: z.string(),
   })
   .refine(data => data.password === data.confirmPassword, {
@@ -29,6 +26,7 @@ const RegisterPage = () => {
   const { register: registerUser } = useAuth()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
 
   const {
     register,
@@ -40,6 +38,7 @@ const RegisterPage = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true)
+    setServerError(null)
     try {
       await registerUser({
         email: data.email,
@@ -52,9 +51,7 @@ const RegisterPage = () => {
       navigate('/auth/login')
     } catch (error: any) {
       console.error(error)
-      const message =
-        error.response?.data?.title || error.message || 'Помилка реєстрації'
-      alert(message)
+      setServerError(error.message || 'Помилка реєстрації')
     } finally {
       setIsSubmitting(false)
     }
@@ -91,6 +88,12 @@ const RegisterPage = () => {
               Заповніть форму для реєстрації
             </p>
           </div>
+
+          {serverError && (
+            <div className='p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm text-center whitespace-pre-line'>
+              {serverError}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
             <div className='grid grid-cols-2 gap-4'>

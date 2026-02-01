@@ -11,7 +11,7 @@ const loginSchema = z.object({
   email: z
     .string()
     .min(1, 'Введіть email')
-    .refine(val => val.includes('@'), 'Невірний формат email'),
+    .email('Введіть коректну email адресу (наприклад, user@example.com)'),
   password: z.string().min(6, 'Пароль має бути мінімум 6 символів'),
 })
 
@@ -21,6 +21,7 @@ const LoginPage = () => {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
 
   const {
     register,
@@ -32,12 +33,13 @@ const LoginPage = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true)
+    setServerError(null)
     try {
       await login({ email: data.email, password: data.password })
       navigate('/profile')
     } catch (error: any) {
       console.error(error)
-      alert('Помилка входу: ' + (error.message || 'Перевірте дані'))
+      setServerError(error.message || 'Неправильний логін або пароль')
     } finally {
       setIsSubmitting(false)
     }
@@ -74,6 +76,12 @@ const LoginPage = () => {
               Введіть свої дані для входу в акаунт
             </p>
           </div>
+
+          {serverError && (
+            <div className='p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm text-center'>
+              {serverError}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-5'>
             <Input
