@@ -104,7 +104,7 @@ const ProfilePage = () => {
         </div>
 
         <div>
-          <div className='mb-8 flex p-1.5 rounded-2xl bg-black/20 border border-white/5 backdrop-blur-md sticky top-24 z-20 shadow-lg'>
+          <div className='mb-8 flex p-1.5 rounded-2xl bg-black/20 border border-white/5 backdrop-blur-md shadow-lg'>
             {(['active-tickets', 'history', 'settings'] as TabType[]).map(
               tab => (
                 <button
