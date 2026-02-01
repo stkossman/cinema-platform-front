@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../../lib/supabase'
+// import { supabase } from '../../../lib/supabase'
+import { technologiesService } from '../../../services/technologiesService'
 import { seatTypesService } from '../../../services/seatTypesService'
 import type { Seat, SeatType, Technology } from '../../../types/hall'
 
@@ -7,6 +8,7 @@ export const useHallBuilder = (
   initialSeats: Seat[] = [],
   initialRows = 5,
   initialCols = 8,
+  initialTechIds: string[] = [],
 ) => {
   const [rows, setRows] = useState(initialRows)
   const [cols, setCols] = useState(initialCols)
@@ -27,9 +29,9 @@ export const useHallBuilder = (
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [typesData, techResponse] = await Promise.all([
+        const [typesData, techData] = await Promise.all([
           seatTypesService.getAll(),
-          supabase.from('technologies').select('*'),
+          technologiesService.getAll(),
         ])
 
         if (typesData) {
@@ -40,14 +42,8 @@ export const useHallBuilder = (
           setSelectedPaintType(standard || typesData[0])
         }
 
-        if (techResponse.data) {
-          setAvailableTechnologies(
-            techResponse.data.map((t: any) => ({
-              id: t.id,
-              name: t.name,
-              type: t.type,
-            })),
-          )
+        if (techData) {
+          setAvailableTechnologies(techData)
         }
       } catch (error) {
         console.error('Failed to load builder data:', error)
@@ -57,6 +53,14 @@ export const useHallBuilder = (
     }
     fetchData()
   }, [])
+
+  useEffect(() => {
+    if (initialTechIds.length > 0) {
+      setSelectedTechIds(initialTechIds)
+    } else {
+      setSelectedTechIds([])
+    }
+  }, [initialTechIds])
 
   useEffect(() => {
     if (initialSeats.length > 0) {

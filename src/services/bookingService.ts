@@ -1,6 +1,6 @@
 import { api } from '../lib/axios'
 import type { PaginatedResult } from '../types/common'
-import type { Hall, Session } from '../types/hall'
+import type { Hall, Session, Technology } from '../types/hall'
 
 interface SessionDto {
   id: string
@@ -31,6 +31,7 @@ interface HallDto {
   name: string
   capacity: number
   seats: SeatDto[]
+  technologies?: { id: string; name: string; type: string }[]
 }
 
 export const bookingService = {
@@ -92,6 +93,7 @@ export const bookingService = {
         rowsCount: maxGridY + 1,
         colsCount: maxGridX + 1,
         seats: mappedSeats,
+        technologies: data.technologies || [],
       }
     } catch (error) {
       console.error('API Error (Hall):', error)

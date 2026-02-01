@@ -4,7 +4,7 @@ import {
   type HallSummaryDto,
 } from '../../../services/hallsService'
 import { bookingService } from '../../../services/bookingService'
-import type { Seat } from '../../../types/hall'
+import type { Seat, Technology } from '../../../types/hall'
 
 export const useHalls = () => {
   const [halls, setHalls] = useState<HallSummaryDto[]>([])
@@ -39,12 +39,16 @@ export const useHallEditor = (refreshHalls: () => void) => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [initialSeats, setInitialSeats] = useState<Seat[]>([])
+  const [initialTechnologies, setInitialTechnologies] = useState<Technology[]>(
+    [],
+  )
 
   const loadHallSeats = async (hallId: string) => {
     setIsLoadingData(true)
     try {
       const hallData = await bookingService.getHallById(hallId)
       setInitialSeats(hallData.seats)
+      setInitialTechnologies(hallData.technologies || [])
       return true
     } catch (error) {
       return false
@@ -53,7 +57,10 @@ export const useHallEditor = (refreshHalls: () => void) => {
     }
   }
 
-  const resetEditor = () => setInitialSeats([])
+  const resetEditor = () => {
+    setInitialSeats([])
+    setInitialTechnologies([])
+  }
 
   const saveHall = async (
     mode: 'create' | 'edit',
@@ -79,13 +86,15 @@ export const useHallEditor = (refreshHalls: () => void) => {
           data.primarySeatTypeId,
           data.technologyIds,
         )
-        // Обробка результату створення (інколи API повертає об'єкт, інколи ID)
         targetHallId =
           typeof createResult === 'string'
             ? createResult
             : (createResult as any).id || (createResult as any).value
       } else if (mode === 'edit' && hallId) {
-        await hallsService.update(hallId, hallName)
+        await Promise.all([
+          hallsService.update(hallId, hallName),
+          hallsService.updateTechnologies(hallId, data.technologyIds),
+        ])
       }
 
       if (!targetHallId) throw new Error('Failed to resolve Hall ID')
@@ -106,15 +115,13 @@ export const useHallEditor = (refreshHalls: () => void) => {
 
       const typeIdsToUpdate = Object.keys(changesByType)
       if (typeIdsToUpdate.length > 0) {
-        await Promise.all(
-          typeIdsToUpdate.map(typeId =>
-            hallsService.batchChangeSeatType(
-              targetHallId!,
-              changesByType[typeId],
-              typeId,
-            ),
-          ),
-        )
+        for (const typeId of typeIdsToUpdate) {
+          await hallsService.batchChangeSeatType(
+            targetHallId!,
+            changesByType[typeId],
+            typeId,
+          )
+        }
       }
 
       refreshHalls()
@@ -136,5 +143,6 @@ export const useHallEditor = (refreshHalls: () => void) => {
     loadHallSeats,
     saveHall,
     resetEditor,
+    initialTechnologies,
   }
 }

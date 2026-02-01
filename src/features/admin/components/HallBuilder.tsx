@@ -1,5 +1,5 @@
 import { useHallBuilder } from '../hooks/useHallBuilder'
-import type { Seat } from '../../../types/hall'
+import type { Seat, Technology } from '../../../types/hall'
 import {
   Save,
   Armchair,
@@ -9,6 +9,7 @@ import {
   PaintBucket,
 } from 'lucide-react'
 import { clsx } from 'clsx'
+import { useMemo } from 'react'
 
 const getSeatColor = (typeName: string = 'Standard') => {
   const lowerName = typeName.toLowerCase()
@@ -23,6 +24,7 @@ interface HallBuilderProps {
   initialRows?: number
   initialCols?: number
   initialSeats?: Seat[]
+  initialTechnologies?: Technology[]
   onSave: (data: any) => void
   isEditing?: boolean
 }
@@ -31,9 +33,15 @@ const HallBuilder = ({
   initialRows,
   initialCols,
   initialSeats,
+  initialTechnologies = [],
   onSave,
   isEditing = false,
 }: HallBuilderProps) => {
+  const initialTechIds = useMemo(
+    () => initialTechnologies.map(t => t.id),
+    [initialTechnologies],
+  )
+
   const {
     rows,
     setRows,
@@ -47,7 +55,7 @@ const HallBuilder = ({
     toggleTech,
     gridConfig,
     handleCellClick,
-  } = useHallBuilder(initialSeats, initialRows, initialCols)
+  } = useHallBuilder(initialSeats, initialRows, initialCols, initialTechIds)
 
   const handleSave = () => {
     if (!availableSeatTypes.length) return

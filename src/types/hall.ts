@@ -20,6 +20,7 @@ export interface Hall {
   name: string
   capacity: number
   seats: Seat[]
+  technologies?: Technology[]
   rowsCount?: number
   colsCount?: number
 }

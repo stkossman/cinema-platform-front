@@ -10,6 +10,8 @@ export const api = axios.create({
   },
 })
 
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 const getErrorMessage = (error: AxiosError<any>): string => {
   const data = error.response?.data
 
@@ -30,18 +32,21 @@ const getErrorMessage = (error: AxiosError<any>): string => {
   return 'Сталася невідома помилка'
 }
 
-api.interceptors.request.use(config => {
-  const token = authService.getAccessToken()
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
-
 api.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config
+
+    if (!originalRequest) {
+      return Promise.reject(error)
+    }
+
+    if (error.response?.status === 429 && !originalRequest._retry429) {
+      originalRequest._retry429 = true
+      console.warn('Rate limit hit. Retrying in 1s...')
+      await wait(1000)
+      return api(originalRequest)
+    }
 
     if (
       error.response?.status === 401 &&

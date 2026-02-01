@@ -14,6 +14,11 @@ interface UpdateHallRequest {
   name: string
 }
 
+interface UpdateHallTechnologiesRequest {
+  hallId: string
+  technologyIds: string[]
+}
+
 export interface HallSummaryDto {
   id: string
   name: string
@@ -72,6 +77,14 @@ export const hallsService = {
       name,
     }
     await api.put(`/halls/${id}`, payload)
+  },
+
+  updateTechnologies: async (id: string, technologyIds: string[]) => {
+    const payload: UpdateHallTechnologiesRequest = {
+      hallId: id,
+      technologyIds,
+    }
+    await api.put(`/halls/${id}/technologies`, payload)
   },
 
   delete: async (id: string) => {

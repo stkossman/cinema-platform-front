@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import HallBuilder from '../../features/admin/components/HallBuilder'
-import { useHalls, useHallEditor } from './hooks/useHalls' // Імпортуємо хуки
+import { useHalls, useHallEditor } from './hooks/useHalls'
 import {
   Armchair,
   Trash2,
@@ -23,6 +23,7 @@ const HallsPage = () => {
     loadHallSeats,
     saveHall,
     resetEditor,
+    initialTechnologies,
   } = useHallEditor(fetchHalls)
 
   useEffect(() => {
@@ -130,6 +131,7 @@ const HallsPage = () => {
             <HallBuilder
               onSave={onSaveClick}
               initialSeats={initialSeats}
+              initialTechnologies={initialTechnologies}
               isEditing={mode === 'edit'}
             />
           </div>
