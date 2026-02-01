@@ -1,6 +1,6 @@
 import { api } from '../lib/axios'
 import type { PaginatedResult } from '../types/common'
-import type { Hall, Session, Technology } from '../types/hall'
+import type { Hall, Session } from '../types/hall'
 
 interface SessionDto {
   id: string
