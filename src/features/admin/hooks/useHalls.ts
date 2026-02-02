@@ -104,7 +104,7 @@ export const useHallEditor = (refreshHalls: () => void) => {
       const currentHallState = await bookingService.getHallById(targetHallId)
       const changesByType: Record<string, string[]> = {}
 
-      currentHallState.seats.forEach(seat => {
+      currentHallState.seats.forEach((seat: Seat) => {
         const targetConfig = data.seatConfig.find(
           sc => sc.gridX === seat.gridX && sc.gridY === seat.gridY,
         )

@@ -1,42 +1,9 @@
 import { api } from '../lib/axios'
-import type { PaginatedResult } from '../types/common'
-import type { Hall, Session } from '../types/hall'
+import type { Session, Hall } from '../types/hall'
 
 let sessionsCache: Session[] | null = null
 let lastFetchTime = 0
 const CACHE_DURATION = 60 * 1000
-
-interface SessionDto {
-  id: string
-  startTime: string
-  endTime: string
-  status: string
-  movieId: string
-  movieTitle: string
-  hallId: string
-  hallName: string
-  pricingId: string
-  pricingName: string
-}
-
-interface SeatDto {
-  id: string
-  row: string
-  number: number
-  gridX: number
-  gridY: number
-  status: string
-  seatTypeId: string
-  seatTypeName: string
-}
-
-interface HallDto {
-  id: string
-  name: string
-  capacity: number
-  seats: SeatDto[]
-  technologies?: { id: string; name: string; type: string }[]
-}
 
 export const bookingService = {
   getSessionsByMovieId: async (movieId: string): Promise<Session[]> => {
@@ -44,11 +11,13 @@ export const bookingService = {
     return allSessions.filter(s => s.movieId === movieId)
   },
 
-  getHallById: async (hallId: string) => {
+  getHallById: async (hallId: string): Promise<Hall> => {
     const { data } = await api.get(`/halls/${hallId}`)
+
     return {
       id: data.id,
       name: data.name,
+      capacity: data.capacity || (data.seats ? data.seats.length : 0),
       rowsCount: data.rows,
       colsCount: data.seatsPerRow,
       seats: data.seats || [],
@@ -76,6 +45,8 @@ export const bookingService = {
         hallId: s.hallId,
         startTime: s.startTime,
         priceBase: s.price,
+        hallName: s.hallName || 'Зал',
+        movieTitle: s.movieTitle || 'Фільм',
         seats: [],
       }))
 
