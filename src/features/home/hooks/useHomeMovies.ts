@@ -80,7 +80,6 @@ export const useHomeMovies = () => {
     todayEnd.setHours(23, 59, 59, 999)
 
     const filtered = movies.filter(movie => {
-
       const techs = movie.technologies.map(t => t.toLowerCase())
 
       if (activeFilter === 'imax') return techs.some(t => t.includes('imax'))

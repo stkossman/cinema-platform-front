@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
+import { adminSessionsService } from '../../../services/adminSessionsService'
 import { moviesService } from '../../../services/moviesService'
 import { hallsService } from '../../../services/hallsService'
 import {
-  adminSessionsService,
-  type PricingLookupDto,
-} from '../../../services/adminSessionsService'
+  adminPricingsService,
+  type PricingLookup,
+} from '../../../services/adminPricingsService'
 import type { Movie } from '../../../types/movie'
+import type { HallSummaryDto } from '../../../services/hallsService'
 
 export const useCreateSession = (
   isOpen: boolean,
@@ -13,22 +15,21 @@ export const useCreateSession = (
   onClose: () => void,
 ) => {
   const [movies, setMovies] = useState<Movie[]>([])
-  const [halls, setHalls] = useState<any[]>([])
-  const [pricings, setPricings] = useState<PricingLookupDto[]>([])
+  const [halls, setHalls] = useState<HallSummaryDto[]>([])
+  const [pricings, setPricings] = useState<PricingLookup[]>([])
 
   const [movieId, setMovieId] = useState('')
   const [hallId, setHallId] = useState('')
   const [pricingId, setPricingId] = useState('')
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('')
+
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [time, setTime] = useState('18:00')
 
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
-      setDate('')
-      setTime('')
       loadData()
     }
   }, [isOpen])
@@ -36,19 +37,21 @@ export const useCreateSession = (
   const loadData = async () => {
     setIsLoadingData(true)
     try {
-      const [m, h, p] = await Promise.all([
+      const [moviesData, hallsData, pricingsData] = await Promise.all([
         moviesService.getAll(),
         hallsService.getAll(),
-        adminSessionsService.getPricingsLookup(),
+        adminPricingsService.getLookups(),
       ])
-      setMovies(m)
-      setHalls(h)
-      setPricings(p)
-      if (m.length > 0) setMovieId(m[0].id)
-      if (h.length > 0) setHallId(h[0].id)
-      if (p.length > 0) setPricingId(p[0].id)
-    } catch (e) {
-      alert('Помилка завантаження даних')
+
+      setMovies(moviesData)
+      setHalls(hallsData)
+      setPricings(pricingsData)
+
+      if (moviesData.length > 0) setMovieId(moviesData[0].id)
+      if (hallsData.length > 0) setHallId(hallsData[0].id)
+      if (pricingsData.length > 0) setPricingId(pricingsData[0].id)
+    } catch (error) {
+      console.error('Failed to load session form data', error)
     } finally {
       setIsLoadingData(false)
     }
@@ -56,25 +59,26 @@ export const useCreateSession = (
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!date || !time || !movieId || !hallId || !pricingId) {
-      alert('Заповніть всі поля')
+    if (!movieId || !hallId || !pricingId || !date || !time) {
+      alert('Будь ласка, заповніть всі поля')
       return
     }
+
     setIsSubmitting(true)
     try {
       const startDateTime = new Date(`${date}T${time}`)
+
       await adminSessionsService.create({
         movieId,
         hallId,
-        pricingId,
         startTime: startDateTime.toISOString(),
+        pricingId,
       })
+
       onSuccess()
       onClose()
     } catch (error: any) {
-      const msg =
-        error.response?.data?.errors?.Description || error.message || 'Error'
-      alert(`Помилка: ${msg}`)
+      alert(error.response?.data?.error || 'Помилка створення сеансу')
     } finally {
       setIsSubmitting(false)
     }
