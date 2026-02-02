@@ -1,69 +1,49 @@
-import { supabase } from '../lib/supabase'
+//import { api } from '../lib/axios'
 import type { OrderItem } from '../types/order'
 
 export const ordersService = {
-  getUserOrders: async (userId: string): Promise<OrderItem[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          id,
-          total_amount,
-          booking_date,
-          status,
-          session:sessions (
-            start_time,
-            movie:movies ( title, img_url ),
-            hall:halls ( name )
-          ),
-          tickets (
-            seat:seats ( row_label, number )
-          )
-        `)
-        .eq('user_id', userId)
-        .order('booking_date', { ascending: false })
+  getMyOrders: async (): Promise<OrderItem[]> => {
+    await new Promise(resolve => setTimeout(resolve, 800))
 
-      if (error) throw error
-      if (!data) return []
+    const mockOrders: OrderItem[] = [
+      {
+        id: '1',
+        bookingId: 'ORD-7782',
+        totalPrice: 450,
+        status: 'active',
+        sessionDate: new Date(Date.now() + 86400000).toISOString(),
+        movieTitle: 'Dune: Part Two',
+        posterUrl:
+          'https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
+        cinemaHall: 'Red Hall',
+        seats: ['5-12', '5-13', '5-14'],
+      },
+      {
+        id: '2',
+        bookingId: 'ORD-9921',
+        totalPrice: 300,
+        status: 'completed',
+        sessionDate: new Date(Date.now() - 864000000).toISOString(),
+        movieTitle: 'Oppenheimer',
+        posterUrl:
+          'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
+        cinemaHall: 'IMAX Hall',
+        seats: ['8-10', '8-11'],
+      },
+      {
+        id: '3',
+        bookingId: 'ORD-1102',
+        totalPrice: 150,
+        status: 'cancelled',
+        sessionDate: new Date(Date.now() - 200000).toISOString(),
+        movieTitle: 'Kung Fu Panda 4',
+        posterUrl:
+          'https://image.tmdb.org/t/p/w500/kDp1vUBnMpe8ak4rjgl3cLELqjU.jpg',
+        cinemaHall: 'Blue Hall',
+        seats: ['3-5'],
+      },
+    ]
 
-      console.log('User Orders Raw:', data)
-
-      return data.map((order: any) => {
-        const seatsList = order.tickets
-          ? order.tickets.map(
-              (t: any) => `${t.seat?.row_label}-${t.seat?.number}`,
-            )
-          : []
-
-        let uiStatus: 'active' | 'completed' | 'cancelled' = 'active'
-
-        const sessionDate = new Date(order.session.start_time)
-        const now = new Date()
-
-        if (order.status === 3 || order.status === 2) {
-          uiStatus = 'cancelled'
-        } else if (sessionDate < now) {
-          uiStatus = 'completed'
-        } else {
-          uiStatus = 'active'
-        }
-
-        return {
-          id: order.id,
-          bookingId: order.id.slice(0, 8).toUpperCase(),
-          totalPrice: order.total_amount,
-          status: uiStatus,
-
-          sessionDate: order.session.start_time,
-          movieTitle: order.session.movie?.title || 'Unknown Movie',
-          posterUrl: order.session.movie?.img_url || '',
-          cinemaHall: order.session.hall?.name || 'Unknown Hall',
-          seats: seatsList,
-        }
-      })
-    } catch (error) {
-      console.error('Supabase Error (Orders):', error)
-      return []
-    }
+    return mockOrders
   },
 }

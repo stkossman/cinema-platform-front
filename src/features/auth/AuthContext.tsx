@@ -27,7 +27,7 @@ interface AuthContextType {
   login: (params: LoginParams) => Promise<void>
   register: (params: RegisterParams) => Promise<void>
   logout: () => void
-  updateUserData: (data: Partial<User>) => Promise<void>
+  updateUser: (data: { name: string; surname: string }) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -62,9 +62,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     delete api.defaults.headers.common['Authorization']
   }
 
-  const updateUserData = async (_data: Partial<User>) => {
-    if (!user) return
-    alert('Редагування профілю тимчасово недоступне.')
+  const updateUser = (data: { name: string; surname: string }) => {
+    if (user) {
+      setUser({ ...user, ...data })
+    }
   }
 
   return (
@@ -76,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         register,
         logout,
-        updateUserData,
+        updateUser,
       }}
     >
       {children}

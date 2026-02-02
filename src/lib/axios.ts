@@ -32,6 +32,14 @@ const getErrorMessage = (error: AxiosError<any>): string => {
   return 'Сталася невідома помилка'
 }
 
+api.interceptors.request.use(config => {
+  const token = authService.getAccessToken()
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 api.interceptors.response.use(
   response => response,
   async error => {

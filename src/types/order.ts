@@ -1,11 +1,11 @@
 export interface OrderItem {
   id: string
-  movieTitle: string
-  posterUrl: string
-  sessionDate: string
-  cinemaHall: string
-  seats: string[]
+  bookingId: string
   totalPrice: number
   status: 'active' | 'completed' | 'cancelled'
-  bookingId: string
+  sessionDate: string
+  movieTitle: string
+  posterUrl: string
+  cinemaHall: string
+  seats: string[]
 }

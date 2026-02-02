@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -11,18 +12,60 @@ import {
   Ticket,
   History,
   Settings,
+  Lock,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
 import TicketCard from '../features/profile/components/TicketCard'
 import { useProfile, type TabType } from '../features/profile/hooks/useProfile'
+import { accountService } from '../services/accountService'
 
-const profileSchema = z.object({
-  name: z.string().min(2, "Ім'я занадто коротке"),
-  surname: z.string().min(2, 'Прізвище занадто коротке'),
-  email: z.string().email('Невірний формат email'),
-  newPassword: z.string().optional(),
-})
+const profileSchema = z
+  .object({
+    firstName: z.string().min(1, "Ім'я обов'язкове").max(50),
+    lastName: z.string().min(1, "Прізвище обов'язкове").max(50),
+    email: z.string().email(),
+
+    oldPassword: z.string().optional(),
+    newPassword: z.string().optional(),
+    confirmNewPassword: z.string().optional(),
+  })
+  .refine(
+    data => {
+      if (data.newPassword && data.newPassword.length > 0) {
+        return data.oldPassword && data.oldPassword.length > 0
+      }
+      return true
+    },
+    {
+      message: 'Введіть поточний пароль для підтвердження змін',
+      path: ['oldPassword'],
+    },
+  )
+  .refine(
+    data => {
+      if (data.newPassword && data.newPassword.length > 0) {
+        return data.newPassword === data.confirmNewPassword
+      }
+      return true
+    },
+    {
+      message: 'Паролі не співпадають',
+      path: ['confirmNewPassword'],
+    },
+  )
+  .refine(
+    data => {
+      if (data.newPassword && data.newPassword.length > 0) {
+        return data.newPassword.length >= 6
+      }
+      return true
+    },
+    {
+      message: 'Мінімум 6 символів',
+      path: ['newPassword'],
+    },
+  )
 
 type ProfileFormData = z.infer<typeof profileSchema>
 
@@ -30,6 +73,7 @@ const ProfilePage = () => {
   const {
     user,
     logout,
+    updateUser,
     activeTab,
     setActiveTab,
     activeTickets,
@@ -37,22 +81,100 @@ const ProfilePage = () => {
     isLoadingTickets,
   } = useProfile()
 
+  const [isSaving, setIsSaving] = useState(false)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user?.name || '',
-      surname: user?.surname || '',
-      email: user?.email || '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      oldPassword: '',
       newPassword: '',
+      confirmNewPassword: '',
     },
   })
 
-  const onSubmit = async (_data: ProfileFormData) => {
-    alert('Редагування профілю тимчасово недоступне на сервері.')
+  useEffect(() => {
+    if (user) {
+      reset({
+        firstName: user.name || '',
+        lastName: user.surname || '',
+        email: user.email || '',
+        oldPassword: '',
+        newPassword: '',
+        confirmNewPassword: '',
+      })
+    }
+  }, [user, reset])
+
+  const onSubmit = async (data: ProfileFormData) => {
+    setIsSaving(true)
+    setSuccessMsg(null)
+    setErrorMsg(null)
+
+    try {
+      const promises = []
+      const messages = []
+
+      if (data.firstName !== user?.name || data.lastName !== user?.surname) {
+        promises.push(
+          accountService
+            .updateProfile({
+              firstName: data.firstName,
+              lastName: data.lastName,
+            })
+            .then(() => {
+              updateUser({ name: data.firstName, surname: data.lastName })
+              messages.push('Профіль оновлено')
+            }),
+        )
+      }
+
+      if (data.newPassword) {
+        promises.push(
+          accountService
+            .changePassword({
+              oldPassword: data.oldPassword,
+              newPassword: data.newPassword,
+              confirmNewPassword: data.confirmNewPassword,
+            })
+            .then(() => {
+              messages.push('Пароль змінено')
+            }),
+        )
+      }
+
+      if (promises.length === 0) {
+        setIsSaving(false)
+        return
+      }
+
+      await Promise.all(promises)
+
+      setSuccessMsg(messages.join(' та '))
+
+      reset({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        oldPassword: '',
+        newPassword: '',
+        confirmNewPassword: '',
+      })
+    } catch (error: any) {
+      console.error(error)
+      setErrorMsg(error.message || 'Помилка збереження даних')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   if (!user) return null
@@ -84,7 +206,7 @@ const ProfilePage = () => {
               {user.email}
             </p>
 
-            {user.role === 'admin' && (
+            {user.role === 'Admin' && (
               <Link
                 to='/admin'
                 className='mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-bold text-black transition-all hover:scale-105 active:scale-95 shadow-lg'
@@ -150,16 +272,13 @@ const ProfilePage = () => {
                       <Ticket className='h-10 w-10 text-[var(--text-muted)]' />
                     </div>
                     <h3 className='text-xl font-bold text-white'>
-                      У вас немає активних квитків
+                      Активних квитків немає
                     </h3>
-                    <p className='text-sm text-[var(--text-muted)] mt-2 mb-6 max-w-xs'>
-                      Саме час обрати цікавий фільм та насолодитися переглядом.
-                    </p>
                     <Link
                       to='/'
-                      className='rounded-xl bg-[var(--color-primary)] px-8 py-3 text-sm font-bold text-white hover:bg-[var(--color-primary-hover)] transition-all shadow-lg hover:shadow-[var(--color-primary)]/40'
+                      className='mt-4 text-[var(--color-primary)] hover:underline'
                     >
-                      Вибрати фільм
+                      Придбати квиток
                     </Link>
                   </div>
                 )}
@@ -175,9 +294,7 @@ const ProfilePage = () => {
                 ) : (
                   <div className='flex flex-col items-center justify-center py-20 text-center opacity-50'>
                     <History className='h-12 w-12 text-[var(--text-muted)] mb-4' />
-                    <p className='font-medium text-white'>
-                      Історія замовлень порожня
-                    </p>
+                    <p className='font-medium text-white'>Історія порожня</p>
                   </div>
                 )}
               </div>
@@ -199,49 +316,84 @@ const ProfilePage = () => {
                   </div>
                 </div>
 
-                <div className='mb-8 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-200 text-sm flex items-start gap-3'>
-                  <div className='mt-0.5 min-w-[6px] h-1.5 rounded-full bg-yellow-500'></div>
-                  <p>
-                    Редагування профілю тимчасово вимкнено адміністратором. Ви
-                    можете лише переглядати дані.
-                  </p>
-                </div>
+                {successMsg && (
+                  <div className='mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm flex items-center gap-2'>
+                    <div className='w-2 h-2 rounded-full bg-green-500'></div>
+                    {successMsg}
+                  </div>
+                )}
 
-                <form
-                  onSubmit={handleSubmit(onSubmit)}
-                  className='space-y-6 opacity-70 grayscale pointer-events-none'
-                >
+                {errorMsg && (
+                  <div className='mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm'>
+                    {errorMsg}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
                   <div className='grid gap-6 md:grid-cols-2'>
-                    <Input label="Ім'я" disabled {...register('name')} />
-                    <Input label='Прізвище' disabled {...register('surname')} />
+                    <Input
+                      label="Ім'я"
+                      error={errors.firstName?.message}
+                      {...register('firstName')}
+                    />
+                    <Input
+                      label='Прізвище'
+                      error={errors.lastName?.message}
+                      {...register('lastName')}
+                    />
                   </div>
                   <Input
                     label='Email'
                     type='email'
                     disabled
+                    className='opacity-60'
                     {...register('email')}
                   />
 
-                  <div className='pt-6 border-t border-white/5'>
-                    <h4 className='mb-6 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest'>
-                      Безпека акаунту
+                  <div className='pt-8 border-t border-white/5'>
+                    <h4 className='mb-6 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2'>
+                      <Lock size={14} /> Зміна паролю
                     </h4>
-                    <Input
-                      label='Новий пароль'
-                      type='password'
-                      placeholder='Залиште пустим, щоб не змінювати'
-                      error={errors.newPassword?.message}
-                      {...register('newPassword')}
-                    />
+
+                    <div className='space-y-4 p-5 bg-white/[0.02] border border-white/5 rounded-xl'>
+                      <Input
+                        label='Поточний пароль'
+                        type='password'
+                        placeholder='Введіть поточний пароль'
+                        error={errors.oldPassword?.message}
+                        {...register('oldPassword')}
+                      />
+                      <div className='grid gap-4 md:grid-cols-2'>
+                        <Input
+                          label='Новий пароль'
+                          type='password'
+                          placeholder='••••••••'
+                          error={errors.newPassword?.message}
+                          {...register('newPassword')}
+                        />
+                        <Input
+                          label='Підтвердження'
+                          type='password'
+                          placeholder='••••••••'
+                          error={errors.confirmNewPassword?.message}
+                          {...register('confirmNewPassword')}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className='flex justify-end pt-4'>
                     <button
                       type='submit'
-                      disabled
-                      className='flex items-center gap-2 rounded-xl bg-zinc-800 px-8 py-3 text-sm font-bold text-zinc-500 cursor-not-allowed border border-white/5'
+                      disabled={isSaving}
+                      className='flex items-center gap-2 rounded-xl bg-white px-8 py-3 text-sm font-bold text-black transition-all hover:bg-zinc-200 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed'
                     >
-                      <Save className='h-4 w-4' /> Зберегти зміни
+                      {isSaving ? (
+                        <Loader2 className='h-4 w-4 animate-spin' />
+                      ) : (
+                        <Save className='h-4 w-4' />
+                      )}
+                      Зберегти зміни
                     </button>
                   </div>
                 </form>
