@@ -206,7 +206,7 @@ const ProfilePage = () => {
               {user.email}
             </p>
 
-            {user.role === 'Admin' && (
+            {user.role === 'admin' && (
               <Link
                 to='/admin'
                 className='mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-bold text-black transition-all hover:scale-105 active:scale-95 shadow-lg'

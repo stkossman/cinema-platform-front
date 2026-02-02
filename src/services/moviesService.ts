@@ -14,7 +14,6 @@ export const moviesService = {
     return {
       id: data.id,
       title: data.title,
-      tagline: data.tagline || 'Кіноподія року',
       description: data.description || 'Опис відсутній.',
       backdropUrl:
         data.backdrop_url || data.img_url || 'https://placehold.co/1920x1080',
