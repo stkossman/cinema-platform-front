@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -18,7 +18,6 @@ import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
 import TicketCard from '../features/profile/components/TicketCard'
 import { useProfile, type TabType } from '../features/profile/hooks/useProfile'
-import { accountService } from '../services/accountService'
 
 const profileSchema = z
   .object({
@@ -73,17 +72,17 @@ const ProfilePage = () => {
   const {
     user,
     logout,
-    updateUser,
     activeTab,
     setActiveTab,
     activeTickets,
     historyOrders,
     isLoadingTickets,
+    isSaving,
+    successMsg,
+    errorMsg,
+    updateProfileData,
+    clearMessages,
   } = useProfile()
-
-  const [isSaving, setIsSaving] = useState(false)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const {
     register,
@@ -116,51 +115,9 @@ const ProfilePage = () => {
   }, [user, reset])
 
   const onSubmit = async (data: ProfileFormData) => {
-    setIsSaving(true)
-    setSuccessMsg(null)
-    setErrorMsg(null)
+    const success = await updateProfileData(data)
 
-    try {
-      const promises = []
-      const messages = []
-
-      if (data.firstName !== user?.name || data.lastName !== user?.surname) {
-        promises.push(
-          accountService
-            .updateProfile({
-              firstName: data.firstName,
-              lastName: data.lastName,
-            })
-            .then(() => {
-              updateUser({ name: data.firstName, surname: data.lastName })
-              messages.push('Профіль оновлено')
-            }),
-        )
-      }
-
-      if (data.newPassword) {
-        promises.push(
-          accountService
-            .changePassword({
-              oldPassword: data.oldPassword,
-              newPassword: data.newPassword,
-              confirmNewPassword: data.confirmNewPassword,
-            })
-            .then(() => {
-              messages.push('Пароль змінено')
-            }),
-        )
-      }
-
-      if (promises.length === 0) {
-        setIsSaving(false)
-        return
-      }
-
-      await Promise.all(promises)
-
-      setSuccessMsg(messages.join(' та '))
-
+    if (success) {
       reset({
         firstName: data.firstName,
         lastName: data.lastName,
@@ -169,11 +126,6 @@ const ProfilePage = () => {
         newPassword: '',
         confirmNewPassword: '',
       })
-    } catch (error: any) {
-      console.error(error)
-      setErrorMsg(error.message || 'Помилка збереження даних')
-    } finally {
-      setIsSaving(false)
     }
   }
 
@@ -329,7 +281,11 @@ const ProfilePage = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+                <form
+                  onSubmit={handleSubmit(onSubmit)}
+                  className='space-y-6'
+                  onChange={() => clearMessages()}
+                >
                   <div className='grid gap-6 md:grid-cols-2'>
                     <Input
                       label="Ім'я"
