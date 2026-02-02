@@ -18,9 +18,11 @@ export const useHomeMovies = () => {
 
   const filters = [
     { id: 'all', label: 'Всі' },
-    { id: 'today', label: 'Сьогодні' },
-    { id: 'soon', label: 'Скоро' },
     { id: 'imax', label: 'IMAX' },
+    { id: 'dolby', label: 'Dolby Atmos' },
+    { id: 'dbox', label: 'D-Box' },
+    { id: '3d', label: '3D' },
+    { id: '4dx', label: '4DX' },
   ]
 
   useEffect(() => {
@@ -74,23 +76,21 @@ export const useHomeMovies = () => {
       return
     }
 
-    const now = new Date()
     const todayEnd = new Date()
     todayEnd.setHours(23, 59, 59, 999)
 
     const filtered = movies.filter(movie => {
-      if (activeFilter === 'today') {
-        return movie.sessions.some(s => {
-          const sDate = new Date(s.startTime)
-          return sDate >= now && sDate <= todayEnd
-        })
-      }
-      if (activeFilter === 'soon') {
-        return movie.sessions.every(s => new Date(s.startTime) > todayEnd)
-      }
-      if (activeFilter === 'imax') {
-        return movie.technologies.some(t => t.toLowerCase().includes('imax'))
-      }
+
+      const techs = movie.technologies.map(t => t.toLowerCase())
+
+      if (activeFilter === 'imax') return techs.some(t => t.includes('imax'))
+      if (activeFilter === 'dolby')
+        return techs.some(t => t.includes('dolby') || t.includes('atmos'))
+      if (activeFilter === 'dbox')
+        return techs.some(t => t.includes('d-box') || t.includes('dbox'))
+      if (activeFilter === '3d') return techs.some(t => t === '3d')
+      if (activeFilter === '4dx') return techs.some(t => t.includes('4dx'))
+
       return true
     })
 
