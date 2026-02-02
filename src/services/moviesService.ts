@@ -14,14 +14,17 @@ export const moviesService = {
     return {
       id: data.id,
       title: data.title,
-      tagline: '',
+      tagline: data.tagline || 'Кіноподія року',
       description: data.description || 'Опис відсутній.',
-      backdropUrl: data.img_url || 'https://placehold.co/1920x1080',
-      genres: ['Sci-Fi'],
+      backdropUrl:
+        data.backdrop_url || data.img_url || 'https://placehold.co/1920x1080',
+      posterUrl: data.poster_url || data.img_url,
+      genres: ['Sci-Fi', 'Action'],
       rating: data.rating,
-      year: 2024,
+      year: data.release_year || 2024,
       duration: data.duration_minutes,
-      videoUrl: data.video_url,
+      videoUrl: data.trailer_url || data.video_url,
+      externalId: data.external_id,
     }
   },
 
@@ -33,14 +36,17 @@ export const moviesService = {
     return data.map((m: any) => ({
       id: m.id,
       title: m.title,
-      tagline: '',
-      description: '',
-      backdropUrl: m.img_url,
-      genres: [],
+      tagline: m.tagline || '',
+      description: m.description || '',
+      backdropUrl:
+        m.backdrop_url || m.img_url || 'https://placehold.co/1920x1080',
+      posterUrl: m.poster_url || m.img_url,
+      genres: ['Sci-Fi'], // Тимчасово
       rating: m.rating,
-      year: 2024,
+      year: m.release_year || 2024,
       duration: m.duration_minutes,
-      videoUrl: m.video_url,
+      videoUrl: m.trailer_url || m.video_url,
+      externalId: m.external_id,
     }))
   },
 }

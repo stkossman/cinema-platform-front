@@ -81,12 +81,9 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
               </div>
             </div>
 
-            <h1 className='mb-4 text-5xl font-black tracking-tighter sm:text-7xl lg:text-8xl text-white drop-shadow-2xl leading-[0.9] max-w-4xl'>
+            <h1 className='mb-10 text-5xl font-black tracking-tighter sm:text-7xl lg:text-8xl text-white drop-shadow-2xl leading-[0.9] max-w-4xl'>
               {movie.title}
             </h1>
-            <p className='mb-10 text-xl italic text-zinc-300 font-serif max-w-2xl border-l-4 border-[var(--color-primary)] pl-6'>
-              "{movie.tagline || 'Епічна кіноподія, яку не можна пропустити'}"
-            </p>
 
             <div className='hidden sm:flex flex-wrap gap-4'>
               <button
