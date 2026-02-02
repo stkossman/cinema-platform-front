@@ -11,58 +11,55 @@ export interface MovieWithMeta extends Movie {
 }
 
 export const useHomeMovies = () => {
-  const [moviesWithMeta, setMoviesWithMeta] = useState<MovieWithMeta[]>([])
+  const [movies, setMovies] = useState<MovieWithMeta[]>([])
   const [filteredMovies, setFilteredMovies] = useState<MovieWithMeta[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState('all')
 
   const filters = [
     { id: 'all', label: 'Всі' },
-    { id: 'IMAX', label: 'IMAX' },
-    { id: '4DX', label: '4DX' },
-    { id: '3D', label: '3D' },
-    { id: 'Dolby Atmos', label: 'Dolby' },
+    { id: 'today', label: 'Сьогодні' },
+    { id: 'soon', label: 'Скоро' },
+    { id: 'imax', label: 'IMAX' },
   ]
 
   useEffect(() => {
     const loadData = async () => {
+      setIsLoading(true)
       try {
-        const [moviesData, hallsData] = await Promise.all([
+        const [moviesData, allSessions, hallsData] = await Promise.all([
           moviesService.getAll(),
+          bookingService.getAllSessions(),
           hallsService.getAll(),
         ])
 
         const hallTechMap: Record<string, string[]> = {}
-        for (const hall of hallsData) {
+        hallsData.forEach(hall => {
           hallTechMap[hall.id] = hall.technologies?.map(t => t.name) || []
-        }
+        })
 
-        const enrichedMovies = await Promise.all(
-          moviesData.map(async movie => {
-            const sessions = await bookingService.getSessionsByMovieId(movie.id)
-            const techSet = new Set<string>()
+        const enrichedMovies = moviesData.map(movie => {
+          const movieSessions = allSessions.filter(s => s.movieId === movie.id)
 
-            for (const session of sessions) {
-              const hallTechs = hallTechMap[session.hallId]
-              if (hallTechs) {
-                hallTechs.forEach(t => techSet.add(t))
-              }
-            }
+          const techSet = new Set<string>()
+          movieSessions.forEach(session => {
+            const techs = hallTechMap[session.hallId]
+            if (techs) techs.forEach(t => techSet.add(t))
+          })
 
-            if (techSet.size === 0) techSet.add('2D')
+          if (techSet.size === 0) techSet.add('2D')
 
-            return {
-              ...movie,
-              sessions,
-              technologies: Array.from(techSet),
-            }
-          }),
-        )
+          return {
+            ...movie,
+            sessions: movieSessions,
+            technologies: Array.from(techSet),
+          }
+        })
 
-        setMoviesWithMeta(enrichedMovies)
+        setMovies(enrichedMovies)
         setFilteredMovies(enrichedMovies)
       } catch (error) {
-        console.error('Failed to load data', error)
+        console.error('Failed to load home movies:', error)
       } finally {
         setIsLoading(false)
       }
@@ -73,15 +70,32 @@ export const useHomeMovies = () => {
 
   useEffect(() => {
     if (activeFilter === 'all') {
-      setFilteredMovies(moviesWithMeta)
-    } else {
-      setFilteredMovies(
-        moviesWithMeta.filter(m =>
-          m.technologies.some(t => t.includes(activeFilter)),
-        ),
-      )
+      setFilteredMovies(movies)
+      return
     }
-  }, [activeFilter, moviesWithMeta])
+
+    const now = new Date()
+    const todayEnd = new Date()
+    todayEnd.setHours(23, 59, 59, 999)
+
+    const filtered = movies.filter(movie => {
+      if (activeFilter === 'today') {
+        return movie.sessions.some(s => {
+          const sDate = new Date(s.startTime)
+          return sDate >= now && sDate <= todayEnd
+        })
+      }
+      if (activeFilter === 'soon') {
+        return movie.sessions.every(s => new Date(s.startTime) > todayEnd)
+      }
+      if (activeFilter === 'imax') {
+        return movie.technologies.some(t => t.toLowerCase().includes('imax'))
+      }
+      return true
+    })
+
+    setFilteredMovies(filtered)
+  }, [activeFilter, movies])
 
   return {
     filteredMovies,

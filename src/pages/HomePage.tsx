@@ -3,10 +3,20 @@ import PromoSection from '../features/home/components/PromoSection'
 import HeroSection from '../features/movies/components/HeroSection'
 import { Loader2, Film } from 'lucide-react'
 import { useHomeMovies } from '../features/home/hooks/useHomeMovies'
+import { useMemo } from 'react'
 
 const HomePage = () => {
   const { filteredMovies, isLoading, activeFilter, setActiveFilter, filters } =
     useHomeMovies()
+
+  const moviesToShow = useMemo(() => {
+    const now = new Date()
+    return filteredMovies
+      .filter(movie =>
+        movie.sessions.some(session => new Date(session.startTime) > now),
+      )
+      .slice(0, 4)
+  }, [filteredMovies])
 
   if (isLoading) {
     return (
@@ -44,10 +54,14 @@ const HomePage = () => {
           </div>
         </div>
 
-        {filteredMovies.length === 0 ? (
+        {moviesToShow.length === 0 ? (
           <div className='flex flex-col items-center justify-center py-20 text-[var(--text-muted)] bg-[var(--bg-card)] rounded-2xl border border-dashed border-white/10'>
             <Film size={48} className='opacity-20 mb-4' />
-            <p>Фільмів з такими параметрами не знайдено</p>
+            <p>
+              {filteredMovies.length > 0
+                ? 'Немає активних сеансів для обраних фільмів'
+                : 'Фільмів з такими параметрами не знайдено'}
+            </p>
             <button
               type='button'
               onClick={() => setActiveFilter('all')}
@@ -58,7 +72,7 @@ const HomePage = () => {
           </div>
         ) : (
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8'>
-            {filteredMovies.map(movie => (
+            {moviesToShow.map(movie => (
               <MovieCard
                 key={movie.id}
                 movie={movie}
