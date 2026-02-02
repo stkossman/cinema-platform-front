@@ -6,6 +6,8 @@ import {
 import { bookingService } from '../../../services/bookingService'
 import type { Seat, Technology } from '../../../types/hall'
 
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 export const useHalls = () => {
   const [halls, setHalls] = useState<HallSummaryDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -114,6 +116,7 @@ export const useHallEditor = (refreshHalls: () => void) => {
       })
 
       const typeIdsToUpdate = Object.keys(changesByType)
+
       if (typeIdsToUpdate.length > 0) {
         for (const typeId of typeIdsToUpdate) {
           await hallsService.batchChangeSeatType(
@@ -121,8 +124,11 @@ export const useHallEditor = (refreshHalls: () => void) => {
             changesByType[typeId],
             typeId,
           )
+          if (typeIdsToUpdate.length > 1) await wait(200)
         }
       }
+
+      await wait(1000)
 
       refreshHalls()
       return { success: true }

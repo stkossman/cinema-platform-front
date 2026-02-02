@@ -2,7 +2,21 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { DollarSign, Ticket, Film, TrendingUp } from 'lucide-react'
 
-const StatCard = ({ title, value, icon: Icon, trend, isLoading }: any) => (
+interface StatCardProps {
+  title: string
+  value: string | number
+  icon: any
+  trend?: string
+  isLoading: boolean
+}
+
+const StatCard = ({
+  title,
+  value,
+  icon: Icon,
+  trend,
+  isLoading,
+}: StatCardProps) => (
   <div className='rounded-xl border border-white/5 bg-[var(--bg-card)] p-6 backdrop-blur-sm shadow-lg hover:border-[var(--color-primary)]/20 transition-colors'>
     <div className='flex items-center justify-between'>
       <h3 className='text-sm font-medium text-[var(--text-muted)]'>{title}</h3>
@@ -38,11 +52,15 @@ const AdminDashboard = () => {
 
         if (moviesError) throw moviesError
 
+        /*
         const { data: orders, error: ordersError } = await supabase
           .from('orders')
           .select('total_amount, status')
 
         if (ordersError) throw ordersError
+        */
+
+        const orders: any[] = []
 
         const totalOrders = orders?.length || 0
 
@@ -85,14 +103,14 @@ const AdminDashboard = () => {
           title='Продано квитків'
           value={stats.ordersCount}
           icon={Ticket}
-          trend='+12%'
+          trend={stats.ordersCount > 0 ? '+12%' : undefined}
           isLoading={isLoading}
         />
         <StatCard
           title='Дохід'
           value={formattedRevenue}
           icon={DollarSign}
-          trend='+5%'
+          trend={stats.revenue > 0 ? '+5%' : undefined}
           isLoading={isLoading}
         />
         <StatCard
