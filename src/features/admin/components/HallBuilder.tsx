@@ -188,6 +188,12 @@ const HallBuilder = ({
       </div>
 
       <div className='relative overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)] p-8'>
+        <div className='mt-10 w-full flex justify-center'>
+          <div className='w-2/3 h-2 bg-gradient-to-r from-transparent via-[var(--color-primary)]/50 to-transparent rounded-full shadow-[0_5px_15px_rgba(239,68,68,0.2)]' />
+        </div>
+        <p className='text-center text-xs text-[var(--text-muted)] mb-4 uppercase tracking-widest'>
+          Екран
+        </p>
         <div className='absolute top-4 right-4 text-xs text-[var(--text-muted)] flex items-center gap-1'>
           <MousePointer2 size={12} /> Натисніть, щоб змінити тип
         </div>
@@ -221,12 +227,6 @@ const HallBuilder = ({
             )
           })}
         </div>
-        <div className='mt-10 w-full flex justify-center'>
-          <div className='w-2/3 h-2 bg-gradient-to-r from-transparent via-[var(--color-primary)]/50 to-transparent rounded-full shadow-[0_5px_15px_rgba(239,68,68,0.2)]' />
-        </div>
-        <p className='text-center text-xs text-[var(--text-muted)] mt-2 uppercase tracking-widest'>
-          Екран
-        </p>
       </div>
     </div>
   )
