@@ -12,9 +12,10 @@ export const useUsers = () => {
     setIsLoading(true)
     try {
       const data = await adminUsersService.getAll()
-      setUsers(data)
+      setUsers(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to fetch users', error)
+      setUsers([])
     } finally {
       setIsLoading(false)
     }

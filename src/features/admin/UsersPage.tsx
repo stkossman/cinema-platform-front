@@ -21,6 +21,7 @@ const UsersPage = () => {
 
   const filteredUsers = useMemo(() => {
     const lowerQuery = searchQuery.toLowerCase()
+
     return users.filter(
       u =>
         u.email.toLowerCase().includes(lowerQuery) ||

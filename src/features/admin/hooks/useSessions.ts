@@ -12,13 +12,16 @@ export const useSessions = () => {
     setIsLoading(true)
     try {
       const data = await adminSessionsService.getAll(1, 100)
-      const sorted = data.sort(
+      const safeData = Array.isArray(data) ? data : []
+
+      const sorted = safeData.sort(
         (a, b) =>
           new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
       )
       setSessions(sorted)
     } catch (error) {
       console.error('Failed to fetch sessions', error)
+      setSessions([])
     } finally {
       setIsLoading(false)
     }

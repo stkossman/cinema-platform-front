@@ -16,9 +16,10 @@ export const useHalls = () => {
     setIsLoading(true)
     try {
       const data = await hallsService.getAll()
-      setHalls(data)
+      setHalls(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching halls:', error)
+      setHalls([])
     } finally {
       setIsLoading(false)
     }

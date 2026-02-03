@@ -29,17 +29,19 @@ export const useAdminMovies = () => {
     setIsLoading(true)
     try {
       const data = await moviesService.getPaginated(page, 10, search)
-      setMovies(data.items)
+      const items = Array.isArray(data?.items) ? data.items : []
+      setMovies(items)
       setPagination({
-        pageNumber: data.pageNumber,
+        pageNumber: data?.pageNumber || 1,
         pageSize: 10,
         totalPages: data.totalPages,
-        totalCount: data.totalCount,
+        totalCount: data?.totalCount || 0,
         hasPreviousPage: data.hasPreviousPage,
         hasNextPage: data.hasNextPage,
       })
     } catch (error) {
       console.error('Failed to fetch movies:', error)
+      setMovies([])
     } finally {
       setIsLoading(false)
     }
