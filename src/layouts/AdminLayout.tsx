@@ -7,6 +7,10 @@ import {
   ArrowLeft,
   Settings,
   Armchair,
+  Cpu,
+  Tag,
+  ShoppingCart,
+  Ticket,
 } from 'lucide-react'
 
 const MENU_ITEMS = [
@@ -15,6 +19,10 @@ const MENU_ITEMS = [
   { icon: Calendar, label: 'Сеанси', href: '/admin/sessions' },
   { icon: Users, label: 'Користувачі', href: '/admin/users' },
   { icon: Armchair, label: 'Зали', href: '/admin/halls' },
+  { icon: Cpu, label: 'Технології', href: '/admin/technologies' },
+  { icon: Tag, label: 'Тарифи', href: '/admin/pricings' },
+  { icon: ShoppingCart, label: 'Замовлення', href: '/admin/orders' },
+  { icon: Ticket, label: 'Квитки', href: '/admin/tickets' },
   { icon: Settings, label: 'Налаштування', href: '/profile' },
 ]
 

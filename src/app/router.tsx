@@ -18,6 +18,10 @@ import MoviesPage from '../pages/MoviesPage'
 import SessionsPage from '../features/admin/SessionsPage'
 import UsersPage from '../features/admin/UsersPage'
 import AdminMoviesPage from '../features/admin/AdminMoviesPage'
+import TechnologiesPage from '../features/admin/TechnologiesPage'
+import OrdersPage from '../features/admin/OrdersPage'
+import TicketsPage from '../features/admin/TicketsPage'
+import PricingsPage from '../features/admin/PricingsPage'
 
 export const router = createBrowserRouter([
   {
@@ -93,6 +97,22 @@ export const router = createBrowserRouter([
           {
             path: 'movies',
             element: <AdminMoviesPage />,
+          },
+          {
+            path: 'technologies',
+            element: <TechnologiesPage />,
+          },
+          {
+            path: 'orders',
+            element: <OrdersPage />,
+          },
+          {
+            path: 'tickets',
+            element: <TicketsPage />,
+          },
+          {
+            path: 'pricings',
+            element: <PricingsPage />,
           },
         ],
       },
