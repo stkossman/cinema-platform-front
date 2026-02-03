@@ -1,51 +1,119 @@
-import { supabase } from '../lib/supabase'
-import { type Movie } from '../types/movie'
+import { api } from '../lib/axios'
+import type {
+  Movie,
+  MovieDto,
+  PaginatedResult,
+  TmdbSearchResult,
+} from '../types/movie'
+
+let moviesCache: Movie[] | null = null
+let lastFetchTime = 0
+const CACHE_DURATION = 2 * 60 * 1000
+let activeRequest: Promise<Movie[]> | null = null
+
+const mapDtoToMovie = (dto: MovieDto): Movie => ({
+  id: dto.id,
+  title: dto.title,
+  description: dto.description || 'Опис відсутній',
+  backdropUrl:
+    dto.backdropUrl || 'https://placehold.co/1920x1080?text=No+Image',
+  posterUrl: dto.posterUrl,
+  genres: dto.genres || [],
+  rating: dto.rating,
+  year: dto.releaseYear,
+  duration: dto.durationMinutes,
+  videoUrl: dto.trailerUrl,
+  cast: dto.cast || [],
+})
 
 export const moviesService = {
   getById: async (id: string): Promise<Movie | null> => {
-    const { data, error } = await supabase
-      .from('movies')
-      .select('*')
-      .eq('id', id)
-      .single()
-
-    if (error || !data) return null
-
-    return {
-      id: data.id,
-      title: data.title,
-      description: data.description || 'Опис відсутній.',
-      backdropUrl:
-        data.backdrop_url || data.img_url || 'https://placehold.co/1920x1080',
-      posterUrl: data.poster_url || data.img_url,
-      genres: ['Sci-Fi', 'Action'],
-      rating: data.rating,
-      year: data.release_year || 2024,
-      duration: data.duration_minutes,
-      videoUrl: data.trailer_url || data.video_url,
-      externalId: data.external_id,
+    try {
+      const { data } = await api.get<MovieDto>(`/movies/${id}`)
+      return mapDtoToMovie(data)
+    } catch (error) {
+      console.error(`Failed to fetch movie ${id}:`, error)
+      return null
     }
   },
 
   getAll: async (): Promise<Movie[]> => {
-    const { data, error } = await supabase.from('movies').select('*')
+    const now = Date.now()
 
-    if (error || !data) return []
+    if (moviesCache && now - lastFetchTime < CACHE_DURATION) {
+      return moviesCache
+    }
 
-    return data.map((m: any) => ({
-      id: m.id,
-      title: m.title,
-      tagline: m.tagline || '',
-      description: m.description || '',
-      backdropUrl:
-        m.backdrop_url || m.img_url || 'https://placehold.co/1920x1080',
-      posterUrl: m.poster_url || m.img_url,
-      genres: ['Sci-Fi'], // Тимчасово
-      rating: m.rating,
-      year: m.release_year || 2024,
-      duration: m.duration_minutes,
-      videoUrl: m.trailer_url || m.video_url,
-      externalId: m.external_id,
-    }))
+    if (activeRequest) {
+      return activeRequest
+    }
+
+    activeRequest = (async () => {
+      try {
+        const { data } = await api.get<PaginatedResult<MovieDto>>('/movies', {
+          params: { pageNumber: 1, pageSize: 100 },
+        })
+
+        const mappedMovies = data.items.map(mapDtoToMovie)
+
+        moviesCache = mappedMovies
+        lastFetchTime = Date.now()
+
+        return mappedMovies
+      } catch (error) {
+        console.error('Failed to fetch movies:', error)
+        return []
+      } finally {
+        activeRequest = null
+      }
+    })()
+
+    return activeRequest
+  },
+
+  getPaginated: async (
+    pageNumber: number,
+    pageSize: number,
+    searchTerm?: string,
+  ): Promise<PaginatedResult<Movie>> => {
+    const { data } = await api.get<PaginatedResult<MovieDto>>('/movies', {
+      params: { pageNumber, pageSize, searchTerm },
+    })
+
+    return {
+      ...data,
+      items: data.items.map(mapDtoToMovie),
+    }
+  },
+
+  searchTmdb: async (query: string): Promise<TmdbSearchResult[]> => {
+    const { data } = await api.get<TmdbSearchResult[]>('/movies/tmdb-search', {
+      params: { query },
+    })
+    return data
+  },
+
+  importMovie: async (tmdbId: number): Promise<string> => {
+    const { data } = await api.post<{ movieId: string }>('/movies/import', {
+      tmdbId: tmdbId,
+    })
+    return data.movieId
+  },
+
+  delete: async (id: string): Promise<void> => {
+    moviesCache = null
+    await api.delete(`/movies/${id}`)
+  },
+
+  update: async (id: string, movieData: Partial<Movie>): Promise<void> => {
+    moviesCache = null
+    await api.put(`/movies/${id}`, {
+      id,
+      title: movieData.title,
+      description: movieData.description,
+      posterUrl: movieData.posterUrl,
+      backdropUrl: movieData.backdropUrl,
+      trailerUrl: movieData.videoUrl,
+    })
   },
 }

@@ -20,8 +20,9 @@ const MoviesGrid = () => {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        const [moviesData, hallsData] = await Promise.all([
+        const [moviesData, allSessions, hallsData] = await Promise.all([
           moviesService.getAll(),
+          bookingService.getAllSessions(),
           hallsService.getAll(),
         ])
 
@@ -30,26 +31,24 @@ const MoviesGrid = () => {
           hallTechMap[hall.id] = hall.technologies?.map(t => t.name) || []
         }
 
-        const enrichedMovies = await Promise.all(
-          moviesData.map(async movie => {
-            const sessions = await bookingService.getSessionsByMovieId(movie.id)
+        const enrichedMovies = moviesData.map(movie => {
+          const sessions = allSessions.filter(s => s.movieId === movie.id)
 
-            const techSet = new Set<string>()
-            for (const session of sessions) {
-              const hallTechs = hallTechMap[session.hallId]
-              if (hallTechs) {
-                hallTechs.forEach(t => techSet.add(t))
-              }
+          const techSet = new Set<string>()
+          for (const session of sessions) {
+            const hallTechs = hallTechMap[session.hallId]
+            if (hallTechs) {
+              hallTechs.forEach(t => techSet.add(t))
             }
-            if (techSet.size === 0) techSet.add('2D')
+          }
+          if (techSet.size === 0) techSet.add('2D')
 
-            return {
-              ...movie,
-              sessions,
-              technologies: Array.from(techSet),
-            }
-          }),
-        )
+          return {
+            ...movie,
+            sessions,
+            technologies: Array.from(techSet),
+          }
+        })
 
         setMovies(enrichedMovies)
       } catch (error) {
