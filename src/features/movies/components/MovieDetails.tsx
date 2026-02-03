@@ -4,7 +4,6 @@ import {
   Clock,
   Play,
   ArrowLeft,
-  Ticket,
   Users,
   Film,
 } from 'lucide-react'
