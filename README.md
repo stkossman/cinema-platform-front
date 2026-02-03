@@ -43,7 +43,7 @@ Check [cinema-platform-back](https://github.com/stkossman/cinema-platform-back) 
 - [ ] Enhance Admin Panel ([#10](https://github.com/stkossman/cinema-platform-front/issues/10))
 	- [ ] Stats Page
 	- [x] Users Page
-	- [ ] Movies Page
+	- [x] Movies Page
 - [ ] Filter movies by genre/duration ([#13](https://github.com/stkossman/cinema-platform-front/issues/13))
 
 ### Week 4

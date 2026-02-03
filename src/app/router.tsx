@@ -17,6 +17,7 @@ import BookingPage from '../pages/BookingPage'
 import MoviesPage from '../pages/MoviesPage'
 import SessionsPage from '../features/admin/SessionsPage'
 import UsersPage from '../features/admin/UsersPage'
+import AdminMoviesPage from '../features/admin/AdminMoviesPage'
 
 export const router = createBrowserRouter([
   {
@@ -88,6 +89,10 @@ export const router = createBrowserRouter([
           {
             path: 'users',
             element: <UsersPage />,
+          },
+          {
+            path: 'movies',
+            element: <AdminMoviesPage />,
           },
         ],
       },

@@ -11,7 +11,7 @@ let lastFetchTime = 0
 const CACHE_DURATION = 2 * 60 * 1000
 let activeRequest: Promise<Movie[]> | null = null
 
-const mapDtoToMovie = (dto: MovieDto): Movie => ({
+const mapDtoToMovie = (dto: MovieDto & { TrailerUrl?: string }): Movie => ({
   id: dto.id,
   title: dto.title,
   description: dto.description || 'Опис відсутній',
@@ -22,7 +22,7 @@ const mapDtoToMovie = (dto: MovieDto): Movie => ({
   rating: dto.rating,
   year: dto.releaseYear,
   duration: dto.durationMinutes,
-  videoUrl: dto.trailerUrl,
+  videoUrl: dto.trailerUrl || dto.TrailerUrl,
   cast: dto.cast || [],
 })
 
@@ -55,10 +55,8 @@ export const moviesService = {
         })
 
         const mappedMovies = data.items.map(mapDtoToMovie)
-
         moviesCache = mappedMovies
         lastFetchTime = Date.now()
-
         return mappedMovies
       } catch (error) {
         console.error('Failed to fetch movies:', error)
@@ -107,13 +105,44 @@ export const moviesService = {
 
   update: async (id: string, movieData: Partial<Movie>): Promise<void> => {
     moviesCache = null
-    await api.put(`/movies/${id}`, {
-      id,
-      title: movieData.title,
-      description: movieData.description,
-      posterUrl: movieData.posterUrl,
-      backdropUrl: movieData.backdropUrl,
-      trailerUrl: movieData.videoUrl,
-    })
+
+    const requests = []
+
+    if (movieData.title !== undefined) {
+      requests.push(
+        api.patch(`/movies/${id}/title`, {
+          title: movieData.title,
+        }),
+      )
+    }
+
+    if (
+      movieData.posterUrl !== undefined ||
+      movieData.backdropUrl !== undefined ||
+      movieData.videoUrl !== undefined
+    ) {
+      requests.push(
+        api.patch(`/movies/${id}/images`, {
+          posterUrl: movieData.posterUrl,
+          backdropUrl: movieData.backdropUrl,
+          trailerUrl: movieData.videoUrl,
+        }),
+      )
+    }
+
+    if (movieData.description !== undefined) {
+      requests.push(
+        api.patch(`/movies/${id}/details`, {
+          description: movieData.description,
+          durationMinutes: movieData.duration,
+          rating: movieData.rating,
+          releaseYear: movieData.year,
+        }),
+      )
+    }
+
+    if (requests.length > 0) {
+      await Promise.all(requests)
+    }
   },
 }
