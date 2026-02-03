@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { moviesService } from '../../../services/moviesService'
-import { useAuth } from '../../auth/AuthContext'
+import { bookingService } from '../../../services/bookingService'
 import type { Movie } from '../../../types/movie'
 
 const AUTO_PLAY_INTERVAL = 8000
@@ -11,68 +11,87 @@ export const useHeroSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isAnimating, setIsAnimating] = useState(false)
-
   const timerRef = useRef<number | null>(null)
-  const { user } = useAuth()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const fetchFeatured = async () => {
-      try {
-        const allMovies = await moviesService.getAll()
-        if (allMovies.length > 0) {
-          setMovies(allMovies.slice(0, 5))
-        }
-      } catch (error) {
-        console.error('Failed to load hero movies', error)
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchMoviesWithSessions = async () => {
+    setIsLoading(true)
+    try {
+      const [allMovies, allSessions] = await Promise.all([
+        moviesService.getAll(),
+        bookingService.getAllSessions(),
+      ])
+
+      const now = new Date()
+      const nextWeek = new Date()
+      nextWeek.setDate(now.getDate() + 6)
+      nextWeek.setHours(23, 59, 59, 999)
+
+      const activeMovies = allMovies.filter(movie => {
+        const movieSessions = allSessions.filter(s => s.movieId === movie.id)
+
+        const hasUpcomingSession = movieSessions.some(session => {
+          const sessionDate = new Date(session.startTime)
+          return sessionDate >= now && sessionDate <= nextWeek
+        })
+
+        return hasUpcomingSession
+      })
+
+      setMovies(activeMovies.slice(0, 5))
+    } catch (error) {
+      console.error('Failed to load hero slider movies:', error)
+    } finally {
+      setIsLoading(false)
     }
-    fetchFeatured()
+  }
+
+  useEffect(() => {
+    fetchMoviesWithSessions()
   }, [])
 
-  useEffect(() => {
+  const nextSlide = useCallback(() => {
     if (movies.length === 0) return
-    startTimer()
-    return () => stopTimer()
-  }, [currentIndex, movies.length])
-
-  const startTimer = () => {
-    stopTimer()
-    timerRef.current = setInterval(() => {
-      handleNext()
-    }, AUTO_PLAY_INTERVAL)
-  }
-
-  const stopTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current)
-  }
-
-  const handleNext = () => {
     setIsAnimating(true)
     setTimeout(() => {
       setCurrentIndex(prev => (prev + 1) % movies.length)
       setIsAnimating(false)
     }, 500)
-  }
+  }, [movies.length])
+
+  const startTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = setInterval(nextSlide, AUTO_PLAY_INTERVAL)
+  }, [nextSlide])
+
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    startTimer()
+  }, [startTimer])
+
+  useEffect(() => {
+    if (movies.length > 0) {
+      startTimer()
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [movies.length, startTimer])
 
   const handleManualSelect = (index: number) => {
-    if (index === currentIndex) return
-    stopTimer()
+    if (index === currentIndex || isAnimating) return
     setIsAnimating(true)
+    resetTimer()
     setTimeout(() => {
       setCurrentIndex(index)
       setIsAnimating(false)
-      startTimer()
     }, 300)
   }
 
   const handleBuyTicket = () => {
-    const activeMovie = movies[currentIndex]
-    if (!activeMovie) return
-    if (!user) navigate('/auth/login')
-    else navigate(`/booking/${activeMovie.id}`)
+    if (movies[currentIndex]) {
+      navigate(`/booking/${movies[currentIndex].id}`)
+    }
   }
 
   return {
