@@ -1,20 +1,44 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { type Movie, MovieStatus } from '../../../types/movie'
 import { type Session } from '../../../types/hall'
 import { moviesService } from '../../../services/moviesService'
 import { bookingService } from '../../../services/bookingService'
 import { hallsService } from '../../../services/hallsService'
 import MovieCard from './MovieCard'
-import { Loader2, Film, Clock, Archive, PlayCircle } from 'lucide-react'
+import { Loader2, CalendarDays, Clock, Calendar } from 'lucide-react'
+import { clsx } from 'clsx'
 
 interface MovieWithMeta extends Movie {
   sessions: Session[]
   technologies: string[]
 }
 
+const generateDates = () => {
+  const dates = []
+  const today = new Date()
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() + i)
+    dates.push(d)
+  }
+  return dates
+}
+
+const isSameDate = (d1: Date, d2: Date) => {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  )
+}
+
 const MoviesGrid = () => {
   const [movies, setMovies] = useState<MovieWithMeta[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  const [activeTab, setActiveTab] = useState<'now' | 'soon'>('now')
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const dates = useMemo(() => generateDates(), [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,9 +61,7 @@ const MoviesGrid = () => {
           const techSet = new Set<string>()
           for (const session of sessions) {
             const hallTechs = hallTechMap[session.hallId]
-            if (hallTechs) {
-              hallTechs.forEach(t => techSet.add(t))
-            }
+            if (hallTechs) hallTechs.forEach(t => techSet.add(t))
           }
           if (techSet.size === 0) techSet.add('2D')
 
@@ -50,7 +72,7 @@ const MoviesGrid = () => {
           }
         })
 
-        setMovies(enrichedMovies)
+        setMovies(enrichedMovies.filter(m => m.status !== MovieStatus.Archived))
       } catch (error) {
         console.error('Failed to load movies data:', error)
       } finally {
@@ -61,94 +83,133 @@ const MoviesGrid = () => {
     fetchData()
   }, [])
 
-  const activeMovies = movies.filter(m => m.status === MovieStatus.Active)
-  const comingSoonMovies = movies.filter(
-    m => m.status === MovieStatus.ComingSoon,
-  )
-  const archivedMovies = movies.filter(m => m.status === MovieStatus.Archived)
+  const displayedMovies = useMemo(() => {
+    if (activeTab === 'soon') {
+      return movies.filter(m => m.status === MovieStatus.ComingSoon)
+    }
+
+    return movies
+      .filter(m => m.status === MovieStatus.Active)
+      .filter(m => {
+        return m.sessions.some(s =>
+          isSameDate(new Date(s.startTime), selectedDate),
+        )
+      })
+  }, [movies, activeTab, selectedDate])
 
   if (isLoading) {
     return (
       <div className='flex h-64 w-full items-center justify-center'>
-        <Loader2 className='h-8 w-8 animate-spin text-[var(--color-primary)]' />
-      </div>
-    )
-  }
-
-  if (movies.length === 0) {
-    return (
-      <div className='flex h-64 w-full flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-[var(--bg-card)] text-[var(--text-muted)]'>
-        <Film className='mb-2 h-10 w-10 opacity-20' />
-        <p>Фільмів поки немає</p>
+        <Loader2 className='h-10 w-10 animate-spin text-[var(--color-primary)]' />
       </div>
     )
   }
 
   return (
-    <div className='space-y-16'>
-      {activeMovies.length > 0 && (
-        <section className='animate-in fade-in slide-in-from-bottom-4 duration-700'>
-          <div className='flex items-center gap-3 mb-8'>
-            <div className='h-8 w-1 bg-[var(--color-primary)] rounded-full'></div>
-            <h2 className='text-2xl font-black text-white uppercase tracking-wide flex items-center gap-2'>
-              <PlayCircle className='text-[var(--color-primary)]' /> Зараз у
-              кіно
-            </h2>
-          </div>
-          <div className='grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
-            {activeMovies.map(movie => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                sessions={movie.sessions}
-                technologies={movie.technologies}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+    <div className='space-y-8'>
+      <div className='flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between'>
+        <div className='bg-[var(--bg-card)] p-1 rounded-xl border border-white/10 flex'>
+          <button
+            type='button'
+            onClick={() => setActiveTab('now')}
+            className={clsx(
+              'px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all',
+              activeTab === 'now'
+                ? 'bg-[var(--color-primary)] text-white shadow-lg'
+                : 'text-[var(--text-muted)] hover:text-white hover:bg-white/5',
+            )}
+          >
+            <CalendarDays size={16} /> Розклад
+          </button>
+          <button
+            type='button'
+            onClick={() => setActiveTab('soon')}
+            className={clsx(
+              'px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all',
+              activeTab === 'soon'
+                ? 'bg-yellow-500 text-black shadow-lg'
+                : 'text-[var(--text-muted)] hover:text-white hover:bg-white/5',
+            )}
+          >
+            <Clock size={16} /> Скоро
+          </button>
+        </div>
 
-      {comingSoonMovies.length > 0 && (
-        <section className='animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100'>
-          <div className='flex items-center gap-3 mb-8'>
-            <div className='h-8 w-1 bg-yellow-500 rounded-full'></div>
-            <h2 className='text-2xl font-black text-white uppercase tracking-wide flex items-center gap-2'>
-              <Clock className='text-yellow-500' /> Скоро
-            </h2>
-          </div>
-          <div className='grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
-            {comingSoonMovies.map(movie => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                sessions={[]}
-                technologies={movie.technologies}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+        {activeTab === 'now' && (
+          <div className='w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 no-scrollbar'>
+            <div className='flex gap-2 min-w-max'>
+              {dates.map((date, idx) => {
+                const isSelected = isSameDate(date, selectedDate)
+                const isToday = isSameDate(date, new Date())
 
-      {archivedMovies.length > 0 && (
-        <section className='animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 opacity-60 hover:opacity-100 transition-opacity'>
-          <div className='flex items-center gap-3 mb-8'>
-            <div className='h-8 w-1 bg-zinc-600 rounded-full'></div>
-            <h2 className='text-2xl font-black text-zinc-400 uppercase tracking-wide flex items-center gap-2'>
-              <Archive className='text-zinc-500' /> Архів
-            </h2>
+                return (
+                  <button
+                    type='button'
+                    key={idx}
+                    onClick={() => setSelectedDate(date)}
+                    className={clsx(
+                      'flex flex-col items-center justify-center w-14 h-16 rounded-xl border transition-all duration-300',
+                      isSelected
+                        ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-110 z-10'
+                        : 'bg-[var(--bg-card)] text-[var(--text-muted)] border-white/5 hover:border-white/20 hover:text-white',
+                    )}
+                  >
+                    <span className='text-[10px] font-bold uppercase'>
+                      {isToday
+                        ? 'Сьог'
+                        : date.toLocaleDateString('uk-UA', {
+                            weekday: 'short',
+                          })}
+                    </span>
+                    <span className='text-lg font-black leading-none'>
+                      {date.getDate()}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
-          <div className='grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
-            {archivedMovies.map(movie => (
+        )}
+      </div>
+
+      <div className='min-h-[400px]'>
+        {displayedMovies.length === 0 ? (
+          <div className='flex flex-col items-center justify-center py-20 bg-[var(--bg-card)] rounded-3xl border border-dashed border-white/5 text-[var(--text-muted)]'>
+            {activeTab === 'now' ? (
+              <>
+                <Calendar size={48} className='opacity-20 mb-4' />
+                <p className='text-lg'>
+                  На жаль, на цю дату сеансів не знайдено.
+                </p>
+                <p className='text-sm mt-1'>Спробуйте обрати інший день.</p>
+              </>
+            ) : (
+              <>
+                <Clock size={48} className='opacity-20 mb-4' />
+                <p className='text-lg'>Список анонсів порожній.</p>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+            {displayedMovies.map(movie => (
               <MovieCard
                 key={movie.id}
                 movie={movie}
-                sessions={[]}
+                sessions={
+                  activeTab === 'now'
+                    ? movie.sessions.filter(s =>
+                        isSameDate(new Date(s.startTime), selectedDate),
+                      )
+                    : []
+                }
                 technologies={movie.technologies}
+                hideIfNoSessions={false}
               />
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </div>
     </div>
   )
 }

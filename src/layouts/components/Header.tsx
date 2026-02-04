@@ -5,7 +5,7 @@ import { useAuth } from '../../features/auth/AuthContext'
 import { clsx } from 'clsx'
 
 const NAV_ITEMS = [
-  { label: 'Фільми', href: '/movies' },
+  { label: 'Афіша', href: '/sessions' },
   { label: 'Знижки', href: '/offers' },
   { label: 'Допомога', href: '/faq' },
   { label: 'Про нас', href: '/about' },

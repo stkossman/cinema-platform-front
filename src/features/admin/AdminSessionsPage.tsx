@@ -13,7 +13,7 @@ import {
 import CreateSessionModal from './components/CreateSessionModal'
 import { type SessionDto } from '../../services/adminSessionsService'
 
-const SessionsPage = () => {
+const AdminSessionsPage = () => {
   const {
     sessions,
     isLoading,
@@ -219,4 +219,4 @@ const SessionCard = ({ session, onReschedule, onDelete }: any) => {
   )
 }
 
-export default SessionsPage
+export default AdminSessionsPage

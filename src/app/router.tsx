@@ -14,8 +14,8 @@ import FAQPage from '../pages/FAQPage'
 import OffersPage from '../pages/OffersPage'
 import HallsPage from '../features/admin/HallsPage'
 import BookingPage from '../pages/BookingPage'
-import MoviesPage from '../pages/MoviesPage'
-import SessionsPage from '../features/admin/SessionsPage'
+import SessionsPage from '../pages/SessionsPage'
+import AdminSessionsPage from '../features/admin/AdminSessionsPage'
 import UsersPage from '../features/admin/UsersPage'
 import AdminMoviesPage from '../features/admin/AdminMoviesPage'
 import TechnologiesPage from '../features/admin/TechnologiesPage'
@@ -66,8 +66,8 @@ export const router = createBrowserRouter([
         element: <BookingPage />,
       },
       {
-        path: 'movies',
-        element: <MoviesPage />,
+        path: 'sessions',
+        element: <SessionsPage />,
       },
     ],
   },
@@ -88,7 +88,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'sessions',
-            element: <SessionsPage />,
+            element: <AdminSessionsPage />,
           },
           {
             path: 'users',
