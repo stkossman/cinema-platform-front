@@ -1,6 +1,11 @@
 import { api } from '../lib/axios'
 import type { Session, Hall } from '../types/hall'
 
+export interface CreateOrderResponse {
+  orderId: string
+  status: string
+}
+
 let sessionsCache: Session[] | null = null
 let lastFetchTime = 0
 const CACHE_DURATION = 60 * 1000
@@ -55,6 +60,7 @@ export const bookingService = {
           hallName: s.hallName || 'Зал',
           movieTitle: s.movieTitle || 'Фільм',
           seats: [],
+          pricingId: s.pricingId,
         }))
 
         sessionsCache = mappedSessions
@@ -71,11 +77,23 @@ export const bookingService = {
     return activeRequest
   },
 
-  bookSeats: async (sessionId: string, seatIds: string[], userId: string) => {
-    await api.post('/orders', {
+  lockSeat: async (sessionId: string, seatId: string): Promise<void> => {
+    await api.post('/seats/lock', {
+      sessionId,
+      seatId,
+    })
+  },
+
+  createOrder: async (
+    sessionId: string,
+    seatIds: string[],
+    paymentToken: string = 'dummy_token',
+  ): Promise<CreateOrderResponse> => {
+    const { data } = await api.post<CreateOrderResponse>('/orders', {
       sessionId,
       seatIds,
-      userId,
+      paymentToken,
     })
+    return data
   },
 }

@@ -4,17 +4,15 @@ import HeroSection from '../features/movies/components/HeroSection'
 import { Loader2, Film } from 'lucide-react'
 import { useHomeMovies } from '../features/home/hooks/useHomeMovies'
 import { useMemo } from 'react'
+import { MovieStatus } from '../types/movie'
 
 const HomePage = () => {
   const { filteredMovies, isLoading, activeFilter, setActiveFilter, filters } =
     useHomeMovies()
 
   const moviesToShow = useMemo(() => {
-    const now = new Date()
     return filteredMovies
-      .filter(movie =>
-        movie.sessions.some(session => new Date(session.startTime) > now),
-      )
+      .filter(movie => movie.status === MovieStatus.Active)
       .slice(0, 4)
   }, [filteredMovies])
 

@@ -5,7 +5,7 @@ import { moviesService } from '../../../services/moviesService'
 import { bookingService } from '../../../services/bookingService'
 import { hallsService } from '../../../services/hallsService'
 import MovieCard from './MovieCard'
-import { Loader2, Film, Clock, Archive } from 'lucide-react'
+import { Loader2, Film, Clock, Archive, PlayCircle } from 'lucide-react'
 
 interface MovieWithMeta extends Movie {
   sessions: Session[]
@@ -90,8 +90,9 @@ const MoviesGrid = () => {
         <section className='animate-in fade-in slide-in-from-bottom-4 duration-700'>
           <div className='flex items-center gap-3 mb-8'>
             <div className='h-8 w-1 bg-[var(--color-primary)] rounded-full'></div>
-            <h2 className='text-2xl font-black text-white uppercase tracking-wide'>
-              Зараз у кіно
+            <h2 className='text-2xl font-black text-white uppercase tracking-wide flex items-center gap-2'>
+              <PlayCircle className='text-[var(--color-primary)]' /> Зараз у
+              кіно
             </h2>
           </div>
           <div className='grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>

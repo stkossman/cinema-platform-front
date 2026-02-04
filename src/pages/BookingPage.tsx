@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import type { Movie } from '../types/movie'
 import type { Session, Hall, Seat } from '../types/hall'
 import { moviesService } from '../services/moviesService'
 import { bookingService } from '../services/bookingService'
+import {
+  adminPricingsService,
+  type PricingDetailsDto,
+} from '../services/adminPricingsService'
 import {
   Loader2,
   ArrowLeft,
@@ -30,6 +34,10 @@ const BookingPage = () => {
   const [selectedSession, setSelectedSession] = useState<Session | null>(null)
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([])
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+
+  const [pricingRules, setPricingRules] = useState<PricingDetailsDto | null>(
+    null,
+  )
 
   useEffect(() => {
     if (!user) {
@@ -58,33 +66,74 @@ const BookingPage = () => {
 
   useEffect(() => {
     if (selectedSession) {
-      const loadHall = async () => {
+      const loadData = async () => {
         setIsLoading(true)
-        const hallData = await bookingService.getHallById(
-          selectedSession.hallId,
-        )
-        setHall(hallData)
-        setIsLoading(false)
+        try {
+          const [hallData, pricingData] = await Promise.all([
+            bookingService.getHallById(selectedSession.hallId),
+            selectedSession.pricingId
+              ? adminPricingsService.getById(selectedSession.pricingId)
+              : Promise.resolve(null),
+          ])
+
+          setHall(hallData)
+          setPricingRules(pricingData)
+        } catch (e) {
+          console.error(e)
+        } finally {
+          setIsLoading(false)
+        }
       }
-      loadHall()
+      loadData()
     }
   }, [selectedSession])
 
-  const handleSeatToggle = (seat: Seat) => {
+  const handleSeatToggle = async (seat: Seat) => {
     const exists = selectedSeats.find(s => s.id === seat.id)
     if (exists) {
       setSelectedSeats(selectedSeats.filter(s => s.id !== seat.id))
-    } else {
+      return
+    }
+
+    if (!selectedSession) return
+
+    try {
       setSelectedSeats([...selectedSeats, seat])
+
+      await bookingService.lockSeat(selectedSession.id, seat.id)
+    } catch (error: any) {
+      setSelectedSeats(prev => prev.filter(s => s.id !== seat.id))
+
+      if (error.response?.status === 409) {
+        alert('Це місце вже зайняте або заблоковане іншим користувачем.')
+      } else {
+        console.error('Failed to lock seat:', error)
+      }
     }
   }
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
+    if (!selectedSession || selectedSeats.length === 0) return
+
     setIsProcessingPayment(true)
-    setTimeout(() => {
-      setIsProcessingPayment(false)
+    try {
+      const seatIds = selectedSeats.map(s => s.id)
+      await bookingService.createOrder(
+        selectedSession.id,
+        seatIds,
+        'test_token_123',
+      )
+
       setStep(3)
-    }, 2000)
+    } catch (error: any) {
+      console.error('Payment failed:', error)
+      alert(
+        error.response?.data?.detail ||
+          'Помилка при створенні замовлення. Спробуйте ще раз.',
+      )
+    } finally {
+      setIsProcessingPayment(false)
+    }
   }
 
   const handleChangeSession = () => {
@@ -93,12 +142,28 @@ const BookingPage = () => {
     setSelectedSession(null)
   }
 
-  const totalPrice = selectedSeats.reduce((sum, seat) => {
-    const isVip = seat.seatTypeName?.toLowerCase().includes('vip')
-    const price = isVip ? 300 : 150
+  const calculateSeatPrice = (seat: Seat): number => {
+    if (!selectedSession || !pricingRules) return 150
 
-    return sum + price
-  }, 0)
+    const sessionDate = new Date(selectedSession.startTime)
+    const dayOfWeek = sessionDate.getDay()
+
+    const rule = pricingRules.items.find(
+      item =>
+        item.dayOfWeek === dayOfWeek && item.seatTypeId === seat.seatTypeId,
+    )
+
+    if (rule) return rule.price
+
+    return 150
+  }
+
+  const totalPrice = useMemo(() => {
+    return selectedSeats.reduce(
+      (sum, seat) => sum + calculateSeatPrice(seat),
+      0,
+    )
+  }, [selectedSeats, pricingRules, selectedSession])
 
   if (isLoading && !movie) {
     return (
