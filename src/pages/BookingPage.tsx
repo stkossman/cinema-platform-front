@@ -143,19 +143,23 @@ const BookingPage = () => {
   }
 
   const calculateSeatPrice = (seat: Seat): number => {
-    if (!selectedSession || !pricingRules) return 150
+    if (!selectedSession || !pricingRules || !pricingRules.items) return 150
 
     const sessionDate = new Date(selectedSession.startTime)
     const dayOfWeek = sessionDate.getDay()
 
     const rule = pricingRules.items.find(
       item =>
-        item.dayOfWeek === dayOfWeek && item.seatTypeId === seat.seatTypeId,
+        item.dayOfWeek === dayOfWeek &&
+        String(item.seatTypeId).toLowerCase() ===
+          String(seat.seatTypeId).toLowerCase(),
     )
 
-    if (rule) return rule.price
+    if (rule) {
+      return rule.price
+    }
 
-    return 150
+    return selectedSession.priceBase || 150
   }
 
   const totalPrice = useMemo(() => {
