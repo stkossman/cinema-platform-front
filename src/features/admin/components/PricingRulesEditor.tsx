@@ -145,7 +145,6 @@ const PricingRulesEditor = ({
                     <th
                       key={st.id}
                       className='px-4 py-3 text-center border-b border-white/10 border-l border-white/5'
-                      style={{ color: st.color }}
                     >
                       {st.name}
                     </th>
