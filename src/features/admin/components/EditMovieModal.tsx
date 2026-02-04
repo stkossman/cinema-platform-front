@@ -105,7 +105,7 @@ const EditMovieModal = ({
                 onChange={e =>
                   setFormData({
                     ...formData,
-                    status: e.target.value as MovieStatus,
+                    status: Number(e.target.value) as MovieStatus,
                   })
                 }
                 className='w-full rounded-xl border border-white/10 bg-[var(--bg-main)] px-4 py-3 text-sm text-white focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] appearance-none cursor-pointer'
