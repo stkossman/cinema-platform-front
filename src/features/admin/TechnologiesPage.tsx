@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTechnologies } from './hooks/useTechnologies'
-import { Plus, Cpu, Edit, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Cpu, Trash2, Loader2 } from 'lucide-react'
 import CreateTechnologyModal from './components/CreateTechnologyModal'
 
 const TechnologiesPage = () => {

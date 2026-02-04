@@ -1,8 +1,10 @@
-export enum MovieStatus {
-  ComingSoon = 1,
-  Active = 2,
-  Archived = 3,
-}
+export const MovieStatus = {
+  ComingSoon: 1,
+  Active: 2,
+  Archived: 3,
+} as const
+
+export type MovieStatus = (typeof MovieStatus)[keyof typeof MovieStatus]
 
 export interface Actor {
   name: string
