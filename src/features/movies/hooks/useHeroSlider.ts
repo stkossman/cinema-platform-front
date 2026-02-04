@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { moviesService } from '../../../services/moviesService'
-import { bookingService } from '../../../services/bookingService'
-import type { Movie } from '../../../types/movie'
+import { type Movie, MovieStatus } from '../../../types/movie'
 
 const AUTO_PLAY_INTERVAL = 8000
 
@@ -14,31 +13,16 @@ export const useHeroSlider = () => {
   const timerRef = useRef<number | null>(null)
   const navigate = useNavigate()
 
-  const fetchMoviesWithSessions = async () => {
+  const fetchHeroMovies = async () => {
     setIsLoading(true)
     try {
-      const [allMovies, allSessions] = await Promise.all([
-        moviesService.getAll(),
-        bookingService.getAllSessions(),
-      ])
+      const allMovies = await moviesService.getAll()
 
-      const now = new Date()
-      const nextWeek = new Date()
-      nextWeek.setDate(now.getDate() + 6)
-      nextWeek.setHours(23, 59, 59, 999)
+      const activeMovies = allMovies
+        .filter(m => m.status === MovieStatus.Active)
+        .slice(0, 5)
 
-      const activeMovies = allMovies.filter(movie => {
-        const movieSessions = allSessions.filter(s => s.movieId === movie.id)
-
-        const hasUpcomingSession = movieSessions.some(session => {
-          const sessionDate = new Date(session.startTime)
-          return sessionDate >= now && sessionDate <= nextWeek
-        })
-
-        return hasUpcomingSession
-      })
-
-      setMovies(activeMovies.slice(0, 5))
+      setMovies(activeMovies)
     } catch (error) {
       console.error('Failed to load hero slider movies:', error)
     } finally {
@@ -47,7 +31,7 @@ export const useHeroSlider = () => {
   }
 
   useEffect(() => {
-    fetchMoviesWithSessions()
+    fetchHeroMovies()
   }, [])
 
   const nextSlide = useCallback(() => {

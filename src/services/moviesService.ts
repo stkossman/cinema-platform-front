@@ -1,9 +1,10 @@
 import { api } from '../lib/axios'
-import type {
-  Movie,
-  MovieDto,
-  PaginatedResult,
-  TmdbSearchResult,
+import {
+  type Movie,
+  type MovieDto,
+  type PaginatedResult,
+  type TmdbSearchResult,
+  MovieStatus,
 } from '../types/movie'
 
 let moviesCache: Movie[] | null = null
@@ -24,6 +25,7 @@ const mapDtoToMovie = (dto: MovieDto & { TrailerUrl?: string }): Movie => ({
   duration: dto.durationMinutes,
   videoUrl: dto.trailerUrl || dto.TrailerUrl,
   cast: dto.cast || [],
+  status: dto.status !== undefined ? dto.status : MovieStatus.Active,
 })
 
 export const moviesService = {
@@ -105,7 +107,6 @@ export const moviesService = {
 
   update: async (id: string, movieData: Partial<Movie>): Promise<void> => {
     moviesCache = null
-
     const requests = []
 
     if (movieData.title !== undefined) {
@@ -137,6 +138,14 @@ export const moviesService = {
           durationMinutes: movieData.duration,
           rating: movieData.rating,
           releaseYear: movieData.year,
+        }),
+      )
+    }
+
+    if (movieData.status !== undefined) {
+      requests.push(
+        api.patch(`/movies/${id}/status`, movieData.status, {
+          headers: { 'Content-Type': 'application/json' },
         }),
       )
     }

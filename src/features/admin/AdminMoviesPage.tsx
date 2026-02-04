@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAdminMovies } from './hooks/useAdminMovies'
+import { useAdminMovies } from '../../features/admin/hooks/useAdminMovies'
 import {
   Search,
   Loader2,
@@ -9,10 +9,13 @@ import {
   Edit,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Archive,
+  PlayCircle,
 } from 'lucide-react'
-import ImportMovieModal from './components/ImportMovieModal'
-import EditMovieModal from './components/EditMovieModal'
-import type { Movie } from '../../types/movie'
+import ImportMovieModal from '../../features/admin/components/ImportMovieModal'
+import EditMovieModal from '../../features/admin/components/EditMovieModal'
+import { type Movie, MovieStatus } from '../../types/movie'
 
 const AdminMoviesPage = () => {
   const {
@@ -35,6 +38,31 @@ const AdminMoviesPage = () => {
     const result = await deleteMovie(id)
     if (!result.success) {
       alert(result.error)
+    }
+  }
+
+  const getStatusBadge = (status: MovieStatus) => {
+    switch (status) {
+      case MovieStatus.Active:
+        return (
+          <span className='inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-2.5 py-1 text-xs font-bold text-green-500 border border-green-500/20'>
+            <PlayCircle size={12} /> Active
+          </span>
+        )
+      case MovieStatus.ComingSoon:
+        return (
+          <span className='inline-flex items-center gap-1.5 rounded-full bg-yellow-500/10 px-2.5 py-1 text-xs font-bold text-yellow-500 border border-yellow-500/20'>
+            <Clock size={12} /> Soon
+          </span>
+        )
+      case MovieStatus.Archived:
+        return (
+          <span className='inline-flex items-center gap-1.5 rounded-full bg-zinc-500/10 px-2.5 py-1 text-xs font-bold text-zinc-500 border border-zinc-500/20'>
+            <Archive size={12} /> Archived
+          </span>
+        )
+      default:
+        return <span className='text-xs text-[var(--text-muted)]'>Unknown</span>
     }
   }
 
@@ -83,7 +111,7 @@ const AdminMoviesPage = () => {
                   <th className='px-6 py-4 w-[80px]'>Постер</th>
                   <th className='px-6 py-4'>Інформація</th>
                   <th className='px-6 py-4 hidden md:table-cell'>Жанри</th>
-                  <th className='px-6 py-4 hidden sm:table-cell'>Рейтинг</th>
+                  <th className='px-6 py-4'>Статус</th>
                   <th className='px-6 py-4 text-right'>Дії</th>
                 </tr>
               </thead>
@@ -98,7 +126,7 @@ const AdminMoviesPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  movies.map(movie => (
+                  (movies || []).map(movie => (
                     <tr
                       key={movie.id}
                       className='group hover:bg-[var(--bg-hover)] transition-colors'
@@ -117,8 +145,15 @@ const AdminMoviesPage = () => {
                         <div className='font-bold text-white text-base'>
                           {movie.title}
                         </div>
-                        <div className='text-[var(--text-muted)] text-xs mt-1'>
-                          {movie.year} • {movie.duration} хв
+                        <div className='text-[var(--text-muted)] text-xs mt-1 flex gap-2'>
+                          <span>{movie.year}</span>
+                          <span>•</span>
+                          <span>{movie.duration} хв</span>
+                          <span className='hidden sm:inline'>•</span>
+                          <span className='hidden sm:flex items-center gap-1 text-yellow-500'>
+                            <Star size={10} fill='currentColor' />{' '}
+                            {movie.rating.toFixed(1)}
+                          </span>
                         </div>
                       </td>
                       <td className='px-6 py-4 hidden md:table-cell'>
@@ -138,14 +173,8 @@ const AdminMoviesPage = () => {
                           )}
                         </div>
                       </td>
-                      <td className='px-6 py-4 hidden sm:table-cell'>
-                        <div className='flex items-center gap-1 font-medium text-white'>
-                          <Star
-                            size={14}
-                            className='text-yellow-500 fill-yellow-500'
-                          />
-                          {movie.rating.toFixed(1)}
-                        </div>
+                      <td className='px-6 py-4'>
+                        {getStatusBadge(movie.status)}
                       </td>
                       <td className='px-6 py-4 text-right'>
                         <div className='flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity'>

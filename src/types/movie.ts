@@ -1,3 +1,9 @@
+export enum MovieStatus {
+  ComingSoon = 1,
+  Active = 2,
+  Archived = 3,
+}
+
 export interface Actor {
   name: string
   role?: string
@@ -16,6 +22,7 @@ export interface Movie {
   duration: number
   videoUrl?: string | null
   cast: Actor[]
+  status: MovieStatus
 }
 
 export interface MovieDto {
@@ -30,6 +37,7 @@ export interface MovieDto {
   trailerUrl?: string
   genres: string[]
   cast: Actor[]
+  status: number
 }
 
 export interface TmdbSearchResult {
