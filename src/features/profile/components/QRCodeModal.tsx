@@ -16,7 +16,6 @@ const QRCodeModal = ({
   bookingId,
   ticketId,
   movieTitle,
-  seats,
 }: QRCodeModalProps) => {
   const [isCopied, setIsCopied] = useState(false)
 
