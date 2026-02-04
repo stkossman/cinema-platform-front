@@ -22,6 +22,7 @@ import TechnologiesPage from '../features/admin/TechnologiesPage'
 import OrdersPage from '../features/admin/OrdersPage'
 import TicketsPage from '../features/admin/TicketsPage'
 import PricingsPage from '../features/admin/PricingsPage'
+import GenresPage from '../features/admin/GenresPage'
 
 export const router = createBrowserRouter([
   {
@@ -113,6 +114,10 @@ export const router = createBrowserRouter([
           {
             path: 'pricings',
             element: <PricingsPage />,
+          },
+          {
+            path: 'genres',
+            element: <GenresPage />,
           },
         ],
       },

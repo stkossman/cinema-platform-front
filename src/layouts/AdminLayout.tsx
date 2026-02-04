@@ -11,6 +11,7 @@ import {
   Tag,
   ShoppingCart,
   Ticket,
+  Sword,
 } from 'lucide-react'
 
 const MENU_ITEMS = [
@@ -23,6 +24,7 @@ const MENU_ITEMS = [
   { icon: Tag, label: 'Тарифи', href: '/admin/pricings' },
   { icon: ShoppingCart, label: 'Замовлення', href: '/admin/orders' },
   { icon: Ticket, label: 'Квитки', href: '/admin/tickets' },
+  { icon: Sword, label: 'Жанри', href: '/admin/genres' },
   { icon: Settings, label: 'Налаштування', href: '/profile' },
 ]
 
