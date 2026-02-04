@@ -2,7 +2,7 @@
 
 Modern, responsive web client for the Cinema Management System, developed as part of the **SoftServe Practice**. This application provides an interactive interface for users to book tickets and for administrators to manage the cinema ecosystem.
 
-![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat&logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-Bundler-646CFF?style=flat&logo=vite)
 ![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.0-06B6D4?style=flat&logo=tailwindcss)
@@ -19,7 +19,7 @@ Built with a focus on performance, type safety, and modern development experienc
 
 | Category | Technologies |
 |---|---|
-| **Core** | React 19, TypeScript, Vite |
+| **Core** | React 19, TypeScript, Vite, Bun |
 | **Styling** | Tailwind CSS **v4**, clsx, tailwind-merge, Lucide React (Icons) |
 | **State & API** | Context API, Custom Hooks, Axios (Interceptors) |
 | **Forms** | React Hook Form + Zod (Schema Validation) |
@@ -54,7 +54,7 @@ Built with a focus on performance, type safety, and modern development experienc
 
 ### Prerequisites
 * Node.js (v18 or higher)
-* npm or pnpm or bun
+* bun
 
 ### Installation
 
