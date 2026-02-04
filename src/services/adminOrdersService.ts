@@ -1,63 +1,33 @@
 import { api } from '../lib/axios'
-import type { PaginatedResult } from '../types/common'
-import { OrderStatus } from '../types/order'
+import type { OrderStatus, TicketStatus } from '../types/order'
+
+// Використовуємо типи, які точно співпадають з бекендом
+export interface AdminTicketDto {
+  id: string
+  movieTitle: string
+  posterUrl: string
+  hallName: string
+  rowLabel: string
+  seatNumber: number
+  seatType: string
+  price: number
+  sessionStart: string
+  status: TicketStatus | string
+  secretCode: string
+}
 
 export interface AdminOrderDto {
   id: string
-  userId: string
-  userEmail?: string
-  movieTitle: string
+  createdAt: string
   totalAmount: number
-  status: OrderStatus
-  bookingDate: string
-  paymentTransactionId?: string
+  status: OrderStatus | string
+  tickets: AdminTicketDto[]
 }
 
 export const adminOrdersService = {
-  getAll: async (
-    page = 1,
-    search = '',
-  ): Promise<PaginatedResult<AdminOrderDto>> => {
-    await new Promise(r => setTimeout(r, 600))
-
-    const mockOrders: AdminOrderDto[] = [
-      {
-        id: '35549704-c8e9-43f4-a13a-bef68920393b',
-        userId: 'user-1',
-        userEmail: 'client@example.com',
-        movieTitle: 'Дюна: Частина друга',
-        totalAmount: 450,
-        status: OrderStatus.Paid,
-        bookingDate: new Date().toISOString(),
-        paymentTransactionId: 'txn_123456',
-      },
-      {
-        id: '7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d',
-        userId: 'user-2',
-        userEmail: 'admin@cinema.com',
-        movieTitle: 'Avatar 2',
-        totalAmount: 900,
-        status: OrderStatus.Cancelled,
-        bookingDate: new Date(Date.now() - 86400000).toISOString(),
-        paymentTransactionId: 'txn_987654',
-      },
-    ]
-
-    const filtered = mockOrders.filter(
-      o =>
-        o.id.includes(search) ||
-        o.userEmail?.includes(search) ||
-        o.paymentTransactionId?.includes(search),
-    )
-
-    return {
-      items: filtered,
-      pageNumber: page,
-      totalPages: 1,
-      totalCount: filtered.length,
-      hasPreviousPage: false,
-      hasNextPage: false,
-    }
+  getUserOrders: async (userId: string): Promise<AdminOrderDto[]> => {
+    const { data } = await api.get<AdminOrderDto[]>(`/orders/user/${userId}`)
+    return data
   },
 
   cancelOrder: async (id: string): Promise<void> => {

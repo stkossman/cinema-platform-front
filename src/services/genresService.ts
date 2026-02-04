@@ -12,7 +12,7 @@ export const genresService = {
     return data
   },
 
-  create: async (externalId: number, name: string): Promise<number> => {
+  create: async (externalId: number, name: string): Promise<string> => {
     const { data } = await api.post('/genres', { externalId, name })
     return data
   },

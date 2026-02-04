@@ -19,10 +19,9 @@ import SessionsPage from '../features/admin/SessionsPage'
 import UsersPage from '../features/admin/UsersPage'
 import AdminMoviesPage from '../features/admin/AdminMoviesPage'
 import TechnologiesPage from '../features/admin/TechnologiesPage'
-import OrdersPage from '../features/admin/OrdersPage'
-import TicketsPage from '../features/admin/TicketsPage'
 import PricingsPage from '../features/admin/PricingsPage'
 import GenresPage from '../features/admin/GenresPage'
+import UserActivityPage from '../features/admin/UserActivityPage'
 
 export const router = createBrowserRouter([
   {
@@ -104,12 +103,8 @@ export const router = createBrowserRouter([
             element: <TechnologiesPage />,
           },
           {
-            path: 'orders',
-            element: <OrdersPage />,
-          },
-          {
-            path: 'tickets',
-            element: <TicketsPage />,
+            path: 'user-activity',
+            element: <UserActivityPage />,
           },
           {
             path: 'pricings',
