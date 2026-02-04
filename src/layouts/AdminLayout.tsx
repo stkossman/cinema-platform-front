@@ -9,7 +9,6 @@ import {
   Armchair,
   Cpu,
   Tag,
-  ShoppingCart,
   Ticket,
   Sword,
 } from 'lucide-react'
@@ -22,8 +21,6 @@ const MENU_ITEMS = [
   { icon: Armchair, label: 'Зали', href: '/admin/halls' },
   { icon: Cpu, label: 'Технології', href: '/admin/technologies' },
   { icon: Tag, label: 'Тарифи', href: '/admin/pricings' },
-  // { icon: ShoppingCart, label: 'Замовлення', href: '/admin/orders' },
-  // { icon: Ticket, label: 'Квитки', href: '/admin/tickets' },
   {
     icon: Ticket,
     label: 'Активність користувачів',
