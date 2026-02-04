@@ -1,49 +1,60 @@
-//import { api } from '../lib/axios'
-import type { OrderItem } from '../types/order'
+import { api } from '../lib/axios'
+import {
+  type OrderItem,
+  type MyOrdersVm,
+  type OrderDto,
+  OrderStatus,
+} from '../types/order'
+
+const mapOrderDtoToItem = (dto: OrderDto): OrderItem | null => {
+  if (!dto.tickets || dto.tickets.length === 0) return null
+
+  const firstTicket = dto.tickets[0]
+  const sessionDate = new Date(firstTicket.sessionStart)
+  const now = new Date()
+
+  let uiStatus: 'active' | 'completed' | 'cancelled' = 'active'
+
+  const statusStr = String(dto.status)
+
+  if (statusStr === OrderStatus.Cancelled || statusStr === OrderStatus.Failed) {
+    uiStatus = 'cancelled'
+  } else if (statusStr === OrderStatus.Pending) {
+    uiStatus = 'cancelled'
+  } else {
+    if (sessionDate < now) {
+      uiStatus = 'completed'
+    } else {
+      uiStatus = 'active'
+    }
+  }
+
+  return {
+    id: dto.id,
+    bookingId: `ORD-${dto.id.substring(0, 8).toUpperCase()}`,
+    totalPrice: dto.totalAmount,
+    status: uiStatus,
+    sessionDate: firstTicket.sessionStart,
+    movieTitle: firstTicket.movieTitle,
+    posterUrl:
+      firstTicket.posterUrl || 'https://placehold.co/500x750?text=No+Image',
+    cinemaHall: firstTicket.hallName,
+    seats: dto.tickets.map(t => `${t.rowLabel}-${t.seatNumber}`),
+  }
+}
 
 export const ordersService = {
   getMyOrders: async (): Promise<OrderItem[]> => {
-    await new Promise(resolve => setTimeout(resolve, 800))
+    const { data } = await api.get<MyOrdersVm>('/orders')
 
-    const mockOrders: OrderItem[] = [
-      {
-        id: '1',
-        bookingId: 'ORD-7782',
-        totalPrice: 450,
-        status: 'active',
-        sessionDate: new Date(Date.now() + 86400000).toISOString(),
-        movieTitle: 'Dune: Part Two',
-        posterUrl:
-          'https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
-        cinemaHall: 'Red Hall',
-        seats: ['5-12', '5-13', '5-14'],
-      },
-      {
-        id: '2',
-        bookingId: 'ORD-9921',
-        totalPrice: 300,
-        status: 'completed',
-        sessionDate: new Date(Date.now() - 864000000).toISOString(),
-        movieTitle: 'Oppenheimer',
-        posterUrl:
-          'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
-        cinemaHall: 'IMAX Hall',
-        seats: ['8-10', '8-11'],
-      },
-      {
-        id: '3',
-        bookingId: 'ORD-1102',
-        totalPrice: 150,
-        status: 'cancelled',
-        sessionDate: new Date(Date.now() - 200000).toISOString(),
-        movieTitle: 'Kung Fu Panda 4',
-        posterUrl:
-          'https://image.tmdb.org/t/p/w500/kDp1vUBnMpe8ak4rjgl3cLELqjU.jpg',
-        cinemaHall: 'Blue Hall',
-        seats: ['3-5'],
-      },
-    ]
+    const allOrders = [...data.activeOrders, ...data.pastOrders]
 
-    return mockOrders
+    return allOrders
+      .map(mapOrderDtoToItem)
+      .filter((item): item is OrderItem => item !== null)
+  },
+
+  cancelOrder: async (orderId: string): Promise<void> => {
+    await api.post(`/orders/${orderId}/cancel`)
   },
 }

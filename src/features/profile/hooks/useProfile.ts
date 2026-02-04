@@ -44,12 +44,10 @@ export const useProfile = () => {
     }
   }, [user, activeTab])
 
-  const activeTickets = tickets.filter(
-    t => new Date(t.sessionDate) > new Date() && t.status !== 'cancelled',
-  )
+  const activeTickets = tickets.filter(t => t.status === 'active')
 
   const historyOrders = tickets.filter(
-    t => new Date(t.sessionDate) <= new Date() || t.status === 'cancelled',
+    t => t.status === 'completed' || t.status === 'cancelled',
   )
 
   const updateProfileData = async (data: ProfileUpdateData) => {

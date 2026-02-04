@@ -1,12 +1,6 @@
 import { useState } from 'react'
 import { Search, Eye, Filter, CreditCard } from 'lucide-react'
-
-const OrderStatus = {
-  PENDING: 0,
-  PAID: 1,
-  CANCELLED: 2,
-  REFUNDED: 3,
-}
+import { OrderStatus } from '../../types/order'
 
 const OrdersPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -41,38 +35,18 @@ const OrdersPage = () => {
     },
   ])
 
-  const getStatusBadge = (status: number) => {
+  const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
-      case OrderStatus.PAID:
-        return (
-          <span className='bg-green-500/10 text-green-500 border-green-500/20 px-2 py-1 rounded-full text-xs font-bold border'>
-            Оплачено
-          </span>
-        )
-      case OrderStatus.PENDING:
-        return (
-          <span className='bg-yellow-500/10 text-yellow-500 border-yellow-500/20 px-2 py-1 rounded-full text-xs font-bold border'>
-            Очікує
-          </span>
-        )
-      case OrderStatus.CANCELLED:
-        return (
-          <span className='bg-red-500/10 text-red-500 border-red-500/20 px-2 py-1 rounded-full text-xs font-bold border'>
-            Скасовано
-          </span>
-        )
-      case OrderStatus.REFUNDED:
-        return (
-          <span className='bg-purple-500/10 text-purple-500 border-purple-500/20 px-2 py-1 rounded-full text-xs font-bold border'>
-            Повернено
-          </span>
-        )
+      case OrderStatus.Paid:
+        return <span className='... text-green-500 ...'>Paid</span>
+      case OrderStatus.Pending:
+        return <span className='... text-yellow-500 ...'>Pending</span>
+      case OrderStatus.Cancelled:
+        return <span className='... text-red-500 ...'>Cancelled</span>
+      case OrderStatus.Failed:
+        return <span className='... text-red-500 ...'>Failed</span>
       default:
-        return (
-          <span className='bg-gray-500/10 text-gray-500 border-gray-500/20 px-2 py-1 rounded-full text-xs font-bold border'>
-            Невідомо
-          </span>
-        )
+        return <span>{status}</span>
     }
   }
 
@@ -155,7 +129,9 @@ const OrdersPage = () => {
                     '-'
                   )}
                 </td>
-                <td className='px-6 py-4'>{getStatusBadge(order.status)}</td>
+                <td className='px-6 py-4'>
+                  {getStatusBadge(order.status as OrderStatus)}
+                </td>
                 <td className='px-6 py-4 text-right'>
                   <button
                     type='button'
