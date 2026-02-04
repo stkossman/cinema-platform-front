@@ -14,7 +14,6 @@ import {
   CheckCircle,
   Ticket,
   CalendarX,
-  Clock,
 } from 'lucide-react'
 
 import SessionSelector from '../features/booking/components/SessionSelector'
