@@ -17,7 +17,14 @@ const EditMovieModal = ({
   onClose,
   onSuccess,
 }: EditMovieModalProps) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string
+    description: string
+    posterUrl: string
+    backdropUrl: string
+    videoUrl: string
+    status: MovieStatus
+  }>({
     title: '',
     description: '',
     posterUrl: '',
@@ -96,7 +103,10 @@ const EditMovieModal = ({
               <select
                 value={formData.status}
                 onChange={e =>
-                  setFormData({ ...formData, status: Number(e.target.value) })
+                  setFormData({
+                    ...formData,
+                    status: e.target.value as MovieStatus,
+                  })
                 }
                 className='w-full rounded-xl border border-white/10 bg-[var(--bg-main)] px-4 py-3 text-sm text-white focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] appearance-none cursor-pointer'
               >

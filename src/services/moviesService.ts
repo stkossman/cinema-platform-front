@@ -25,7 +25,11 @@ const mapDtoToMovie = (dto: MovieDto & { TrailerUrl?: string }): Movie => ({
   duration: dto.durationMinutes,
   videoUrl: dto.trailerUrl || dto.TrailerUrl,
   cast: dto.cast || [],
-  status: dto.status !== undefined ? dto.status : MovieStatus.Active,
+  status:
+    dto.status !== undefined
+      ? (MovieStatus[dto.status as keyof typeof MovieStatus] ??
+        MovieStatus.Active)
+      : MovieStatus.Active,
 })
 
 export const moviesService = {
