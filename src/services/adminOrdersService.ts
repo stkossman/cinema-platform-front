@@ -60,7 +60,6 @@ export const adminOrdersService = {
     }
   },
 
-  // Цей метод вже працює на бекенді, можемо використовувати
   cancelOrder: async (id: string): Promise<void> => {
     await api.post(`/orders/${id}/cancel`)
   },

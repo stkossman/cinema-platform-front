@@ -1,52 +1,38 @@
-import { useState } from 'react'
-import { Search, Eye, Filter, CreditCard } from 'lucide-react'
+import { useAdminOrders } from './hooks/useAdminOrders'
+import { Search, CreditCard, Loader2, AlertCircle } from 'lucide-react'
 import { OrderStatus } from '../../types/order'
 
 const OrdersPage = () => {
-  const [searchTerm, setSearchTerm] = useState('')
-
-  const [orders] = useState([
-    {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      user_email: 'ivan@example.com',
-      movie_title: 'Dune: Part Two',
-      total_amount: 450.0,
-      status: 1,
-      booking_date: '2024-02-10T14:30:00Z',
-      payment_transaction_id: 'tx_stripe_123456789',
-    },
-    {
-      id: '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
-      user_email: 'olga@example.com',
-      movie_title: 'Madam Web',
-      total_amount: 300.0,
-      status: 0,
-      booking_date: '2024-02-10T15:15:00Z',
-      payment_transaction_id: null,
-    },
-    {
-      id: '7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d',
-      user_email: 'admin@cinema.com',
-      movie_title: 'Avatar 2',
-      total_amount: 900.0,
-      status: 2,
-      booking_date: '2024-02-09T10:00:00Z',
-      payment_transaction_id: 'tx_stripe_987654321',
-    },
-  ])
+  const { orders, isLoading, searchTerm, setSearchTerm } = useAdminOrders()
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
       case OrderStatus.Paid:
-        return <span className='... text-green-500 ...'>Paid</span>
+        return (
+          <span className='bg-green-500/10 text-green-500 border-green-500/20 px-2 py-1 rounded-full text-xs font-bold border'>
+            Оплачено
+          </span>
+        )
       case OrderStatus.Pending:
-        return <span className='... text-yellow-500 ...'>Pending</span>
+        return (
+          <span className='bg-yellow-500/10 text-yellow-500 border-yellow-500/20 px-2 py-1 rounded-full text-xs font-bold border'>
+            Очікує
+          </span>
+        )
       case OrderStatus.Cancelled:
-        return <span className='... text-red-500 ...'>Cancelled</span>
+        return (
+          <span className='bg-red-500/10 text-red-500 border-red-500/20 px-2 py-1 rounded-full text-xs font-bold border'>
+            Скасовано
+          </span>
+        )
       case OrderStatus.Failed:
-        return <span className='... text-red-500 ...'>Failed</span>
+        return (
+          <span className='bg-red-500/10 text-red-500 border-red-500/20 px-2 py-1 rounded-full text-xs font-bold border'>
+            Помилка
+          </span>
+        )
       default:
-        return <span>{status}</span>
+        return <span>-</span>
     }
   }
 
@@ -59,14 +45,6 @@ const OrdersPage = () => {
             Історія транзакцій та покупок
           </p>
         </div>
-        <div className='flex gap-2'>
-          <button
-            type='button'
-            className='p-2.5 rounded-xl border border-white/10 text-[var(--text-muted)] hover:bg-white/5 hover:text-white transition-colors'
-          >
-            <Filter size={20} />
-          </button>
-        </div>
       </div>
 
       <div className='relative'>
@@ -76,76 +54,66 @@ const OrdersPage = () => {
         />
         <input
           type='text'
-          placeholder='Пошук за ID, поштою або ID транзакції...'
+          placeholder='Пошук за ID...'
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           className='w-full rounded-xl bg-[var(--bg-card)] border border-white/5 py-3 pl-10 pr-4 text-white placeholder-[var(--text-muted)] focus:border-[var(--color-primary)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]/50'
         />
       </div>
 
-      <div className='rounded-xl border border-white/5 bg-[var(--bg-card)] overflow-hidden backdrop-blur-sm shadow-xl'>
-        <table className='w-full text-left text-sm'>
-          <thead className='bg-white/5 text-[var(--text-muted)] font-medium uppercase text-xs tracking-wider'>
-            <tr>
-              <th className='px-6 py-4'>Дата</th>
-              <th className='px-6 py-4'>Користувач</th>
-              <th className='px-6 py-4'>Фільм</th>
-              <th className='px-6 py-4'>Сума</th>
-              <th className='px-6 py-4'>Trx ID</th>
-              <th className='px-6 py-4'>Статус</th>
-              <th className='px-6 py-4 text-right'>Дії</th>
-            </tr>
-          </thead>
-          <tbody className='divide-y divide-white/5'>
-            {orders.map(order => (
-              <tr
-                key={order.id}
-                className='group hover:bg-[var(--bg-hover)] transition-colors'
-              >
-                <td className='px-6 py-4 text-[var(--text-muted)] whitespace-nowrap'>
-                  {new Date(order.booking_date).toLocaleString('uk-UA', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </td>
-                <td className='px-6 py-4 font-medium text-white'>
-                  {order.user_email}
-                </td>
-                <td className='px-6 py-4 text-[var(--text-muted)]'>
-                  {order.movie_title}
-                </td>
-                <td className='px-6 py-4 font-bold text-white'>
-                  {order.total_amount.toFixed(2)} ₴
-                </td>
-                <td className='px-6 py-4 text-xs font-mono text-[var(--text-muted)]'>
-                  {order.payment_transaction_id ? (
-                    <div className='flex items-center gap-1'>
-                      <CreditCard size={12} />{' '}
-                      {order.payment_transaction_id.slice(0, 8)}...
-                    </div>
-                  ) : (
-                    '-'
-                  )}
-                </td>
-                <td className='px-6 py-4'>
-                  {getStatusBadge(order.status as OrderStatus)}
-                </td>
-                <td className='px-6 py-4 text-right'>
-                  <button
-                    type='button'
-                    className='p-2 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-colors'
-                    title='Деталі'
-                  >
-                    <Eye size={18} />
-                  </button>
-                </td>
+      {isLoading ? (
+        <div className='flex justify-center py-20'>
+          <Loader2 className='animate-spin text-[var(--color-primary)]' />
+        </div>
+      ) : orders.length === 0 ? (
+        <div className='text-center py-20 text-[var(--text-muted)] flex flex-col items-center'>
+          <AlertCircle className='mb-2 opacity-50' size={32} />
+          <p>Замовлень не знайдено (АПІ ще не готове)</p>
+        </div>
+      ) : (
+        <div className='rounded-xl border border-white/5 bg-[var(--bg-card)] overflow-hidden backdrop-blur-sm shadow-xl'>
+          <table className='w-full text-left text-sm'>
+            <thead className='bg-white/5 text-[var(--text-muted)] font-medium uppercase text-xs tracking-wider'>
+              <tr>
+                <th className='px-6 py-4'>Дата</th>
+                <th className='px-6 py-4'>Фільм</th>
+                <th className='px-6 py-4'>Сума</th>
+                <th className='px-6 py-4'>Trx ID</th>
+                <th className='px-6 py-4'>Статус</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className='divide-y divide-white/5'>
+              {orders.map(order => (
+                <tr
+                  key={order.id}
+                  className='group hover:bg-[var(--bg-hover)] transition-colors'
+                >
+                  <td className='px-6 py-4 text-[var(--text-muted)] whitespace-nowrap'>
+                    {new Date(order.bookingDate).toLocaleDateString()}
+                  </td>
+                  <td className='px-6 py-4 text-white'>
+                    {order.movieTitle || 'Unknown'}
+                  </td>
+                  <td className='px-6 py-4 font-bold text-white'>
+                    {order.totalAmount} ₴
+                  </td>
+                  <td className='px-6 py-4 text-xs font-mono text-[var(--text-muted)]'>
+                    {order.paymentTransactionId ? (
+                      <div className='flex items-center gap-1'>
+                        <CreditCard size={12} />{' '}
+                        {order.paymentTransactionId.slice(0, 8)}...
+                      </div>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                  <td className='px-6 py-4'>{getStatusBadge(order.status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
