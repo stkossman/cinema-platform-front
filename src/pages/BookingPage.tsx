@@ -22,13 +22,14 @@ import { useAuth } from '../features/auth/AuthContext'
 
 const BookingPage = () => {
   const { id } = useParams<{ id: string }>()
-  const { user } = useAuth()
+  const { user, isLoading: isAuthLoading } = useAuth()
   const navigate = useNavigate()
 
   const [movie, setMovie] = useState<Movie | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
   const [hall, setHall] = useState<Hall | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+
+  const [isPageLoading, setIsPageLoading] = useState(true)
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [selectedSession, setSelectedSession] = useState<Session | null>(null)
@@ -40,10 +41,10 @@ const BookingPage = () => {
   )
 
   useEffect(() => {
-    if (!user) {
+    if (!isAuthLoading && !user) {
       navigate('/auth/login', { replace: true })
     }
-  }, [user, navigate])
+  }, [user, isAuthLoading, navigate])
 
   useEffect(() => {
     const init = async () => {
@@ -74,7 +75,7 @@ const BookingPage = () => {
       } catch (e) {
         console.error(e)
       } finally {
-        setIsLoading(false)
+        setIsPageLoading(false)
       }
     }
     init()
@@ -83,7 +84,7 @@ const BookingPage = () => {
   useEffect(() => {
     if (selectedSession) {
       const loadData = async () => {
-        setIsLoading(true)
+        setIsPageLoading(true)
         try {
           const [hallData, pricingData] = await Promise.all([
             bookingService.getHallById(selectedSession.hallId),
@@ -97,7 +98,7 @@ const BookingPage = () => {
         } catch (e) {
           console.error(e)
         } finally {
-          setIsLoading(false)
+          setIsPageLoading(false)
         }
       }
       loadData()
@@ -193,7 +194,7 @@ const BookingPage = () => {
     )
   }, [selectedSeats, pricingRules, selectedSession])
 
-  if (isLoading && !movie) {
+  if (isAuthLoading || (isPageLoading && !movie)) {
     return (
       <div className='flex h-screen items-center justify-center bg-[var(--bg-main)] text-white'>
         <Loader2 className='animate-spin text-[var(--color-primary)]' />
@@ -285,7 +286,7 @@ const BookingPage = () => {
                     заплановані.
                   </p>
                   <Link
-                    to='/sessions'
+                    to='/movies'
                     className='mt-8 rounded-xl bg-[var(--color-primary)] px-8 py-3 text-sm font-bold text-white transition-all hover:bg-[var(--color-primary-hover)] shadow-lg shadow-[var(--color-primary)]/20 hover:-translate-y-1'
                   >
                     Афіша кінотеатру
