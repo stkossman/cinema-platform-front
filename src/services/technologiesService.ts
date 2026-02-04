@@ -12,12 +12,12 @@ export const technologiesService = {
     const { data } = await api.get<Technology[]>('/technologies')
 
     technologiesCache = data
-
     return data
   },
 
   create: async (name: string, type: string): Promise<string> => {
     const { data } = await api.post('/technologies', { name, type })
+
     technologiesCache = null
     return data
   },
