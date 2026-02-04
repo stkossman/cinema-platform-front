@@ -32,9 +32,9 @@ const PricingModal = ({ isOpen, onClose, onSave }: PricingModalProps) => {
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in'>
-      <div className='w-full max-w-md bg-[var(--bg-card)] border border-white/10 rounded-xl shadow-2xl overflow-hidden'>
+      <div className='w-full max-w-md bg-[var(--bg-card)] border border-white/10 rounded-xl shadow-2xl'>
         <div className='flex items-center justify-between border-b border-white/10 p-6'>
-          <h2 className='text-xl font-bold text-white'>New Pricing Scheme</h2>
+          <h2 className='text-xl font-bold text-white'>Новий тариф</h2>
           <button
             type='button'
             onClick={onClose}
@@ -44,29 +44,30 @@ const PricingModal = ({ isOpen, onClose, onSave }: PricingModalProps) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className='p-6 space-y-4'>
+        <form onSubmit={handleSubmit} className='p-6 space-y-6'>
           <Input
-            label='Name'
+            label='Назва тарифу'
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder='e.g. Standard Evening, Weekend Prime'
+            placeholder='Напр. "Стандартний Вечірній"'
+            autoFocus
           />
 
-          <div className='flex justify-end gap-3 pt-4'>
+          <div className='flex justify-end gap-3'>
             <button
               type='button'
               onClick={onClose}
-              className='px-6 py-2 rounded-lg text-sm font-bold text-[var(--text-muted)] hover:text-white transition-colors'
+              className='px-6 py-2 rounded-lg text-sm font-bold text-[var(--text-muted)] hover:text-white hover:bg-white/5 transition-colors'
             >
-              Cancel
+              Скасувати
             </button>
             <button
               type='submit'
-              disabled={isSubmitting}
+              disabled={isSubmitting || !name.trim()}
               className='flex items-center gap-2 bg-[var(--color-primary)] text-white px-6 py-2 rounded-lg font-bold hover:bg-[var(--color-primary-hover)] transition-all shadow-lg disabled:opacity-50'
             >
               {isSubmitting && <Loader2 className='animate-spin' size={16} />}
-              Create
+              Створити
             </button>
           </div>
         </form>

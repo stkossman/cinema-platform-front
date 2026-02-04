@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Loader2, Save } from 'lucide-react'
+import { X, Save, Loader2, RefreshCw } from 'lucide-react'
 import {
   type PricingDetailsDto,
   type SetPricingRuleDto,
@@ -10,21 +10,20 @@ import { type SeatType } from '../../../types/hall'
 interface PricingRulesEditorProps {
   pricing: PricingDetailsDto
   onClose: () => void
-  onSave: (
-    id: string,
-    rules: SetPricingRuleDto[],
-  ) => Promise<{ success: boolean; error?: string }>
+  onSave: (id: string, rules: SetPricingRuleDto[]) => Promise<any>
 }
 
 const DAYS = [
-  { id: 1, name: 'Monday' },
-  { id: 2, name: 'Tuesday' },
-  { id: 3, name: 'Wednesday' },
-  { id: 4, name: 'Thursday' },
-  { id: 5, name: 'Friday' },
-  { id: 6, name: 'Saturday' },
-  { id: 0, name: 'Sunday' },
+  { id: 1, name: 'Пн' },
+  { id: 2, name: 'Вт' },
+  { id: 3, name: 'Ср' },
+  { id: 4, name: 'Чт' },
+  { id: 5, name: 'Пт' },
+  { id: 6, name: 'Сб' },
+  { id: 0, name: 'Нд' },
 ]
+
+const SEPARATOR = '__'
 
 const PricingRulesEditor = ({
   pricing,
@@ -37,18 +36,16 @@ const PricingRulesEditor = ({
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const loadData = async () => {
+    const init = async () => {
       try {
         const types = await seatTypesService.getAll()
         setSeatTypes(types)
 
         const initialMatrix: Record<string, number> = {}
-        if (pricing.items && pricing.items.length > 0) {
-          pricing.items.forEach(item => {
-            const key = `${item.dayOfWeek}-${item.seatTypeId}`
-            initialMatrix[key] = item.price
-          })
-        }
+        pricing.items.forEach(item => {
+          const key = `${item.dayOfWeek}${SEPARATOR}${item.seatTypeId}`
+          initialMatrix[key] = item.price
+        })
         setMatrix(initialMatrix)
       } catch (e) {
         console.error(e)
@@ -56,22 +53,23 @@ const PricingRulesEditor = ({
         setIsLoading(false)
       }
     }
-    loadData()
+    init()
   }, [pricing])
 
-  const handlePriceChange = (day: number, seatTypeId: string, val: string) => {
-    const key = `${day}-${seatTypeId}`
-    if (val === '') {
-      const newMatrix = { ...matrix }
-      delete newMatrix[key]
-      setMatrix(newMatrix)
-      return
-    }
+  const handlePriceChange = (day: number, typeId: string, value: string) => {
+    const numValue = parseFloat(value)
+    if (isNaN(numValue)) return
 
-    const num = parseFloat(val)
-    if (!isNaN(num)) {
-      setMatrix(prev => ({ ...prev, [key]: num }))
-    }
+    const key = `${day}${SEPARATOR}${typeId}`
+    setMatrix(prev => ({ ...prev, [key]: numValue }))
+  }
+
+  const fillRow = (typeId: string, value: number) => {
+    const updates: Record<string, number> = {}
+    DAYS.forEach(d => {
+      updates[`${d.id}${SEPARATOR}${typeId}`] = value
+    })
+    setMatrix(prev => ({ ...prev, ...updates }))
   }
 
   const handleSave = async () => {
@@ -79,42 +77,35 @@ const PricingRulesEditor = ({
     const rules: SetPricingRuleDto[] = []
 
     Object.entries(matrix).forEach(([key, price]) => {
-      const parts = key.split('-')
-      if (parts.length < 2) return
-      const dayStr = parts[0]
-      const seatTypeId = parts.slice(1).join('-')
+      const [dayStr, typeId] = key.split(SEPARATOR)
 
-      if (price > 0 && seatTypeId) {
+      if (dayStr && typeId) {
         rules.push({
           dayOfWeek: parseInt(dayStr),
-          seatTypeId: seatTypeId,
-          price,
+          seatTypeId: typeId,
+          price: price,
         })
       }
     })
 
-    const result = await onSave(pricing.id, rules)
+    const res = await onSave(pricing.id, rules)
     setIsSaving(false)
-    if (result.success) {
-      onClose()
-    } else {
-      alert(result.error)
-    }
+    if (res.success) onClose()
+    else alert(res.error)
   }
 
+  if (isLoading) return null
+
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in'>
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in'>
       <div className='w-full max-w-5xl bg-[var(--bg-card)] border border-white/10 rounded-xl shadow-2xl flex flex-col max-h-[90vh]'>
         <div className='flex items-center justify-between border-b border-white/10 p-6'>
           <div>
             <h2 className='text-xl font-bold text-white'>
-              Edit Rules:{' '}
-              <span className='text-[var(--color-primary)]'>
-                {pricing.name}
-              </span>
+              Редагування цін: {pricing.name}
             </h2>
             <p className='text-sm text-[var(--text-muted)]'>
-              Set prices for each seat type per day of week.
+              Встановіть ціни для кожного типу місця та дня тижня
             </p>
           </div>
           <button
@@ -126,96 +117,106 @@ const PricingRulesEditor = ({
           </button>
         </div>
 
-        <div className='flex-1 overflow-auto p-6 custom-scrollbar'>
-          {isLoading ? (
-            <div className='flex justify-center py-20'>
-              <Loader2
-                className='animate-spin text-[var(--color-primary)]'
-                size={32}
-              />
-            </div>
-          ) : (
-            <table className='w-full text-sm text-left border-collapse'>
-              <thead className='text-xs text-[var(--text-muted)] uppercase bg-white/5 sticky top-0 z-10 backdrop-blur-md'>
+        <div className='flex-1 overflow-auto p-6'>
+          <div className='border border-white/10 rounded-lg overflow-hidden'>
+            <table className='w-full text-sm text-left'>
+              <thead className='text-xs uppercase bg-white/5 text-[var(--text-muted)] font-medium'>
                 <tr>
-                  <th className='px-4 py-3 rounded-tl-lg border-b border-white/10'>
-                    Day
-                  </th>
-                  {seatTypes.map(st => (
+                  <th className='px-4 py-3 w-48'>Тип місця</th>
+                  {DAYS.map(day => (
                     <th
-                      key={st.id}
-                      className='px-4 py-3 text-center border-b border-white/10 border-l border-white/5'
+                      key={day.id}
+                      className='px-2 py-3 text-center w-24 border-l border-white/5'
                     >
-                      {st.name}
+                      {day.name}
                     </th>
                   ))}
+                  <th className='px-4 py-3 w-10'></th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-white/5'>
-                {DAYS.map(day => (
+                {seatTypes.map(type => (
                   <tr
-                    key={day.id}
+                    key={type.id}
                     className='hover:bg-white/5 transition-colors'
                   >
-                    <td className='px-4 py-3 font-medium text-white border-r border-white/5 bg-white/5'>
-                      {day.name}
+                    <td className='px-4 py-3 font-bold text-white'>
+                      {type.name}
+                      <div className='text-[10px] font-normal text-[var(--text-muted)] line-clamp-1'>
+                        {type.description}
+                      </div>
                     </td>
-                    {seatTypes.map(st => {
-                      const key = `${day.id}-${st.id}`
-                      const price = matrix[key] !== undefined ? matrix[key] : ''
+                    {DAYS.map(day => {
+                      const price =
+                        matrix[`${day.id}${SEPARATOR}${type.id}`] || 0
                       return (
                         <td
-                          key={st.id}
-                          className='px-2 py-2 border-l border-white/5'
+                          key={day.id}
+                          className='p-2 border-l border-white/5'
                         >
                           <div className='relative group'>
                             <input
                               type='number'
                               min='0'
                               step='10'
-                              placeholder='-'
                               value={price}
                               onChange={e =>
-                                handlePriceChange(day.id, st.id, e.target.value)
+                                handlePriceChange(
+                                  day.id,
+                                  type.id,
+                                  e.target.value,
+                                )
                               }
-                              className='w-full bg-transparent border border-white/5 rounded px-2 py-2 text-center text-white focus:border-[var(--color-primary)] focus:bg-[var(--bg-main)] outline-none transition-all placeholder:text-white/10 font-mono'
+                              className='w-full bg-[var(--bg-main)] border border-transparent focus:border-[var(--color-primary)] rounded px-2 py-1.5 text-center text-white font-medium focus:outline-none transition-all'
                             />
-                            {price !== '' && (
-                              <span className='absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-[10px] pointer-events-none'>
-                                ₴
-                              </span>
-                            )}
+                            <span className='absolute right-2 top-1.5 text-[10px] text-[var(--text-muted)] pointer-events-none opacity-50'>
+                              ₴
+                            </span>
                           </div>
                         </td>
                       )
                     })}
+                    <td className='px-2 text-center border-l border-white/5'>
+                      <button
+                        type='button'
+                        onClick={() => {
+                          const basePrice =
+                            matrix[`${DAYS[0].id}${SEPARATOR}${type.id}`] || 150
+                          fillRow(type.id, basePrice)
+                        }}
+                        className='p-1.5 rounded hover:bg-white/10 text-[var(--text-muted)] hover:text-white'
+                        title='Заповнити весь рядок ціною понеділка'
+                      >
+                        <RefreshCw size={14} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )}
+          </div>
         </div>
 
-        <div className='border-t border-white/10 p-6 flex justify-end gap-3 bg-[var(--bg-card)] rounded-b-xl'>
+        <div className='p-6 border-t border-white/10 flex justify-end gap-3 bg-[var(--bg-card)] rounded-b-xl'>
           <button
             type='button'
             onClick={onClose}
-            className='px-6 py-2 rounded-lg text-sm font-bold text-[var(--text-muted)] hover:text-white transition-colors'
+            className='px-6 py-2 rounded-lg font-bold text-[var(--text-muted)] hover:text-white transition-colors'
           >
-            Cancel
+            Скасувати
           </button>
           <button
             type='button'
             onClick={handleSave}
             disabled={isSaving}
-            className='flex items-center gap-2 bg-[var(--color-primary)] text-white px-6 py-2 rounded-lg font-bold hover:bg-[var(--color-primary-hover)] transition-all shadow-lg disabled:opacity-50'
+            className='flex items-center gap-2 bg-[var(--color-success)] text-white px-8 py-2 rounded-lg font-bold hover:brightness-110 shadow-lg shadow-[var(--color-success)]/20 transition-all'
           >
             {isSaving ? (
-              <Loader2 className='animate-spin' size={16} />
+              <Loader2 className='animate-spin' />
             ) : (
-              <Save size={16} />
+              <Save size={18} />
             )}
-            Save Rules
+            Зберегти зміни
           </button>
         </div>
       </div>

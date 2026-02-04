@@ -12,8 +12,25 @@ export const usePricings = () => {
   const fetchPricings = useCallback(async () => {
     setIsLoading(true)
     try {
-      const data = await adminPricingsService.getAll()
-      setPricings(Array.isArray(data) ? data : [])
+      const listData = await adminPricingsService.getAll()
+
+      if (!Array.isArray(listData)) {
+        setPricings([])
+        return
+      }
+
+      const detailedPricings = await Promise.all(
+        listData.map(async pricing => {
+          try {
+            return await adminPricingsService.getById(pricing.id)
+          } catch (e) {
+            console.warn(`Could not fetch details for ${pricing.name}`, e)
+            return pricing
+          }
+        }),
+      )
+
+      setPricings(detailedPricings)
     } catch (error) {
       console.error('Failed to fetch pricings', error)
       setPricings([])
