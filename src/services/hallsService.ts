@@ -23,6 +23,7 @@ export interface HallSummaryDto {
   id: string
   name: string
   capacity: number
+  totalCapacity?: number
   technologies?: { id: string; name: string }[]
 }
 
@@ -37,7 +38,10 @@ export const hallsService = {
     const { data } = await api.get<PaginatedResult<HallSummaryDto>>(
       '/halls?pageNumber=1&pageSize=100',
     )
-    return data.items
+    return data.items.map(item => ({
+      ...item,
+      capacity: item.totalCapacity || item.capacity || 0,
+    }))
   },
 
   create: async (

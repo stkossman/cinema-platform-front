@@ -64,15 +64,29 @@ export const useHallBuilder = (
 
   useEffect(() => {
     if (initialSeats.length > 0) {
-      const maxX = Math.max(...initialSeats.map(s => s.gridX))
-      const maxY = Math.max(...initialSeats.map(s => s.gridY))
-      setCols(maxX + 1)
-      setRows(maxY + 1)
+      const minX = Math.min(...initialSeats.map(s => s.gridX))
+      const minY = Math.min(...initialSeats.map(s => s.gridY))
+
+      const shiftX = minX > 0 ? minX : 0
+      const shiftY = minY > 0 ? minY : 0
+
+      let maxNormalizedX = 0
+      let maxNormalizedY = 0
 
       const newMap = new Map<string, string>()
+
       initialSeats.forEach(s => {
-        newMap.set(`${s.gridX}-${s.gridY}`, s.seatTypeId)
+        const normX = s.gridX - shiftX
+        const normY = s.gridY - shiftY
+
+        if (normX > maxNormalizedX) maxNormalizedX = normX
+        if (normY > maxNormalizedY) maxNormalizedY = normY
+
+        newMap.set(`${normX}-${normY}`, s.seatTypeId)
       })
+
+      setCols(maxNormalizedX + 1)
+      setRows(maxNormalizedY + 1)
       setGridConfig(newMap)
     }
   }, [initialSeats])
@@ -88,7 +102,11 @@ export const useHallBuilder = (
     const key = `${x}-${y}`
     setGridConfig(prev => {
       const newMap = new Map(prev)
-      newMap.set(key, selectedPaintType.id)
+      if (newMap.get(key) === selectedPaintType.id) {
+        newMap.delete(key)
+      } else {
+        newMap.set(key, selectedPaintType.id)
+      }
       return newMap
     })
   }

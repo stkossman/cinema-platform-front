@@ -220,7 +220,7 @@ const HallBuilder = ({
                   getSeatColor(displayType?.name),
                   'text-white',
                 )}
-                title={`Row: ${y + 1}, Num: ${x + 1} (${displayType?.name})`}
+                title={`Row: ${y}, Num: ${x} (${displayType?.name})`}
               >
                 <Armchair size={16} fill='currentColor' />
               </div>
