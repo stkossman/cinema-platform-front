@@ -86,13 +86,18 @@ const BookingPage = () => {
       const loadData = async () => {
         setIsPageLoading(true)
         try {
-          const [hallData, pricingData] = await Promise.all([
-            bookingService.getHallById(selectedSession.hallId),
-            selectedSession.pricingId
-              ? adminPricingsService.getById(selectedSession.pricingId)
-              : Promise.resolve(null),
-          ])
+          const sessionDetails = await bookingService.getSessionDetails(
+            selectedSession.id,
+          )
+          const hallData = await bookingService.getHallById(
+            selectedSession.hallId,
+          )
 
+          const pricingData = selectedSession.pricingId
+            ? await adminPricingsService.getById(selectedSession.pricingId)
+            : null
+
+          setSelectedSession(sessionDetails)
           setHall(hallData)
           setPricingRules(pricingData)
         } catch (e) {
@@ -103,7 +108,7 @@ const BookingPage = () => {
       }
       loadData()
     }
-  }, [selectedSession])
+  }, [selectedSession?.id])
 
   const handleSeatToggle = async (seat: Seat) => {
     const exists = selectedSeats.find(s => s.id === seat.id)
@@ -305,6 +310,7 @@ const BookingPage = () => {
                 hall={hall}
                 selectedSeats={selectedSeats}
                 onToggleSeat={handleSeatToggle}
+                occupiedSeatIds={selectedSession?.occupiedSeatIds || []}
               />
             </div>
           )}

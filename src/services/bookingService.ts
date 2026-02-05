@@ -1,4 +1,5 @@
 import { api } from '../lib/axios'
+import { supabase } from '../lib/supabase'
 import type { Session, Hall } from '../types/hall'
 
 export interface CreateOrderResponse {
@@ -77,6 +78,29 @@ export const bookingService = {
     return activeRequest
   },
 
+  getOccupiedSeatsFromSupabase: async (
+    session_id: string,
+  ): Promise<string[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('seat_id, ticket_status')
+        .eq('session_id', session_id)
+
+      if (error) {
+        console.error('Supabase error:', error)
+        return []
+      }
+
+      if (!data) return []
+
+      return data.map((ticket: any) => ticket.seat_id)
+    } catch (e) {
+      console.error('Failed to fetch occupied seats from Supabase:', e)
+      return []
+    }
+  },
+
   lockSeat: async (sessionId: string, seatId: string): Promise<void> => {
     await api.post('/seats/lock', {
       sessionId,
@@ -95,5 +119,26 @@ export const bookingService = {
       paymentToken,
     })
     return data
+  },
+
+  getSessionDetails: async (sessionId: string): Promise<Session> => {
+    const { data } = await api.get<Session>(`/sessions/${sessionId}`)
+
+    const occupiedSeats =
+      await bookingService.getOccupiedSeatsFromSupabase(sessionId)
+
+    return {
+      id: data.id,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      status: data.status,
+      movieId: data.movieId,
+      movieTitle: data.movieTitle,
+      hallId: data.hallId,
+      hallName: data.hallName,
+      priceBase: data.priceBase,
+      pricingId: data.pricingId,
+      occupiedSeatIds: occupiedSeats,
+    } as Session
   },
 }

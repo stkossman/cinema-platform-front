@@ -7,6 +7,7 @@ interface SeatSelectorProps {
   selectedSeats: Seat[]
   onToggleSeat: (seat: Seat) => void
   lockingSeatId?: string | null
+  occupiedSeatIds?: string[]
 }
 
 const getSeatTypeStyle = (typeName: string = 'Standard') => {
@@ -24,6 +25,7 @@ const SeatSelector = ({
   selectedSeats,
   onToggleSeat,
   lockingSeatId,
+  occupiedSeatIds = [],
 }: SeatSelectorProps) => {
   const cols = hall.colsCount || 10
   const rows = hall.rowsCount || 10
@@ -50,7 +52,12 @@ const SeatSelector = ({
           <span className='text-white'>Обране</span>
         </div>
         <div className='flex items-center gap-2'>
-          <Armchair size={18} className='text-zinc-800' />
+          <Armchair
+            size={18}
+            className='text-zinc-800'
+            fill='currentColor'
+            fillOpacity={0.2}
+          />
           <span className='opacity-40'>Зайнято</span>
         </div>
 
@@ -93,6 +100,12 @@ const SeatSelector = ({
 
             if (!seat) return <div key={index} />
 
+            const isOccupied =
+              occupiedSeatIds
+                .map(id => id.toLowerCase())
+                .includes(seat.id.toLowerCase()) ||
+              seat.status === 'Sold' ||
+              seat.status === 'Locked'
             const isSelected = selectedSeats.some(s => s.id === seat.id)
             const isLocking = lockingSeatId === seat.id
 
@@ -101,7 +114,11 @@ const SeatSelector = ({
             let iconFill = 'none'
             let fillOpacity = 0
 
-            if (isLocking) {
+            if (isOccupied) {
+              seatClasses += 'text-zinc-800 cursor-not-allowed opacity-60'
+              iconFill = 'currentColor'
+              fillOpacity = 0.2
+            } else if (isLocking) {
               seatClasses +=
                 'text-[var(--color-primary)] opacity-50 cursor-wait scale-90'
             } else if (isSelected) {
@@ -124,10 +141,14 @@ const SeatSelector = ({
               <button
                 type='button'
                 key={seat.id}
-                disabled={isLocking}
+                disabled={isLocking || isOccupied}
                 onClick={() => onToggleSeat(seat)}
                 className={`group relative flex h-8 w-8 items-center justify-center ${seatClasses}`}
-                title={`Ряд ${seat.row}, Місце ${seat.number} (${seat.seatTypeName})`}
+                title={
+                  isOccupied
+                    ? `Місце зайняте (Ряд ${seat.row}, Місце ${seat.number})`
+                    : `Ряд ${seat.row}, Місце ${seat.number} (${seat.seatTypeName})`
+                }
               >
                 {isLocking ? (
                   <Loader2 size={16} className='animate-spin' />
@@ -145,7 +166,7 @@ const SeatSelector = ({
                   />
                 )}
 
-                {!isLocking && (
+                {!isLocking && !isOccupied && (
                   <div className='absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-bold px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 whitespace-nowrap z-20 scale-90 group-hover:scale-100'>
                     Ряд {seat.row} / {seat.number}
                   </div>
