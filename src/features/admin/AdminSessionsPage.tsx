@@ -93,8 +93,7 @@ const AdminSessionsPage = () => {
 
           {Object.entries(groupedSessions).map(([dateKey, sessionList]) => {
             const dateObj = new Date(sessionList[0].startTime)
-            const isToday =
-              new Date().toDateString() === new Date().toDateString()
+            const isToday = dateObj.toDateString() === new Date().toDateString()
 
             return (
               <div key={dateKey} className='relative'>
