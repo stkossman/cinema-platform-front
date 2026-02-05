@@ -286,7 +286,7 @@ const BookingPage = () => {
                     заплановані.
                   </p>
                   <Link
-                    to='/movies'
+                    to='/sessions'
                     className='mt-8 rounded-xl bg-[var(--color-primary)] px-8 py-3 text-sm font-bold text-white transition-all hover:bg-[var(--color-primary-hover)] shadow-lg shadow-[var(--color-primary)]/20 hover:-translate-y-1'
                   >
                     Афіша кінотеатру
