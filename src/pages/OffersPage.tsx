@@ -1,79 +1,184 @@
-import { TicketPercent, Gift, Zap, Crown } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { Sparkles, Loader2, Ticket, SearchX, Play } from 'lucide-react'
+import { useAuth } from '../features/auth/AuthContext'
+import {
+  moviesService,
+  type MovieRecommendation,
+} from '../services/moviesService'
 
 const OffersPage = () => {
+  const { user, isLoading: isAuthLoading } = useAuth()
+  const navigate = useNavigate()
+
+  const [recommendations, setRecommendations] = useState<MovieRecommendation[]>(
+    [],
+  )
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      navigate('/auth/login', { replace: true })
+    }
+  }, [user, isAuthLoading, navigate])
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      if (!user) return
+
+      try {
+        const data = await moviesService.getRecommendations(6)
+        setRecommendations(data)
+      } catch (error) {
+        console.error('Failed to fetch recommendations:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (user && !isAuthLoading) {
+      fetchRecommendations()
+    }
+  }, [user, isAuthLoading])
+
+  if (isAuthLoading || (isLoading && user)) {
+    return (
+      <div className='flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[var(--bg-main)]'>
+        <Loader2 className='h-8 w-8 animate-spin text-[var(--color-primary)]' />
+      </div>
+    )
+  }
+
+  if (!user) return null
+
   return (
-    <div className='flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-20 bg-[var(--bg-main)] overflow-hidden relative'>
-      <div className='absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-4xl opacity-30 pointer-events-none'>
-        <div className='absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--color-primary)]/20 rounded-full blur-[120px] animate-pulse-slow' />
-        <div className='absolute bottom-1/4 right-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-[100px]' />
+    <div className='min-h-[calc(100vh-4rem)] px-4 py-12 bg-[var(--bg-main)] overflow-hidden relative'>
+      <div className='absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl opacity-20 pointer-events-none'>
+        <div className='absolute top-0 left-1/4 w-96 h-96 bg-[var(--color-primary)]/30 rounded-full blur-[120px]' />
+        <div className='absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[150px]' />
       </div>
 
-      <div className='relative w-full max-w-4xl z-10'>
-        <div className='text-center mb-16 space-y-4'>
-          <h1 className='text-4xl sm:text-6xl font-black text-white tracking-tighter uppercase'>
-            Ексклюзивні{' '}
-            <span className='text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] to-orange-500'>
-              Пропозиції
+      <div className='relative z-10 container mx-auto max-w-6xl'>
+        <div className='text-center mb-16 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700'>
+          <div className='inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-[var(--color-primary)] uppercase tracking-widest mb-2'>
+            <Sparkles size={14} /> AI Powered
+          </div>
+          <h1 className='text-4xl sm:text-5xl font-black text-white tracking-tight uppercase'>
+            Персонально для{' '}
+            <span className='text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] to-purple-500'>
+              Вас
             </span>
           </h1>
-          <p className='text-lg text-[var(--text-muted)] max-w-xl mx-auto'>
-            Приєднуйтесь до програми лояльності, щоб отримати доступ до
-            спеціальних цін та закритих показів.
+          <p className='text-lg text-[var(--text-muted)] max-w-2xl mx-auto'>
+            Ми проаналізували вашу історію переглядів за допомогою штучного
+            інтелекту та підібрали фільми, які вам точно сподобаються.
           </p>
         </div>
 
-        <div className='grid gap-6 md:grid-cols-2'>
-          <div className='group relative overflow-hidden rounded-3xl border border-white/10 bg-[var(--bg-card)] p-8 transition-all hover:-translate-y-2 hover:shadow-2xl hover:border-[var(--color-primary)]/30'>
-            <div className='absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity'>
-              <TicketPercent size={120} />
-            </div>
-            <div className='w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-6 text-[var(--color-primary)] border border-white/10 group-hover:bg-[var(--color-primary)] group-hover:text-white transition-colors'>
-              <Zap size={24} />
-            </div>
-            <h3 className='text-2xl font-bold text-white mb-2'>Ранні пташки</h3>
-            <p className='text-[var(--text-muted)] mb-6'>
-              Знижка 20% на всі ранкові сеанси до 12:00 у будні дні.
-            </p>
-            <button
-              type='button'
-              className='w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white hover:text-black transition-all'
-            >
-              Скоро
-            </button>
-          </div>
+        {recommendations.length > 0 ? (
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
+            {recommendations.map((movie, index) => {
+              const matchPercentage = Math.round(movie.similarityScore * 100)
 
-          <div className='group relative overflow-hidden rounded-3xl border border-white/10 bg-[var(--bg-card)] p-8 transition-all hover:-translate-y-2 hover:shadow-2xl hover:border-blue-500/30'>
-            <div className='absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity'>
-              <Gift size={120} />
-            </div>
-            <div className='w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-6 text-blue-500 border border-white/10 group-hover:bg-blue-500 group-hover:text-white transition-colors'>
-              <Crown size={24} />
-            </div>
-            <h3 className='text-2xl font-bold text-white mb-2'>
-              Birthday Special
-            </h3>
-            <p className='text-[var(--text-muted)] mb-6'>
-              Безкоштовний квиток та попкорн у ваш день народження для учасників
-              клубу.
-            </p>
-            <button
-              type='button'
-              className='w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-blue-500 hover:border-blue-500 transition-all'
-            >
-              Скоро
-            </button>
-          </div>
-        </div>
+              return (
+                <Link
+                  key={movie.id}
+                  to={`/movies/${movie.id}`}
+                  className='group relative aspect-[2/3] overflow-hidden rounded-2xl bg-[#1a1a1a] border border-white/5 shadow-2xl transition-all hover:-translate-y-2 hover:shadow-[0_0_30px_-5px_var(--color-primary)]/30 animate-in fade-in zoom-in duration-500'
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <img
+                    src={movie.posterUrl}
+                    alt={movie.title}
+                    className='h-full w-full object-cover transition-transform duration-700 group-hover:scale-110'
+                  />
 
-        <div className='mt-12 text-center'>
-          <div className='inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-[var(--text-muted)]'>
-            <span className='relative flex h-2 w-2'>
-              <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-primary)] opacity-75'></span>
-              <span className='relative inline-flex rounded-full h-2 w-2 bg-[var(--color-primary)]'></span>
-            </span>
-            Більше пропозицій вже в розробці
+                  <div className='absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity' />
+
+                  <div className='absolute top-4 right-4'>
+                    <div className='relative flex items-center justify-center w-12 h-12 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-lg group-hover:scale-110 transition-transform'>
+                      <svg className='absolute inset-0 w-full h-full -rotate-90'>
+                        <circle
+                          cx='24'
+                          cy='24'
+                          r='20'
+                          className='stroke-white/10'
+                          strokeWidth='4'
+                          fill='none'
+                        />
+                        <circle
+                          cx='24'
+                          cy='24'
+                          r='20'
+                          className={`${
+                            matchPercentage > 80
+                              ? 'stroke-green-500'
+                              : matchPercentage > 60
+                                ? 'stroke-yellow-500'
+                                : 'stroke-[var(--color-primary)]'
+                          }`}
+                          strokeWidth='4'
+                          fill='none'
+                          strokeDasharray='126'
+                          strokeDashoffset={126 - (126 * matchPercentage) / 100}
+                          strokeLinecap='round'
+                        />
+                      </svg>
+                      <span className='text-[10px] font-bold text-white'>
+                        {matchPercentage}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className='absolute bottom-0 left-0 w-full p-6 translate-y-2 group-hover:translate-y-0 transition-transform'>
+                    <h3 className='text-xl font-bold text-white leading-tight mb-2 line-clamp-2 drop-shadow-md'>
+                      {movie.title}
+                    </h3>
+                    <div className='flex items-center gap-2 text-xs font-bold text-[var(--color-primary)] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity delay-100'>
+                      <Play size={12} fill='currentColor' /> Дивитись деталі
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
-        </div>
+        ) : (
+          <div className='flex flex-col items-center justify-center py-12 text-center animate-in fade-in zoom-in duration-500'>
+            <div className='relative mb-8 group cursor-default'>
+              <div className='absolute inset-0 bg-gradient-to-r from-[var(--color-primary)] to-purple-600 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500' />
+              <div className='relative w-32 h-32 bg-[#1a1a1a] rounded-full border border-white/10 flex items-center justify-center shadow-2xl'>
+                <SearchX
+                  size={48}
+                  className='text-[var(--text-muted)] group-hover:text-white transition-colors duration-500'
+                />
+
+                <div className='absolute -top-2 -right-2 w-10 h-10 bg-[var(--bg-card)] rounded-full border border-white/10 flex items-center justify-center animate-bounce'>
+                  <Ticket size={16} className='text-[var(--color-primary)]' />
+                </div>
+              </div>
+            </div>
+
+            <h2 className='text-2xl font-bold text-white mb-3'>
+              Штучний інтелект ще навчається...
+            </h2>
+            <p className='text-[var(--text-muted)] max-w-md mb-8'>
+              У нас поки недостатньо даних про ваші вподобання. Відвідайте
+              кілька сеансів, щоб ми могли скласти ваш персональний
+              кіно-профіль!
+            </p>
+
+            <Link
+              to='/sessions'
+              className='group relative inline-flex items-center gap-2 px-8 py-4 bg-[var(--color-primary)] text-white font-bold rounded-xl overflow-hidden hover:scale-105 transition-transform shadow-lg shadow-[var(--color-primary)]/25'
+            >
+              <span className='relative z-10 flex items-center gap-2'>
+                <Ticket size={18} />
+                Обрати перший фільм
+              </span>
+              <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out' />
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )

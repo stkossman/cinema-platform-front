@@ -12,6 +12,13 @@ let lastFetchTime = 0
 const CACHE_DURATION = 2 * 60 * 1000
 let activeRequest: Promise<Movie[]> | null = null
 
+export interface MovieRecommendation {
+  id: string
+  title: string
+  posterUrl: string
+  similarityScore: number
+}
+
 const mapDtoToMovie = (dto: MovieDto & { TrailerUrl?: string }): Movie => ({
   id: dto.id,
   title: dto.title,
@@ -157,5 +164,17 @@ export const moviesService = {
     if (requests.length > 0) {
       await Promise.all(requests)
     }
+  },
+
+  getRecommendations: async (
+    count: number = 6,
+  ): Promise<MovieRecommendation[]> => {
+    const { data } = await api.get<MovieRecommendation[]>(
+      '/movies/recommendations',
+      {
+        params: { count },
+      },
+    )
+    return data
   },
 }
