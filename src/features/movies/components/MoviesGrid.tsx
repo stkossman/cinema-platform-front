@@ -136,11 +136,16 @@ const MoviesGrid = () => {
         </div>
 
         {activeTab === 'now' && (
-          <div className='w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 no-scrollbar'>
-            <div className='flex gap-2 min-w-max'>
+          <div className='w-full xl:w-auto overflow-x-auto overflow-y-hidden py-2 px-2 no-scrollbar -mx-2 xl:mx-0'>
+            <div className='flex gap-3 min-w-max items-center'>
               {dates.map((date, idx) => {
                 const isSelected = isSameDate(date, selectedDate)
                 const isToday = isSameDate(date, new Date())
+
+                const dayName = date.toLocaleDateString('uk-UA', {
+                  weekday: 'short',
+                })
+                const dayNum = date.getDate()
 
                 return (
                   <button
@@ -150,19 +155,15 @@ const MoviesGrid = () => {
                     className={clsx(
                       'flex flex-col items-center justify-center w-14 h-16 rounded-xl border transition-all duration-300',
                       isSelected
-                        ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-110 z-10'
-                        : 'bg-[var(--bg-card)] text-[var(--text-muted)] border-white/5 hover:border-white/20 hover:text-white',
+                        ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-110 z-10 font-bold'
+                        : 'bg-[var(--bg-card)] text-[var(--text-muted)] border-white/5 hover:border-white/20 hover:text-white hover:bg-white/5',
                     )}
                   >
-                    <span className='text-[10px] font-bold uppercase'>
-                      {isToday
-                        ? 'Сьог'
-                        : date.toLocaleDateString('uk-UA', {
-                            weekday: 'short',
-                          })}
+                    <span className='text-[10px] uppercase tracking-wider opacity-80'>
+                      {isToday ? 'Сьог' : dayName}
                     </span>
-                    <span className='text-lg font-black leading-none'>
-                      {date.getDate()}
+                    <span className='text-xl leading-none mt-0.5'>
+                      {dayNum}
                     </span>
                   </button>
                 )
