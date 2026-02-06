@@ -1,7 +1,6 @@
 import { api } from '../lib/axios'
 import type { OrderStatus, TicketStatus } from '../types/order'
 
-// Використовуємо типи, які точно співпадають з бекендом
 export interface AdminTicketDto {
   id: string
   movieTitle: string

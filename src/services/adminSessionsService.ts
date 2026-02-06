@@ -2,6 +2,8 @@ import { api } from '../lib/axios'
 import { supabase } from '../lib/supabase'
 import type { PaginatedResult } from '../types/common'
 
+let pricingsLookupCache: PricingLookupDto[] | null = null
+
 export interface SessionDto {
   id: string
   startTime: string
@@ -52,6 +54,8 @@ export const adminSessionsService = {
   },
 
   getPricingsLookup: async (): Promise<PricingLookupDto[]> => {
+    if (pricingsLookupCache) return pricingsLookupCache
+
     const { data, error } = await supabase
       .from('pricings')
       .select('id, name')
@@ -61,6 +65,8 @@ export const adminSessionsService = {
       console.error('Failed to load pricings', error)
       return []
     }
-    return data || []
+
+    pricingsLookupCache = data || []
+    return pricingsLookupCache
   },
 }

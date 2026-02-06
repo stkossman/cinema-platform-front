@@ -41,6 +41,13 @@ const mapDtoToMovie = (dto: MovieDto & { TrailerUrl?: string }): Movie => ({
 
 export const moviesService = {
   getById: async (id: string): Promise<Movie | null> => {
+    if (moviesCache) {
+      const cachedMovie = moviesCache.find(m => m.id === id)
+      if (cachedMovie) {
+        return cachedMovie
+      }
+    }
+
     try {
       const { data } = await api.get<MovieDto>(`/movies/${id}`)
       return mapDtoToMovie(data)

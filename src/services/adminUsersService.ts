@@ -1,4 +1,5 @@
 import { api } from '../lib/axios'
+import type { PaginatedResult } from '../types/common'
 
 export interface UserDto {
   id: string
@@ -9,8 +10,13 @@ export interface UserDto {
 }
 
 export const adminUsersService = {
-  getAll: async (): Promise<UserDto[]> => {
-    const { data } = await api.get<UserDto[]>('/users')
+  getAll: async (
+    page = 1,
+    pageSize = 20,
+  ): Promise<PaginatedResult<UserDto>> => {
+    const { data } = await api.get<PaginatedResult<UserDto>>('/users', {
+      params: { pageNumber: page, pageSize },
+    })
     return data
   },
 
