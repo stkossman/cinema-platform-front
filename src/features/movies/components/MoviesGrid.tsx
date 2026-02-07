@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { type Movie, MovieStatus } from '../../../types/movie'
 import { type Session } from '../../../types/hall'
