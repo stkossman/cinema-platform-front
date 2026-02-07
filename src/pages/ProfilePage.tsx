@@ -78,10 +78,7 @@ const ProfilePage = () => {
     historyOrders,
     isLoadingTickets,
     isSaving,
-    successMsg,
-    errorMsg,
     updateProfileData,
-    clearMessages,
   } = useProfile()
 
   const {
@@ -268,24 +265,7 @@ const ProfilePage = () => {
                   </div>
                 </div>
 
-                {successMsg && (
-                  <div className='mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm flex items-center gap-2'>
-                    <div className='w-2 h-2 rounded-full bg-green-500'></div>
-                    {successMsg}
-                  </div>
-                )}
-
-                {errorMsg && (
-                  <div className='mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm'>
-                    {errorMsg}
-                  </div>
-                )}
-
-                <form
-                  onSubmit={handleSubmit(onSubmit)}
-                  className='space-y-6'
-                  onChange={() => clearMessages()}
-                >
+                <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
                   <div className='grid gap-6 md:grid-cols-2'>
                     <Input
                       label="Ім'я"

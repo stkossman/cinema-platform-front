@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { useAuth } from '../../auth/AuthContext'
 import { ordersService } from '../../../services/ordersService'
 import { accountService } from '../../../services/accountService'
+import { useToast } from '../../../common/components/Toast/ToastContext'
 
 export type TabType = 'active-tickets' | 'history' | 'settings'
 
@@ -16,10 +17,9 @@ export interface ProfileUpdateData {
 
 export const useProfile = () => {
   const { user, logout, updateUser } = useAuth()
+  const toast = useToast()
 
   const [activeTab, setActiveTab] = useState<TabType>('active-tickets')
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const { data: ticketsData, isLoading: isLoadingTickets } = useQuery({
     queryKey: ['my-orders'],
@@ -68,11 +68,11 @@ export const useProfile = () => {
       await Promise.all(promises)
     },
     onSuccess: () => {
-      setSuccessMsg('Дані успішно оновлено')
+      toast.success('Дані успішно оновлено')
     },
     onError: (error: any) => {
       console.error(error)
-      setErrorMsg(
+      toast.error(
         error.response?.data?.detail ||
           error.message ||
           'Помилка збереження даних',
@@ -81,20 +81,12 @@ export const useProfile = () => {
   })
 
   const updateProfileData = async (data: ProfileUpdateData) => {
-    setSuccessMsg(null)
-    setErrorMsg(null)
-
     try {
       await updateProfileMutation.mutateAsync(data)
       return true
     } catch {
       return false
     }
-  }
-
-  const clearMessages = () => {
-    setSuccessMsg(null)
-    setErrorMsg(null)
   }
 
   return {
@@ -109,9 +101,6 @@ export const useProfile = () => {
     isLoadingTickets,
 
     isSaving: updateProfileMutation.isPending,
-    successMsg,
-    errorMsg,
     updateProfileData,
-    clearMessages,
   }
 }
