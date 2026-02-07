@@ -1,61 +1,71 @@
 import { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminSessionsService } from '../../../services/adminSessionsService'
 import { moviesService } from '../../../services/moviesService'
 import { hallsService } from '../../../services/hallsService'
-import {
-  adminPricingsService,
-  type PricingLookup,
-} from '../../../services/adminPricingsService'
-import type { Movie } from '../../../types/movie'
-import type { HallSummaryDto } from '../../../services/hallsService'
 
 export const useCreateSession = (
   isOpen: boolean,
   onSuccess: () => void,
   onClose: () => void,
 ) => {
-  const [movies, setMovies] = useState<Movie[]>([])
-  const [halls, setHalls] = useState<HallSummaryDto[]>([])
-  const [pricings, setPricings] = useState<PricingLookup[]>([])
+  const queryClient = useQueryClient()
 
   const [movieId, setMovieId] = useState('')
   const [hallId, setHallId] = useState('')
   const [pricingId, setPricingId] = useState('')
-
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [time, setTime] = useState('18:00')
 
-  const [isLoadingData, setIsLoadingData] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const moviesQuery = useQuery({
+    queryKey: ['admin-movies-list'],
+    queryFn: () => moviesService.getAll(),
+    enabled: isOpen,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const hallsQuery = useQuery({
+    queryKey: ['halls'],
+    queryFn: hallsService.getAll,
+    enabled: isOpen,
+    staleTime: 30 * 60 * 1000,
+  })
+
+  const pricingsQuery = useQuery({
+    queryKey: ['pricings-lookup'],
+    queryFn: adminSessionsService.getPricingsLookup,
+    enabled: isOpen,
+    staleTime: 30 * 60 * 1000,
+  })
+
+  const isLoadingData =
+    moviesQuery.isLoading || hallsQuery.isLoading || pricingsQuery.isLoading
 
   useEffect(() => {
-    if (isOpen) {
-      loadData()
+    if (isOpen && !isLoadingData) {
+      if (!movieId && moviesQuery.data?.length)
+        setMovieId(moviesQuery.data[0].id)
+      if (!hallId && hallsQuery.data?.length) setHallId(hallsQuery.data[0].id)
+      if (!pricingId && pricingsQuery.data?.length)
+        setPricingId(pricingsQuery.data[0].id)
     }
-  }, [isOpen])
+  }, [
+    isOpen,
+    isLoadingData,
+    moviesQuery.data,
+    hallsQuery.data,
+    pricingsQuery.data,
+  ])
 
-  const loadData = async () => {
-    setIsLoadingData(true)
-    try {
-      const [moviesData, hallsData, pricingsData] = await Promise.all([
-        moviesService.getAll(),
-        hallsService.getAll(),
-        adminPricingsService.getLookups(),
-      ])
-
-      setMovies(moviesData)
-      setHalls(hallsData)
-      setPricings(pricingsData)
-
-      if (moviesData.length > 0) setMovieId(moviesData[0].id)
-      if (hallsData.length > 0) setHallId(hallsData[0].id)
-      if (pricingsData.length > 0) setPricingId(pricingsData[0].id)
-    } catch (error) {
-      console.error('Failed to load session form data', error)
-    } finally {
-      setIsLoadingData(false)
-    }
-  }
+  const createMutation = useMutation({
+    mutationFn: adminSessionsService.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-sessions'] })
+      onSuccess()
+      onClose()
+      setTime('18:00')
+    },
+  })
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,30 +74,25 @@ export const useCreateSession = (
       return
     }
 
-    setIsSubmitting(true)
-    try {
-      const startDateTime = new Date(`${date}T${time}`)
+    const startDateTime = new Date(`${date}T${time}`)
 
-      await adminSessionsService.create({
+    try {
+      await createMutation.mutateAsync({
         movieId,
         hallId,
         startTime: startDateTime.toISOString(),
         pricingId,
       })
-
-      onSuccess()
-      onClose()
     } catch (error: any) {
       alert(error.response?.data?.error || 'Помилка створення сеансу')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   return {
-    movies,
-    halls,
-    pricings,
+    movies: moviesQuery.data || [],
+    halls: hallsQuery.data || [],
+    pricings: pricingsQuery.data || [],
+
     movieId,
     setMovieId,
     hallId,
@@ -98,8 +103,9 @@ export const useCreateSession = (
     setDate,
     time,
     setTime,
+
     isLoadingData,
-    isSubmitting,
+    isSubmitting: createMutation.isPending,
     submit,
   }
 }

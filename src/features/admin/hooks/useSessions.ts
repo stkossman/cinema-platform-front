@@ -1,36 +1,44 @@
-import { useState, useEffect, useCallback } from 'react'
 import {
-  adminSessionsService,
-  type SessionDto,
-} from '../../../services/adminSessionsService'
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query'
+import { adminSessionsService } from '../../../services/adminSessionsService'
 
 export const useSessions = () => {
-  const [sessions, setSessions] = useState<SessionDto[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  const fetchSessions = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const data = await adminSessionsService.getAll(1, 100)
-      const safeData = Array.isArray(data) ? data : []
-
-      const sorted = safeData.sort(
+  const { data: sessions = [], isLoading } = useQuery({
+    queryKey: ['admin-sessions'],
+    queryFn: () => adminSessionsService.getAll(1, 100),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+    select: data =>
+      [...data].sort(
         (a, b) =>
           new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
-      )
-      setSessions(sorted)
-    } catch (error) {
-      console.error('Failed to fetch sessions', error)
-      setSessions([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+      ),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: adminSessionsService.cancel,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-sessions'] })
+    },
+  })
+
+  const rescheduleMutation = useMutation({
+    mutationFn: ({ id, newDateIso }: { id: string; newDateIso: string }) =>
+      adminSessionsService.reschedule(id, newDateIso),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-sessions'] })
+    },
+  })
 
   const deleteSession = async (id: string) => {
     try {
-      await adminSessionsService.cancel(id)
-      await fetchSessions()
+      await deleteMutation.mutateAsync(id)
       return true
     } catch (e) {
       return false
@@ -39,8 +47,7 @@ export const useSessions = () => {
 
   const rescheduleSession = async (id: string, newDateIso: string) => {
     try {
-      await adminSessionsService.reschedule(id, newDateIso)
-      await fetchSessions()
+      await rescheduleMutation.mutateAsync({ id, newDateIso })
       return { success: true }
     } catch (e: any) {
       const msg = e.response?.data?.errors?.Description || e.message
@@ -48,14 +55,11 @@ export const useSessions = () => {
     }
   }
 
-  useEffect(() => {
-    fetchSessions()
-  }, [fetchSessions])
-
   return {
     sessions,
     isLoading,
-    fetchSessions,
+    fetchSessions: () =>
+      queryClient.invalidateQueries({ queryKey: ['admin-sessions'] }),
     deleteSession,
     rescheduleSession,
   }
