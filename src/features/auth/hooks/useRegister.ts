@@ -4,6 +4,7 @@ import * as z from 'zod'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { authService } from '../../../services/authService'
+import { useToast } from '../../../common/components/Toast/ToastContext'
 
 const registerSchema = z
   .object({
@@ -25,6 +26,7 @@ export type RegisterFormData = z.infer<typeof registerSchema>
 
 export const useRegister = () => {
   const navigate = useNavigate()
+  const toast = useToast()
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -39,7 +41,7 @@ export const useRegister = () => {
         data.lastName,
       ),
     onSuccess: () => {
-      alert('Реєстрація успішна! Тепер увійдіть у свій акаунт.')
+      toast.success('Реєстрація успішна! Тепер увійдіть у свій акаунт.')
       navigate('/auth/login')
     },
     onError: (error: any) => {
@@ -49,7 +51,7 @@ export const useRegister = () => {
         error.response?.data?.title ||
         error.message ||
         'Помилка реєстрації'
-      alert(message)
+      toast.error(message)
     },
   })
 

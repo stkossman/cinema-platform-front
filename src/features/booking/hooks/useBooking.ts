@@ -3,10 +3,12 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { moviesService } from '../../../services/moviesService'
 import { bookingService } from '../../../services/bookingService'
 import { adminPricingsService } from '../../../services/adminPricingsService'
+import { useToast } from '../../../common/components/Toast/ToastContext'
 import type { Seat } from '../../../types/hall'
 import type { Session } from '../../../types/hall'
 
 export const useBooking = (movieId?: string) => {
+  const toast = useToast()
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
@@ -63,6 +65,7 @@ export const useBooking = (movieId?: string) => {
       bookingService.createOrder(selectedSessionId!, seatIds, 'test_token'),
     onSuccess: () => {
       setStep(3)
+      toast.success('Замовлення успішно створено!')
     },
   })
 
@@ -78,7 +81,7 @@ export const useBooking = (movieId?: string) => {
       } catch (error: any) {
         setSelectedSeats(prev => prev.filter(s => s.id !== seat.id))
         if (error.response?.status === 409) {
-          alert('Це місце вже зайняте.')
+          toast.error('Це місце щойно зайняли або воно заблоковане.')
         }
       }
     }
@@ -124,7 +127,9 @@ export const useBooking = (movieId?: string) => {
     try {
       await createOrderMutation.mutateAsync(selectedSeats.map(s => s.id))
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Помилка при створенні замовлення')
+      toast.error(
+        error.response?.data?.detail || 'Помилка при створенні замовлення',
+      )
     }
   }
 
