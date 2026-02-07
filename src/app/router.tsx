@@ -22,6 +22,7 @@ import TechnologiesPage from '../features/admin/TechnologiesPage'
 import PricingsPage from '../features/admin/PricingsPage'
 import GenresPage from '../features/admin/GenresPage'
 import UserActivityPage from '../features/admin/UserActivityPage'
+import CinemaBarPage from '../pages/CinemaBarPage'
 
 export const router = createBrowserRouter([
   {
@@ -68,6 +69,10 @@ export const router = createBrowserRouter([
       {
         path: 'sessions',
         element: <SessionsPage />,
+      },
+      {
+        path: 'bar',
+        element: <CinemaBarPage />,
       },
     ],
   },

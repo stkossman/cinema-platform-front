@@ -7,6 +7,7 @@ import { clsx } from 'clsx'
 const NAV_ITEMS = [
   { label: 'Афіша', href: '/sessions' },
   { label: 'Пропозиції', href: '/offers' },
+  { label: 'Кінобар', href: '/bar' },
   { label: 'Допомога', href: '/faq' },
   { label: 'Про нас', href: '/about' },
 ]
