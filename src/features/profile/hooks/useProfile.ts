@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { useAuth } from '../../auth/AuthContext'
 import { ordersService } from '../../../services/ordersService'
 import { accountService } from '../../../services/accountService'
-import type { OrderItem } from '../../../types/order'
 
 export type TabType = 'active-tickets' | 'history' | 'settings'
 
@@ -16,48 +16,29 @@ export interface ProfileUpdateData {
 
 export const useProfile = () => {
   const { user, logout, updateUser } = useAuth()
+
   const [activeTab, setActiveTab] = useState<TabType>('active-tickets')
-
-  const [tickets, setTickets] = useState<OrderItem[]>([])
-  const [isLoadingTickets, setIsLoadingTickets] = useState(false)
-
-  const [isSaving, setIsSaving] = useState(false)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchTickets = async () => {
-      if (!user) return
-      setIsLoadingTickets(true)
-      try {
-        const data = await ordersService.getMyOrders()
-        setTickets(data)
-      } catch (error) {
-        console.error('Failed to fetch orders:', error)
-      } finally {
-        setIsLoadingTickets(false)
+  const { data: ticketsData, isLoading: isLoadingTickets } = useQuery({
+    queryKey: ['my-orders'],
+    queryFn: ordersService.getMyOrders,
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    select: data => {
+      return {
+        active: data.filter(t => t.status === 'active'),
+        history: data.filter(
+          t => t.status === 'completed' || t.status === 'cancelled',
+        ),
       }
-    }
+    },
+  })
 
-    if (activeTab === 'active-tickets' || activeTab === 'history') {
-      fetchTickets()
-    }
-  }, [user, activeTab])
-
-  const activeTickets = tickets.filter(t => t.status === 'active')
-
-  const historyOrders = tickets.filter(
-    t => t.status === 'completed' || t.status === 'cancelled',
-  )
-
-  const updateProfileData = async (data: ProfileUpdateData) => {
-    setIsSaving(true)
-    setSuccessMsg(null)
-    setErrorMsg(null)
-
-    try {
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: ProfileUpdateData) => {
       const promises: Promise<void>[] = []
-      const messages: string[] = []
 
       if (data.firstName !== user?.name || data.lastName !== user?.surname) {
         promises.push(
@@ -68,39 +49,45 @@ export const useProfile = () => {
             })
             .then(() => {
               updateUser({ name: data.firstName, surname: data.lastName })
-              messages.push('Профіль оновлено')
             }),
         )
       }
 
       if (data.newPassword) {
         promises.push(
-          accountService
-            .changePassword({
-              oldPassword: data.oldPassword,
-              newPassword: data.newPassword,
-              confirmNewPassword: data.confirmNewPassword,
-            })
-            .then(() => {
-              messages.push('Пароль змінено')
-            }),
+          accountService.changePassword({
+            oldPassword: data.oldPassword,
+            newPassword: data.newPassword,
+            confirmNewPassword: data.confirmNewPassword,
+          }),
         )
       }
 
-      if (promises.length === 0) {
-        setIsSaving(false)
-        return false
-      }
+      if (promises.length === 0) return
 
       await Promise.all(promises)
-
-      setSuccessMsg(messages.join(' та '))
-      setIsSaving(false)
-      return true
-    } catch (error: any) {
+    },
+    onSuccess: () => {
+      setSuccessMsg('Дані успішно оновлено')
+    },
+    onError: (error: any) => {
       console.error(error)
-      setErrorMsg(error.message || 'Помилка збереження даних')
-      setIsSaving(false)
+      setErrorMsg(
+        error.response?.data?.detail ||
+          error.message ||
+          'Помилка збереження даних',
+      )
+    },
+  })
+
+  const updateProfileData = async (data: ProfileUpdateData) => {
+    setSuccessMsg(null)
+    setErrorMsg(null)
+
+    try {
+      await updateProfileMutation.mutateAsync(data)
+      return true
+    } catch {
       return false
     }
   }
@@ -116,10 +103,12 @@ export const useProfile = () => {
     updateUser,
     activeTab,
     setActiveTab,
-    activeTickets,
-    historyOrders,
+
+    activeTickets: ticketsData?.active || [],
+    historyOrders: ticketsData?.history || [],
     isLoadingTickets,
-    isSaving,
+
+    isSaving: updateProfileMutation.isPending,
     successMsg,
     errorMsg,
     updateProfileData,
