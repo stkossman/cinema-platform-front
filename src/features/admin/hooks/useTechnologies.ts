@@ -1,28 +1,26 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { technologiesService } from '../../../services/technologiesService'
-import type { Technology } from '../../../types/hall'
 
 export const useTechnologies = () => {
-  const [technologies, setTechnologies] = useState<Technology[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  const fetchTechnologies = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const data = await technologiesService.getAll()
-      setTechnologies(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error('Failed to fetch technologies', error)
-      setTechnologies([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const { data: technologies = [], isLoading } = useQuery({
+    queryKey: ['technologies'],
+    queryFn: technologiesService.getAll,
+    staleTime: Infinity,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: ({ name, type }: { name: string; type: string }) =>
+      technologiesService.create(name, type),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['technologies'] })
+    },
+  })
 
   const createTechnology = async (name: string, type: string) => {
     try {
-      await technologiesService.create(name, type)
-      await fetchTechnologies()
+      await createMutation.mutateAsync({ name, type })
       return { success: true }
     } catch (error: any) {
       const msg = error.response?.data?.title || 'Помилка створення'
@@ -30,14 +28,9 @@ export const useTechnologies = () => {
     }
   }
 
-  useEffect(() => {
-    fetchTechnologies()
-  }, [fetchTechnologies])
-
   return {
     technologies,
     isLoading,
-    fetchTechnologies,
     createTechnology,
   }
 }
