@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import HallBuilder from '../../features/admin/components/HallBuilder'
-import { useHalls, useHallEditor } from './hooks/useHalls'
+import { useHalls } from './hooks/useHalls'
+import { useHallEditor } from './hooks/useHallEditor'
 import {
   Armchair,
   Trash2,
@@ -15,20 +16,16 @@ const HallsPage = () => {
   const [mode, setMode] = useState<'list' | 'create' | 'edit'>('list')
   const [editingHallId, setEditingHallId] = useState<string | null>(null)
 
-  const { halls, isLoading, fetchHalls, deleteHall } = useHalls()
+  const { halls, isLoading, deleteHall } = useHalls()
   const {
     initialSeats,
     isLoadingData: isLoadingEditData,
-    isProcessing: isProcessingSeats,
+    isProcessing,
     loadHallSeats,
     saveHall,
     resetEditor,
     initialTechnologies,
-  } = useHallEditor(fetchHalls)
-
-  useEffect(() => {
-    fetchHalls()
-  }, [fetchHalls])
+  } = useHallEditor()
 
   const handleEditClick = async (hallId: string) => {
     setEditingHallId(hallId)
@@ -107,7 +104,7 @@ const HallsPage = () => {
         </button>
       </div>
 
-      {isProcessingSeats && (
+      {isProcessing && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm'>
           <div className='text-center'>
             <Loader2 className='h-12 w-12 animate-spin text-[var(--color-primary)] mx-auto mb-4' />
@@ -166,14 +163,14 @@ const HallsPage = () => {
                       <button
                         type='button'
                         onClick={() => handleEditClick(hall.id)}
-                        className='rounded p-2 text-[var(--text-muted)] hover:bg-white/10 hover:text-white'
+                        className='rounded p-2 text-[var(--text-muted)] hover:bg-white/10 hover:text-white transition-colors'
                       >
                         <Pencil size={18} />
                       </button>
                       <button
                         type='button'
                         onClick={() => onDeleteClick(hall.id)}
-                        className='rounded p-2 text-[var(--text-muted)] hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)]'
+                        className='rounded p-2 text-[var(--text-muted)] hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)] transition-colors'
                       >
                         <Trash2 size={18} />
                       </button>

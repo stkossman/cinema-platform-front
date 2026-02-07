@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-// import { supabase } from '../../../lib/supabase'
+import { useQuery } from '@tanstack/react-query'
 import { technologiesService } from '../../../services/technologiesService'
 import { seatTypesService } from '../../../services/seatTypesService'
-import type { Seat, SeatType, Technology } from '../../../types/hall'
+import type { Seat, SeatType } from '../../../types/hall'
 
 export const useHallBuilder = (
   initialSeats: Seat[] = [],
@@ -12,76 +12,52 @@ export const useHallBuilder = (
 ) => {
   const [rows, setRows] = useState(initialRows)
   const [cols, setCols] = useState(initialCols)
-
-  const [availableSeatTypes, setAvailableSeatTypes] = useState<SeatType[]>([])
-  const [availableTechnologies, setAvailableTechnologies] = useState<
-    Technology[]
-  >([])
-
   const [selectedPaintType, setSelectedPaintType] = useState<SeatType | null>(
     null,
   )
   const [selectedTechIds, setSelectedTechIds] = useState<string[]>([])
   const [gridConfig, setGridConfig] = useState<Map<string, string>>(new Map())
 
-  const [isLoading, setIsLoading] = useState(true)
+  const seatTypesQuery = useQuery({
+    queryKey: ['seat-types'],
+    queryFn: seatTypesService.getAll,
+    staleTime: Infinity,
+  })
+
+  const technologiesQuery = useQuery({
+    queryKey: ['technologies'],
+    queryFn: technologiesService.getAll,
+    staleTime: Infinity,
+  })
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [typesData, techData] = await Promise.all([
-          seatTypesService.getAll(),
-          technologiesService.getAll(),
-        ])
-
-        if (typesData) {
-          setAvailableSeatTypes(typesData)
-          const standard = typesData.find(t =>
-            t.name.toLowerCase().includes('standard'),
-          )
-          setSelectedPaintType(standard || typesData[0])
-        }
-
-        if (techData) {
-          setAvailableTechnologies(techData)
-        }
-      } catch (error) {
-        console.error('Failed to load builder data:', error)
-      } finally {
-        setIsLoading(false)
-      }
+    if (seatTypesQuery.data && !selectedPaintType) {
+      const standard = seatTypesQuery.data.find(t =>
+        t.name.toLowerCase().includes('standard'),
+      )
+      setSelectedPaintType(standard || seatTypesQuery.data[0])
     }
-    fetchData()
-  }, [])
+  }, [seatTypesQuery.data, selectedPaintType])
 
   useEffect(() => {
-    if (initialTechIds.length > 0) {
-      setSelectedTechIds(initialTechIds)
-    } else {
-      setSelectedTechIds([])
-    }
+    if (initialTechIds.length > 0) setSelectedTechIds(initialTechIds)
   }, [initialTechIds])
 
   useEffect(() => {
     if (initialSeats.length > 0) {
       const minX = Math.min(...initialSeats.map(s => s.gridX))
       const minY = Math.min(...initialSeats.map(s => s.gridY))
-
       const shiftX = minX > 0 ? minX : 0
       const shiftY = minY > 0 ? minY : 0
-
       let maxNormalizedX = 0
       let maxNormalizedY = 0
-
       const newMap = new Map<string, string>()
 
       initialSeats.forEach(s => {
         const normX = s.gridX - shiftX
         const normY = s.gridY - shiftY
-
         if (normX > maxNormalizedX) maxNormalizedX = normX
         if (normY > maxNormalizedY) maxNormalizedY = normY
-
         newMap.set(`${normX}-${normY}`, s.seatTypeId)
       })
 
@@ -116,14 +92,14 @@ export const useHallBuilder = (
     setRows,
     cols,
     setCols,
-    availableSeatTypes,
-    availableTechnologies,
+    availableSeatTypes: seatTypesQuery.data || [],
+    availableTechnologies: technologiesQuery.data || [],
     selectedPaintType,
     setSelectedPaintType,
     selectedTechIds,
     toggleTech,
     gridConfig,
     handleCellClick,
-    isLoading,
+    isLoading: seatTypesQuery.isLoading || technologiesQuery.isLoading,
   }
 }
