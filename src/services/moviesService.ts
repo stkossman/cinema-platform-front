@@ -7,11 +7,6 @@ import {
   MovieStatus,
 } from '../types/movie'
 
-let moviesCache: Movie[] | null = null
-let lastFetchTime = 0
-const CACHE_DURATION = 2 * 60 * 1000
-let activeRequest: Promise<Movie[]> | null = null
-
 export interface MovieRecommendation {
   id: string
   title: string
@@ -41,13 +36,6 @@ const mapDtoToMovie = (dto: MovieDto & { TrailerUrl?: string }): Movie => ({
 
 export const moviesService = {
   getById: async (id: string): Promise<Movie | null> => {
-    if (moviesCache) {
-      const cachedMovie = moviesCache.find(m => m.id === id)
-      if (cachedMovie) {
-        return cachedMovie
-      }
-    }
-
     try {
       const { data } = await api.get<MovieDto>(`/movies/${id}`)
       return mapDtoToMovie(data)
@@ -58,35 +46,15 @@ export const moviesService = {
   },
 
   getAll: async (): Promise<Movie[]> => {
-    const now = Date.now()
-
-    if (moviesCache && now - lastFetchTime < CACHE_DURATION) {
-      return moviesCache
+    try {
+      const { data } = await api.get<PaginatedResult<MovieDto>>('/movies', {
+        params: { pageNumber: 1, pageSize: 100 },
+      })
+      return data.items.map(mapDtoToMovie)
+    } catch (error) {
+      console.error('Failed to fetch movies:', error)
+      return []
     }
-
-    if (activeRequest) {
-      return activeRequest
-    }
-
-    activeRequest = (async () => {
-      try {
-        const { data } = await api.get<PaginatedResult<MovieDto>>('/movies', {
-          params: { pageNumber: 1, pageSize: 100 },
-        })
-
-        const mappedMovies = data.items.map(mapDtoToMovie)
-        moviesCache = mappedMovies
-        lastFetchTime = Date.now()
-        return mappedMovies
-      } catch (error) {
-        console.error('Failed to fetch movies:', error)
-        return []
-      } finally {
-        activeRequest = null
-      }
-    })()
-
-    return activeRequest
   },
 
   getPaginated: async (
@@ -119,12 +87,10 @@ export const moviesService = {
   },
 
   delete: async (id: string): Promise<void> => {
-    moviesCache = null
     await api.delete(`/movies/${id}`)
   },
 
   update: async (id: string, movieData: Partial<Movie>): Promise<void> => {
-    moviesCache = null
     const requests = []
 
     if (movieData.title !== undefined) {

@@ -15,7 +15,10 @@ export const adminUsersService = {
     pageSize = 20,
   ): Promise<PaginatedResult<UserDto>> => {
     const { data } = await api.get<PaginatedResult<UserDto>>('/users', {
-      params: { pageNumber: page, pageSize },
+      params: {
+        pageNumber: page,
+        pageSize,
+      },
     })
     return data
   },

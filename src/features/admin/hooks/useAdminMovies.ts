@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query'
 import { moviesService } from '../../../services/moviesService'
-import type { Movie } from '../../../types/movie'
 
 interface PaginationState {
   pageNumber: number
@@ -12,56 +17,38 @@ interface PaginationState {
 }
 
 export const useAdminMovies = () => {
-  const [movies, setMovies] = useState<Movie[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
+
+  const [page, setPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
 
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageNumber: 1,
-    pageSize: 10,
-    totalPages: 0,
-    totalCount: 0,
-    hasPreviousPage: false,
-    hasNextPage: false,
-  })
-
-  const fetchMovies = useCallback(async (page = 1, search = '') => {
-    setIsLoading(true)
-    try {
-      const data = await moviesService.getPaginated(page, 10, search)
-      const items = Array.isArray(data?.items) ? data.items : []
-      setMovies(items)
-      setPagination({
-        pageNumber: data?.pageNumber || 1,
-        pageSize: 10,
-        totalPages: data.totalPages,
-        totalCount: data?.totalCount || 0,
-        hasPreviousPage: data.hasPreviousPage,
-        hasNextPage: data.hasNextPage,
-      })
-    } catch (error) {
-      console.error('Failed to fetch movies:', error)
-      setMovies([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const [debouncedSearch, setDebouncedSearch] = useState('')
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchMovies(1, searchTerm)
+      setDebouncedSearch(searchTerm)
+      setPage(1)
     }, 500)
     return () => clearTimeout(timer)
-  }, [searchTerm, fetchMovies])
+  }, [searchTerm])
 
-  const changePage = (newPage: number) => {
-    fetchMovies(newPage, searchTerm)
-  }
+  const { data, isLoading, isPlaceholderData } = useQuery({
+    queryKey: ['admin-movies', page, debouncedSearch],
+    queryFn: () => moviesService.getPaginated(page, 10, debouncedSearch),
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: moviesService.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-movies'] })
+    },
+  })
 
   const deleteMovie = async (id: string) => {
     try {
-      await moviesService.delete(id)
-      await fetchMovies(pagination.pageNumber, searchTerm)
+      await deleteMutation.mutateAsync(id)
       return { success: true }
     } catch (error: any) {
       const msg =
@@ -72,14 +59,24 @@ export const useAdminMovies = () => {
     }
   }
 
+  const pagination: PaginationState = {
+    pageNumber: data?.pageNumber || page,
+    pageSize: 10,
+    totalPages: data?.totalPages || 0,
+    totalCount: data?.totalCount || 0,
+    hasPreviousPage: data?.hasPreviousPage || false,
+    hasNextPage: data?.hasNextPage || false,
+  }
+
   return {
-    movies,
-    isLoading,
+    movies: data?.items || [],
+    isLoading: isLoading || (isPlaceholderData && !data),
     pagination,
     searchTerm,
     setSearchTerm,
-    changePage,
+    changePage: setPage,
     deleteMovie,
-    refresh: () => fetchMovies(pagination.pageNumber, searchTerm),
+    refresh: () =>
+      queryClient.invalidateQueries({ queryKey: ['admin-movies'] }),
   }
 }

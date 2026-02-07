@@ -1,32 +1,63 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import {
-  adminUsersService,
-  type UserDto,
-} from '../../../services/adminUsersService'
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query'
+import { adminUsersService } from '../../../services/adminUsersService'
+
+interface PaginationState {
+  pageNumber: number
+  pageSize: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+}
 
 export const useUsers = () => {
-  const [users, setUsers] = useState<UserDto[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  const fetchUsers = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const data = await adminUsersService.getAll()
-      setUsers(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error('Failed to fetch users', error)
-      setUsers([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const [page, setPage] = useState(1)
+  const pageSize = 10
+
+  const { data, isLoading, isPlaceholderData } = useQuery({
+    queryKey: ['admin-users', page],
+    queryFn: () => adminUsersService.getAll(page, pageSize),
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const isArrayResponse = Array.isArray(data)
+
+  const usersList = isArrayResponse ? data : data?.items || []
+
+  const pagination: PaginationState = {
+    pageNumber: isArrayResponse ? 1 : data?.pageNumber || page,
+    pageSize: isArrayResponse ? usersList.length : pageSize,
+    totalPages: isArrayResponse ? 1 : data?.totalPages || 1,
+    totalCount: isArrayResponse ? usersList.length : data?.totalCount || 0,
+    hasPreviousPage: isArrayResponse ? false : data?.hasPreviousPage || false,
+    hasNextPage: isArrayResponse ? false : data?.hasNextPage || false,
+  }
+
+  const changeRoleMutation = useMutation({
+    mutationFn: ({
+      userId,
+      newRole,
+    }: {
+      userId: string
+      newRole: 'Admin' | 'User'
+    }) => adminUsersService.changeRole(userId, newRole),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+    },
+  })
 
   const changeUserRole = async (userId: string, newRole: 'Admin' | 'User') => {
     try {
-      await adminUsersService.changeRole(userId, newRole)
-      setUsers(prev =>
-        prev.map(u => (u.id === userId ? { ...u, role: newRole } : u)),
-      )
+      await changeRoleMutation.mutateAsync({ userId, newRole })
       return { success: true }
     } catch (error: any) {
       const msg = error.response?.data || 'Помилка зміни ролі'
@@ -34,9 +65,12 @@ export const useUsers = () => {
     }
   }
 
-  useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
-
-  return { users, isLoading, fetchUsers, changeUserRole }
+  return {
+    users: usersList,
+    isLoading: isLoading || (isPlaceholderData && !data),
+    pagination,
+    changePage: setPage,
+    changeUserRole,
+    refresh: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
+  }
 }
