@@ -30,6 +30,11 @@ const SeatSelector = ({
   const cols = hall.colsCount || 10
   const rows = hall.rowsCount || 10
 
+  const occupiedSet = useMemo(() => {
+    console.log('Occupied IDs in Selector:', occupiedSeatIds)
+    return new Set(occupiedSeatIds.map(id => id.toLowerCase()))
+  }, [occupiedSeatIds])
+
   const availableTypes = useMemo(() => {
     const types = new Set<string>()
     hall.seats.forEach(s => types.add(s.seatTypeName))
@@ -101,9 +106,7 @@ const SeatSelector = ({
             if (!seat) return <div key={index} />
 
             const isOccupied =
-              occupiedSeatIds
-                .map(id => id.toLowerCase())
-                .includes(seat.id.toLowerCase()) ||
+              occupiedSet.has(seat.id.toLowerCase()) ||
               seat.status === 'Sold' ||
               seat.status === 'Locked'
             const isSelected = selectedSeats.some(s => s.id === seat.id)

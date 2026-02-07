@@ -28,7 +28,6 @@ class TicketHubService {
 
     try {
       await this.connection?.start()
-      console.log('🔌 SignalR Connected!')
 
       await this.joinSession(sessionId)
       this.registerHandlers()
@@ -43,7 +42,7 @@ class TicketHubService {
         await this.leaveSession(this.sessionId)
       }
       await this.connection?.stop()
-      console.log('🔌 SignalR Disconnected')
+      console.log('SignalR Disconnected')
     }
     this.sessionId = null
   }
@@ -52,7 +51,6 @@ class TicketHubService {
     this.sessionId = sessionId
     try {
       await this.connection?.invoke('JoinSessionGroup', sessionId)
-      console.log(`Joined session group: ${sessionId}`)
     } catch (err) {
       console.error('Error joining session group:', err)
     }

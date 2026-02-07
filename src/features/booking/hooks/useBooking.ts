@@ -90,16 +90,24 @@ export const useBooking = (movieId?: string) => {
     queryClient.setQueryData(
       ['session-full-details', selectedSessionId],
       (oldData: any) => {
-        if (!oldData || !oldData.session) return oldData
+        if (!oldData?.session) return oldData
 
         const currentOccupied = oldData.session.occupiedSeatIds || []
-        let newOccupied = []
+        const targetId = seatId.toString().toLowerCase()
+
+        let newOccupied = [...currentOccupied]
 
         if (action === 'add') {
-          if (currentOccupied.includes(seatId)) return oldData
-          newOccupied = [...currentOccupied, seatId]
+          const exists = currentOccupied.some(
+            (id: string) => id.toString().toLowerCase() === targetId,
+          )
+          if (!exists) {
+            newOccupied.push(seatId)
+          }
         } else {
-          newOccupied = currentOccupied.filter((id: string) => id !== seatId)
+          newOccupied = currentOccupied.filter(
+            (id: string) => id.toString().toLowerCase() !== targetId,
+          )
         }
 
         return {
