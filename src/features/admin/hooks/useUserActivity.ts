@@ -1,115 +1,104 @@
-import { useState, useEffect } from 'react'
-import {
-  adminOrdersService,
-  type AdminOrderDto,
-  type AdminTicketDto,
-} from '../../../services/adminOrdersService'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { adminUsersService } from '../../../services/adminUsersService'
+import { adminOrdersService } from '../../../services/adminOrdersService'
 import { adminTicketsService } from '../../../services/adminTicketsService'
-import {
-  adminUsersService,
-  type UserDto,
-} from '../../../services/adminUsersService'
 
 export const useUserActivity = () => {
-  const [users, setUsers] = useState<UserDto[]>([])
+  const queryClient = useQueryClient()
   const [selectedUserId, setSelectedUserId] = useState('')
 
-  const [orders, setOrders] = useState<AdminOrderDto[]>([])
-  const [tickets, setTickets] = useState<AdminTicketDto[]>([])
+  const usersQuery = useQuery({
+    queryKey: ['admin-users-list-sidebar'],
+    queryFn: () => adminUsersService.getAll(1, 100),
+    staleTime: 5 * 60 * 1000,
+  })
 
-  const [isLoadingUsers, setIsLoadingUsers] = useState(true)
-  const [isLoadingData, setIsLoadingData] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const usersList = Array.isArray(usersQuery.data)
+    ? usersQuery.data
+    : usersQuery.data?.items || []
 
-  useEffect(() => {
-    const loadUsers = async () => {
-      setIsLoadingUsers(true)
-      try {
-        const data = await adminUsersService.getAll()
-        setUsers(data)
-      } catch (e) {
-        console.error('Failed to load users:', e)
-        setError('Не вдалося завантажити список користувачів')
-      } finally {
-        setIsLoadingUsers(false)
+  const userDataQuery = useQuery({
+    queryKey: ['admin-user-orders', selectedUserId],
+    queryFn: () => adminOrdersService.getUserOrders(selectedUserId),
+    enabled: !!selectedUserId,
+    staleTime: 0,
+    select: data => {
+      const allTickets = data
+        .flatMap(order =>
+          order.tickets.map(ticket => ({
+            ...ticket,
+            orderId: order.id,
+          })),
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.sessionStart).getTime() -
+            new Date(a.sessionStart).getTime(),
+        )
+
+      return {
+        orders: data,
+        tickets: allTickets,
       }
-    }
-    loadUsers()
-  }, [])
+    },
+  })
 
-  const fetchUserData = async (targetUserId: string) => {
-    if (!targetUserId) return
-    setIsLoadingData(true)
-    setError(null)
-
-    try {
-      const data = await adminOrdersService.getUserOrders(targetUserId)
-      setOrders(data)
-
-      const allTickets = data.flatMap(order =>
-        order.tickets.map(ticket => ({
-          ...ticket,
-          orderId: order.id,
-        })),
-      )
-
-      allTickets.sort(
-        (a, b) =>
-          new Date(b.sessionStart).getTime() -
-          new Date(a.sessionStart).getTime(),
-      )
-
-      setTickets(allTickets)
-    } catch (err: any) {
-      console.error(err)
-      setError('Помилка завантаження даних користувача')
-      setOrders([])
-      setTickets([])
-    } finally {
-      setIsLoadingData(false)
-    }
-  }
-
-  const selectUser = (userId: string) => {
-    setSelectedUserId(userId)
-    fetchUserData(userId)
-  }
-
-  const validateTicket = async (ticketId: string) => {
-    try {
-      const msg = await adminTicketsService.validate(ticketId)
+  const validateMutation = useMutation({
+    mutationFn: adminTicketsService.validate,
+    onSuccess: msg => {
       alert(msg)
-      if (selectedUserId) fetchUserData(selectedUserId)
-    } catch (e: any) {
-      alert(e.response?.data?.detail || 'Помилка валідації')
-    }
+      queryClient.invalidateQueries({
+        queryKey: ['admin-user-orders', selectedUserId],
+      })
+    },
+    onError: (error: any) => {
+      alert(error.response?.data?.detail || 'Помилка валідації')
+    },
+  })
+
+  const cancelMutation = useMutation({
+    mutationFn: adminOrdersService.cancelOrder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['admin-user-orders', selectedUserId],
+      })
+    },
+    onError: (error: any) => {
+      alert(error.response?.data?.detail || 'Помилка скасування замовлення')
+    },
+  })
+
+  const validateTicket = (ticketId: string) => {
+    validateMutation.mutate(ticketId)
   }
 
-  const cancelOrder = async (orderId: string) => {
+  const cancelOrder = (orderId: string) => {
     if (
       !confirm(
         'Ви впевнені, що хочете скасувати це замовлення? Це також скасує всі квитки.',
       )
     )
       return
+    cancelMutation.mutate(orderId)
+  }
 
-    try {
-      await adminOrdersService.cancelOrder(orderId)
-      if (selectedUserId) fetchUserData(selectedUserId)
-    } catch (e: any) {
-      alert(e.response?.data?.detail || 'Помилка скасування замовлення')
-    }
+  const selectUser = (id: string) => {
+    if (id === selectedUserId) return
+    setSelectedUserId(id)
   }
 
   return {
-    users,
-    isLoadingUsers,
+    users: usersList,
+    isLoadingUsers: usersQuery.isLoading,
+
     selectedUserId,
     selectUser,
-    orders,
-    tickets,
-    isLoadingData,
-    error,
+
+    orders: userDataQuery.data?.orders || [],
+    tickets: userDataQuery.data?.tickets || [],
+    isLoadingData: userDataQuery.isFetching,
+
     validateTicket,
     cancelOrder,
   }

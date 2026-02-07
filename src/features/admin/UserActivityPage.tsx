@@ -34,7 +34,7 @@ const UserActivityPage = () => {
     const lowerTerm = userSearchTerm.toLowerCase()
     return users.filter(
       u =>
-        u.email.toLowerCase().includes(lowerTerm) ||
+        u.email?.toLowerCase().includes(lowerTerm) ||
         (u.firstName && u.firstName.toLowerCase().includes(lowerTerm)) ||
         (u.lastName && u.lastName.toLowerCase().includes(lowerTerm)) ||
         u.id.toLowerCase().includes(lowerTerm),
@@ -42,7 +42,7 @@ const UserActivityPage = () => {
   }, [users, userSearchTerm])
 
   const getStatusBadge = (status: string) => {
-    const s = status.toLowerCase()
+    const s = String(status).toLowerCase()
 
     if (s === 'paid' || s === 'valid')
       return (
@@ -126,19 +126,20 @@ const UserActivityPage = () => {
                 )}
               >
                 <div className='flex justify-between items-start'>
-                  <div>
+                  <div className='min-w-0'>
                     <div
                       className={clsx(
-                        'font-medium text-sm truncate w-48',
+                        'font-medium text-sm truncate',
                         selectedUserId === user.id
                           ? 'text-white'
                           : 'text-[var(--text-muted)] group-hover:text-white',
                       )}
+                      title={user.email}
                     >
                       {user.email}
                     </div>
                     {(user.firstName || user.lastName) && (
-                      <div className='text-xs text-[var(--text-muted)] mt-0.5'>
+                      <div className='text-xs text-[var(--text-muted)] mt-0.5 truncate'>
                         {user.firstName} {user.lastName}
                       </div>
                     )}
@@ -146,7 +147,7 @@ const UserActivityPage = () => {
                   {selectedUserId === user.id && (
                     <ChevronRight
                       size={16}
-                      className='text-[var(--color-primary)] mt-1'
+                      className='text-[var(--color-primary)] mt-1 shrink-0'
                     />
                   )}
                 </div>
@@ -156,7 +157,7 @@ const UserActivityPage = () => {
         </div>
       </div>
 
-      <div className='flex flex-col gap-6 h-full overflow-y-auto pr-2'>
+      <div className='flex flex-col gap-6 h-full overflow-y-auto pr-2 custom-scrollbar'>
         {!selectedUserId ? (
           <div className='flex flex-col items-center justify-center h-full text-[var(--text-muted)] border border-dashed border-white/10 rounded-2xl bg-[var(--bg-card)]/30'>
             <User size={48} className='opacity-20 mb-4' />
@@ -164,7 +165,7 @@ const UserActivityPage = () => {
           </div>
         ) : (
           <>
-            <div className='bg-[var(--bg-card)] border border-white/5 p-6 rounded-2xl shadow-lg'>
+            <div className='bg-[var(--bg-card)] border border-white/5 p-6 rounded-2xl shadow-lg shrink-0 animate-in fade-in slide-in-from-top-2'>
               <div className='flex items-center gap-4'>
                 <div className='h-12 w-12 rounded-full bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center text-xl font-bold text-white border border-white/10'>
                   <User />
@@ -183,11 +184,11 @@ const UserActivityPage = () => {
             </div>
 
             {isLoadingData ? (
-              <div className='flex justify-center py-20'>
+              <div className='flex justify-center py-20 min-h-[300px]'>
                 <Loader2 className='animate-spin text-[var(--color-primary)] h-8 w-8' />
               </div>
             ) : (
-              <>
+              <div className='animate-in fade-in zoom-in-95 duration-300 space-y-6'>
                 <div className='grid grid-cols-3 gap-4'>
                   <div className='bg-[var(--bg-card)] p-4 rounded-xl border border-white/5'>
                     <div className='text-[var(--text-muted)] text-xs uppercase tracking-wider mb-1'>
@@ -214,7 +215,8 @@ const UserActivityPage = () => {
                       {orders
                         .filter(
                           o =>
-                            o.status !== 'Failed' && o.status !== 'Cancelled',
+                            String(o.status) !== 'Failed' &&
+                            String(o.status) !== 'Cancelled',
                         )
                         .reduce((acc, o) => acc + o.totalAmount, 0)
                         .toLocaleString()}
@@ -227,7 +229,7 @@ const UserActivityPage = () => {
                     type='button'
                     onClick={() => setActiveTab('orders')}
                     className={clsx(
-                      'pb-3 px-2 text-sm font-bold flex items-center gap-2 transition-colors border-b-2',
+                      'pb-3 px-2 text-sm font-bold flex items-center gap-2 transition-colors border-b-2 outline-none',
                       activeTab === 'orders'
                         ? 'text-white border-[var(--color-primary)]'
                         : 'text-[var(--text-muted)] border-transparent hover:text-white',
@@ -239,7 +241,7 @@ const UserActivityPage = () => {
                     type='button'
                     onClick={() => setActiveTab('tickets')}
                     className={clsx(
-                      'pb-3 px-2 text-sm font-bold flex items-center gap-2 transition-colors border-b-2',
+                      'pb-3 px-2 text-sm font-bold flex items-center gap-2 transition-colors border-b-2 outline-none',
                       activeTab === 'tickets'
                         ? 'text-white border-[var(--color-primary)]'
                         : 'text-[var(--text-muted)] border-transparent hover:text-white',
@@ -388,7 +390,7 @@ const UserActivityPage = () => {
                     </table>
                   )}
                 </div>
-              </>
+              </div>
             )}
           </>
         )}
