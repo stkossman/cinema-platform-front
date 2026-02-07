@@ -1,11 +1,11 @@
+import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { Loader2, Film, ArrowRight } from 'lucide-react'
 import MovieCard from '../features/movies/components/MovieCard'
 import PromoSection from '../features/home/components/PromoSection'
 import HeroSection from '../features/movies/components/HeroSection'
-import { Loader2, Film, ArrowRight } from 'lucide-react'
 import { useHomeMovies } from '../features/home/hooks/useHomeMovies'
-import { useMemo } from 'react'
 import { MovieStatus } from '../types/movie'
-import { Link } from 'react-router-dom'
 
 const HomePage = () => {
   const { filteredMovies, isLoading, activeFilter, setActiveFilter, filters } =
@@ -54,7 +54,7 @@ const HomePage = () => {
         </div>
 
         {moviesToShow.length === 0 ? (
-          <div className='flex flex-col items-center justify-center py-32 text-[var(--text-muted)] bg-[var(--bg-card)] rounded-3xl border border-dashed border-white/10'>
+          <div className='flex flex-col items-center justify-center py-32 text-[var(--text-muted)] bg-[var(--bg-card)] rounded-3xl border border-dashed border-white/10 animate-in fade-in zoom-in duration-500'>
             <Film size={64} className='opacity-10 mb-6' />
             <p className='text-lg font-medium'>
               {filteredMovies.length > 0

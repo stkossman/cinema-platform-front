@@ -11,11 +11,19 @@ interface MovieCardProps {
 }
 
 const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
-  const displaySessions = sessions.sort(
-    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
-  )
+  const displaySessions = sessions
+    .filter(s => new Date(s.startTime) > new Date())
+    .sort(
+      (a, b) =>
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+    )
+    .slice(0, 3)
 
   const isComingSoon = movie.status === MovieStatus.ComingSoon
+
+  const genresString = Array.isArray(movie.genres)
+    ? movie.genres.map(g => (typeof g === 'string' ? g : g.name)).join(', ')
+    : 'Жанр не вказано'
 
   return (
     <div className='group relative bg-[var(--bg-card)] rounded-2xl overflow-hidden border border-white/5 transition-all duration-300 hover:border-[var(--color-primary)]/30 hover:shadow-2xl hover:-translate-y-1 h-full flex flex-col'>
@@ -57,7 +65,7 @@ const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
           {movie.title}
         </h3>
         <p className='text-xs font-medium text-[var(--text-muted)] mb-4 line-clamp-1'>
-          {movie.genres.join(', ') || 'Жанр не вказано'}
+          {genresString}
         </p>
 
         <div className='mt-auto space-y-3'>
