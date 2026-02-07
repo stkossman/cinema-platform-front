@@ -11,16 +11,24 @@ import {
   MonitorPlay,
   Pencil,
 } from 'lucide-react'
+import ConfirmModal from '../../common/components/Modals/ConfirmModal'
+import InputModal from '../../common/components/Modals/InputModal'
+import { useToast } from '../../common/components/Toast/ToastContext'
 
 const HallsPage = () => {
+  const toast = useToast()
   const [mode, setMode] = useState<'list' | 'create' | 'edit'>('list')
   const [editingHallId, setEditingHallId] = useState<string | null>(null)
+
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [saveModalOpen, setSaveModalOpen] = useState(false)
+  const [tempSaveData, setTempSaveData] = useState<any>(null)
 
   const { halls, isLoading, deleteHall } = useHalls()
   const {
     initialSeats,
     isLoadingData: isLoadingEditData,
-    isProcessing,
+    isProcessing: isProcessingSeats,
     loadHallSeats,
     saveHall,
     resetEditor,
@@ -32,7 +40,7 @@ const HallsPage = () => {
     setMode('edit')
     const success = await loadHallSeats(hallId)
     if (!success) {
-      alert('Помилка завантаження даних залу')
+      toast.error('Помилка завантаження даних залу')
       setMode('list')
     }
   }
@@ -49,30 +57,48 @@ const HallsPage = () => {
     resetEditor()
   }
 
-  const onSaveClick = async (data: any) => {
+  const onSaveClick = (data: any) => {
     if (mode === 'list') return
-
-    const promptMessage =
-      mode === 'edit' ? 'Введіть нову назву залу:' : 'Введіть назву залу:'
-    const currentName = halls.find(h => h.id === editingHallId)?.name || ''
-    const hallName = prompt(promptMessage, mode === 'edit' ? currentName : '')
-
-    if (!hallName) return
-
-    const result = await saveHall(mode, editingHallId, hallName, data)
-
-    if (result.success) {
-      alert(mode === 'create' ? 'Зал успішно створено!' : 'Зал оновлено!')
-      handleBackToList()
-    } else {
-      alert(`Помилка: ${result.error}`)
-    }
+    setTempSaveData(data)
+    setSaveModalOpen(true)
   }
 
-  const onDeleteClick = async (id: string) => {
-    if (!confirm('Ви впевнені? Це видалить зал та всі його місця.')) return
-    const success = await deleteHall(id)
-    if (!success) alert('Не вдалося видалити зал.')
+  const onConfirmSave = async (hallName: string) => {
+    if (mode === 'list') return
+    const result = await saveHall(mode, editingHallId, hallName, tempSaveData)
+
+    if (result.success) {
+      toast.success(
+        mode === 'create' ? 'Зал успішно створено!' : 'Зал оновлено!',
+      )
+      handleBackToList()
+    } else {
+      toast.error(`Помилка: ${result.error}`)
+    }
+    setSaveModalOpen(false)
+    setTempSaveData(null)
+  }
+
+  const onDeleteClick = (id: string) => {
+    setDeleteId(id)
+  }
+
+  const onConfirmDelete = async () => {
+    if (!deleteId) return
+    const success = await deleteHall(deleteId)
+    if (success) {
+      toast.success('Зал видалено')
+    } else {
+      toast.error('Не вдалося видалити зал.')
+    }
+    setDeleteId(null)
+  }
+
+  const getCurrentHallName = () => {
+    if (mode === 'edit' && editingHallId) {
+      return halls.find(h => h.id === editingHallId)?.name || ''
+    }
+    return ''
   }
 
   return (
@@ -104,7 +130,7 @@ const HallsPage = () => {
         </button>
       </div>
 
-      {isProcessing && (
+      {isProcessingSeats && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm'>
           <div className='text-center'>
             <Loader2 className='h-12 w-12 animate-spin text-[var(--color-primary)] mx-auto mb-4' />
@@ -194,6 +220,27 @@ const HallsPage = () => {
           </div>
         </>
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={onConfirmDelete}
+        title='Видалити зал?'
+        message='Ви впевнені, що хочете видалити цей зал? Це призведе до видалення всіх місць та конфігурації. Дія незворотна.'
+        isDestructive
+        confirmText='Видалити'
+      />
+
+      <InputModal
+        isOpen={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        onSubmit={onConfirmSave}
+        title={mode === 'edit' ? 'Оновлення залу' : 'Збереження залу'}
+        label='Назва залу'
+        placeholder='Наприклад: Зал 1 (IMAX)'
+        initialValue={getCurrentHallName()}
+        confirmText='Зберегти'
+      />
     </div>
   )
 }

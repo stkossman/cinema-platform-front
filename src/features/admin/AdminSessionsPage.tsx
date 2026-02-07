@@ -12,6 +12,9 @@ import {
 } from 'lucide-react'
 import CreateSessionModal from './components/CreateSessionModal'
 import { type SessionDto } from '../../services/adminSessionsService'
+import ConfirmModal from '../../common/components/Modals/ConfirmModal'
+import InputModal from '../../common/components/Modals/InputModal'
+import { useToast } from '../../common/components/Toast/ToastContext'
 
 const AdminSessionsPage = () => {
   const {
@@ -21,31 +24,49 @@ const AdminSessionsPage = () => {
     deleteSession,
     rescheduleSession,
   } = useSessions()
+
+  const toast = useToast()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
-  const handleDeleteClick = async (id: string) => {
-    if (!confirm('Ви впевнені, що хочете скасувати цей сеанс?')) return
-    const success = await deleteSession(id)
-    if (!success)
-      alert('Помилка скасування сеансу. Можливо, на нього вже продані квитки.')
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [rescheduleData, setRescheduleData] = useState<{
+    id: string
+    currentStart: string
+  } | null>(null)
+
+  const handleDeleteClick = (id: string) => setDeleteId(id)
+  const handleRescheduleClick = (id: string, currentStart: string) =>
+    setRescheduleData({ id, currentStart })
+
+  const onConfirmDelete = async () => {
+    if (!deleteId) return
+    const success = await deleteSession(deleteId)
+    if (success) {
+      toast.success('Сеанс успішно скасовано')
+    } else {
+      toast.error('Помилка скасування. Можливо, на нього вже є квитки.')
+    }
+    setDeleteId(null)
   }
 
-  const handleRescheduleClick = async (id: string, currentStart: string) => {
-    const currentIso = new Date(currentStart).toISOString().slice(0, 16)
-    const newTimeStr = prompt(
-      'Введіть новий час (YYYY-MM-DDTHH:MM):',
-      currentIso,
-    )
-    if (!newTimeStr) return
+  const onConfirmReschedule = async (newTimeStr: string) => {
+    if (!rescheduleData) return
 
     const newDate = new Date(newTimeStr)
     if (isNaN(newDate.getTime())) {
-      alert('Невірний формат дати')
+      toast.error('Невірний формат дати')
       return
     }
 
-    const result = await rescheduleSession(id, newDate.toISOString())
-    if (!result.success) alert('Помилка переносу: ' + result.error)
+    const result = await rescheduleSession(
+      rescheduleData.id,
+      newDate.toISOString(),
+    )
+    if (result.success) {
+      toast.success('Сеанс успішно перенесено')
+    } else {
+      toast.error('Помилка переносу: ' + result.error)
+    }
   }
 
   const groupedSessions = sessions.reduce(
@@ -57,6 +78,13 @@ const AdminSessionsPage = () => {
     },
     {} as Record<string, SessionDto[]>,
   )
+
+  const getInitialRescheduleValue = () => {
+    if (!rescheduleData) return ''
+    const date = new Date(rescheduleData.currentStart)
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset())
+    return date.toISOString().slice(0, 16)
+  }
 
   return (
     <div className='space-y-8 pb-20'>
@@ -134,7 +162,32 @@ const AdminSessionsPage = () => {
       <CreateSessionModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={fetchSessions}
+        onSuccess={() => {
+          fetchSessions()
+          toast.success('Сеанс створено успішно')
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={onConfirmDelete}
+        title='Скасування сеансу'
+        message='Ви впевнені, що хочете скасувати цей сеанс? Цю дію неможливо скасувати.'
+        confirmText='Так, скасувати'
+        isDestructive
+      />
+
+      <InputModal
+        isOpen={!!rescheduleData}
+        onClose={() => setRescheduleData(null)}
+        onSubmit={onConfirmReschedule}
+        title='Перенести сеанс'
+        label='Новий час початку'
+        initialValue={getInitialRescheduleValue()}
+        confirmText='Перенести'
+        // @ts-ignore (type prop passing)
+        type='datetime-local'
       />
     </div>
   )
