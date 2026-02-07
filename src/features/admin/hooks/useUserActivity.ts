@@ -3,9 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminUsersService } from '../../../services/adminUsersService'
 import { adminOrdersService } from '../../../services/adminOrdersService'
 import { adminTicketsService } from '../../../services/adminTicketsService'
+import { useToast } from '../../../common/components/Toast/ToastContext'
 
 export const useUserActivity = () => {
   const queryClient = useQueryClient()
+  const toast = useToast()
   const [selectedUserId, setSelectedUserId] = useState('')
 
   const usersQuery = useQuery({
@@ -47,7 +49,7 @@ export const useUserActivity = () => {
   const validateMutation = useMutation({
     mutationFn: adminTicketsService.validate,
     onSuccess: msg => {
-      alert(msg)
+      toast.success(msg)
       queryClient.invalidateQueries({
         queryKey: ['admin-user-orders', selectedUserId],
       })
@@ -60,12 +62,15 @@ export const useUserActivity = () => {
   const cancelMutation = useMutation({
     mutationFn: adminOrdersService.cancelOrder,
     onSuccess: () => {
+      toast.success('Замовлення скасовано')
       queryClient.invalidateQueries({
         queryKey: ['admin-user-orders', selectedUserId],
       })
     },
     onError: (error: any) => {
-      alert(error.response?.data?.detail || 'Помилка скасування замовлення')
+      toast.error(
+        error.response?.data?.detail || 'Помилка скасування замовлення',
+      )
     },
   })
 

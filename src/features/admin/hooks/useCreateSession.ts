@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminSessionsService } from '../../../services/adminSessionsService'
 import { moviesService } from '../../../services/moviesService'
 import { hallsService } from '../../../services/hallsService'
+import { useToast } from '../../../common/components/Toast/ToastContext'
 
 export const useCreateSession = (
   isOpen: boolean,
@@ -10,6 +11,7 @@ export const useCreateSession = (
   onClose: () => void,
 ) => {
   const queryClient = useQueryClient()
+  const toast = useToast()
 
   const [movieId, setMovieId] = useState('')
   const [hallId, setHallId] = useState('')
@@ -61,6 +63,7 @@ export const useCreateSession = (
     mutationFn: adminSessionsService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-sessions'] })
+      toast.success('Сеанс успішно створено')
       onSuccess()
       onClose()
       setTime('18:00')
@@ -70,7 +73,7 @@ export const useCreateSession = (
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!movieId || !hallId || !pricingId || !date || !time) {
-      alert('Будь ласка, заповніть всі поля')
+      toast.warning('Будь ласка, заповніть всі поля')
       return
     }
 
@@ -84,7 +87,7 @@ export const useCreateSession = (
         pricingId,
       })
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Помилка створення сеансу')
+      toast.error(error.response?.data?.error || 'Помилка створення сеансу')
     }
   }
 

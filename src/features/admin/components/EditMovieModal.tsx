@@ -3,6 +3,7 @@ import { X, Loader2 } from 'lucide-react'
 import { moviesService } from '../../../services/moviesService'
 import { type Movie, MovieStatus } from '../../../types/movie'
 import Input from '../../../common/components/Input'
+import { useToast } from '../../../common/components/Toast/ToastContext'
 
 interface EditMovieModalProps {
   isOpen: boolean
@@ -17,6 +18,7 @@ const EditMovieModal = ({
   onClose,
   onSuccess,
 }: EditMovieModalProps) => {
+  const toast = useToast()
   const [formData, setFormData] = useState<{
     title: string
     description: string
@@ -59,12 +61,12 @@ const EditMovieModal = ({
         rating: movie.rating,
         year: movie.year,
       })
-
+      toast.success('Фільм успішно оновлено')
       onSuccess()
       onClose()
     } catch (error) {
       console.error(error)
-      alert('Помилка при оновленні фільму')
+      toast.error('Помилка при оновленні фільму')
     } finally {
       setIsSaving(false)
     }
