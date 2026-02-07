@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useGenres } from './hooks/useGenres'
 import { Plus, Tag, Edit, Trash2, Loader2, Search } from 'lucide-react'
 import GenreModal from './components/GenreModal'
@@ -7,6 +7,7 @@ import { type Genre } from '../../services/genresService'
 const GenresPage = () => {
   const { genres, isLoading, createGenre, updateGenre, deleteGenre } =
     useGenres()
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -39,11 +40,16 @@ const GenresPage = () => {
     }
   }
 
-  const filteredGenres = (genres || []).filter(
-    g =>
-      g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      g.externalId.toString().includes(searchTerm),
-  )
+  const filteredGenres = useMemo(() => {
+    if (!genres) return []
+    const term = searchTerm.toLowerCase()
+
+    return genres.filter(
+      g =>
+        g.name.toLowerCase().includes(term) ||
+        g.externalId.toString().includes(term),
+    )
+  }, [genres, searchTerm])
 
   return (
     <div className='space-y-6'>
@@ -121,18 +127,18 @@ const GenresPage = () => {
                       </div>
                     </td>
                     <td className='px-6 py-4 text-right'>
-                      <div className='flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity'>
+                      <div className='flex items-center justify-end gap-2'>
                         <button
                           type='button'
                           onClick={() => handleEditClick(genre)}
-                          className='p-2 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-blue-500/20'
+                          className='p-2 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-blue-500/20 transition-colors'
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           type='button'
                           onClick={() => handleDeleteClick(genre.externalId)}
-                          className='p-2 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10'
+                          className='p-2 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors'
                         >
                           <Trash2 size={16} />
                         </button>

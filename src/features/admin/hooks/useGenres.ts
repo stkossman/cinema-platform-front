@@ -1,27 +1,41 @@
-import { useState, useCallback, useEffect } from 'react'
-import { genresService, type Genre } from '../../../services/genresService'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { genresService } from '../../../services/genresService'
 
 export const useGenres = () => {
-  const [genres, setGenres] = useState<Genre[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  const fetchGenres = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const data = await genresService.getAll()
-      setGenres(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error('Failed to fetch genres', error)
-      setGenres([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const { data, isLoading } = useQuery({
+    queryKey: ['genres'],
+    queryFn: genresService.getAll,
+    staleTime: 60 * 60 * 1000,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: ({ externalId, name }: { externalId: number; name: string }) =>
+      genresService.create(externalId, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['genres'] })
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ externalId, name }: { externalId: number; name: string }) =>
+      genresService.update(externalId, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['genres'] })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: genresService.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['genres'] })
+    },
+  })
 
   const createGenre = async (externalId: number, name: string) => {
     try {
-      await genresService.create(externalId, name)
-      await fetchGenres()
+      await createMutation.mutateAsync({ externalId, name })
       return { success: true }
     } catch (error: any) {
       const msg = error.response?.data?.title || 'Помилка створення жанру'
@@ -31,8 +45,7 @@ export const useGenres = () => {
 
   const updateGenre = async (externalId: number, name: string) => {
     try {
-      await genresService.update(externalId, name)
-      await fetchGenres()
+      await updateMutation.mutateAsync({ externalId, name })
       return { success: true }
     } catch (error: any) {
       return { success: false, error: 'Помилка оновлення' }
@@ -41,22 +54,16 @@ export const useGenres = () => {
 
   const deleteGenre = async (externalId: number) => {
     try {
-      await genresService.delete(externalId)
-      await fetchGenres()
+      await deleteMutation.mutateAsync(externalId)
       return { success: true }
     } catch (error: any) {
       return { success: false, error: 'Помилка видалення' }
     }
   }
 
-  useEffect(() => {
-    fetchGenres()
-  }, [fetchGenres])
-
   return {
-    genres,
+    genres: data || [],
     isLoading,
-    fetchGenres,
     createGenre,
     updateGenre,
     deleteGenre,
