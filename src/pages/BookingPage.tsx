@@ -86,7 +86,10 @@ const BookingPage = () => {
   }
 
   const genresList = Array.isArray(movie?.genres)
-    ? movie!.genres.map(g => (typeof g === 'string' ? g : g.name))
+    ? movie!.genres.map(g => {
+        if (typeof g === 'string') return g
+        return (g as any).name
+      })
     : []
 
   return (

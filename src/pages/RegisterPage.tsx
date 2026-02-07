@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../features/auth/AuthContext'
+import { useMutation } from '@tanstack/react-query'
+import { authService } from '../services/authService'
 import Input from '../common/components/Input'
 import { Loader2, Ticket, ArrowRight } from 'lucide-react'
 
@@ -23,9 +24,7 @@ const registerSchema = z
 type RegisterFormData = z.infer<typeof registerSchema>
 
 const RegisterPage = () => {
-  const { register: registerUser } = useAuth()
   const navigate = useNavigate()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
@@ -36,26 +35,32 @@ const RegisterPage = () => {
     resolver: zodResolver(registerSchema),
   })
 
-  const onSubmit = async (data: RegisterFormData) => {
-    setIsSubmitting(true)
-    setServerError(null)
-    try {
-      await registerUser({
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-      })
-
+  const registerMutation = useMutation({
+    mutationFn: (data: RegisterFormData) =>
+      authService.register(
+        data.email,
+        data.password,
+        data.firstName,
+        data.lastName,
+      ),
+    onSuccess: () => {
       alert('Реєстрація успішна! Тепер увійдіть у свій акаунт.')
       navigate('/auth/login')
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error(error)
-      setServerError(error.message || 'Помилка реєстрації')
-    } finally {
-      setIsSubmitting(false)
-    }
+      setServerError(
+        error.response?.data?.title || error.message || 'Помилка реєстрації',
+      )
+    },
+  })
+
+  const onSubmit = (data: RegisterFormData) => {
+    setServerError(null)
+    registerMutation.mutate(data)
   }
+
+  const isSubmitting = registerMutation.isPending
 
   return (
     <div className='flex min-h-[calc(100vh-4rem)]'>

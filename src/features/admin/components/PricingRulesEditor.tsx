@@ -5,7 +5,6 @@ import {
   type SetPricingRuleDto,
 } from '../../../services/adminPricingsService'
 import { seatTypesService } from '../../../services/seatTypesService'
-import { type SeatType } from '../../../types/hall'
 import { useQuery } from '@tanstack/react-query'
 
 interface PricingRulesEditorProps {

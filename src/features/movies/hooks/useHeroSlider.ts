@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { moviesService } from '../../../services/moviesService'
-import { type Movie, MovieStatus } from '../../../types/movie'
+import { MovieStatus } from '../../../types/movie'
 import { useQuery } from '@tanstack/react-query'
 
 const AUTO_PLAY_INTERVAL = 8000

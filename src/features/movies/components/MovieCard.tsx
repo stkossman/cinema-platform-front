@@ -22,7 +22,12 @@ const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
   const isComingSoon = movie.status === MovieStatus.ComingSoon
 
   const genresString = Array.isArray(movie.genres)
-    ? movie.genres.map(g => (typeof g === 'string' ? g : g.name)).join(', ')
+    ? movie.genres
+        .map(g => {
+          if (typeof g === 'string') return g
+          return (g as any).name
+        })
+        .join(', ')
     : 'Жанр не вказано'
 
   return (
