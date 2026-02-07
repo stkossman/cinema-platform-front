@@ -13,7 +13,6 @@ export const authService = {
     })
 
     authService.setTokens(data.accessToken, data.refreshToken)
-
     return authService.getUserFromToken(data.accessToken)!
   },
 
@@ -57,7 +56,7 @@ export const authService = {
   logout: () => {
     localStorage.removeItem(ACCESS_TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
-    window.location.href = '/auth/login'
+    delete api.defaults.headers.common['Authorization']
   },
 
   getAccessToken: () => localStorage.getItem(ACCESS_TOKEN_KEY),

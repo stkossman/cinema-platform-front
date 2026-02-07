@@ -7,17 +7,10 @@ import {
 } from 'react'
 import { type User } from '../../types/auth'
 import { authService } from '../../services/authService'
-import { api } from '../../lib/axios'
 
 interface LoginParams {
   email: string
   password: string
-}
-interface RegisterParams {
-  email: string
-  password: string
-  firstName: string
-  lastName: string
 }
 
 interface AuthContextType {
@@ -25,9 +18,8 @@ interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
   login: (params: LoginParams) => Promise<void>
-  register: (params: RegisterParams) => Promise<void>
   logout: () => void
-  updateUser: (data: { name: string; surname: string }) => void
+  updateUser: (data: Partial<User>) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -37,9 +29,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const currentUser = authService.getCurrentUser()
-    setUser(currentUser)
-    setIsLoading(false)
+    const initAuth = () => {
+      const currentUser = authService.getCurrentUser()
+      setUser(currentUser)
+      setIsLoading(false)
+    }
+    initAuth()
   }, [])
 
   const login = async ({ email, password }: LoginParams) => {
@@ -47,22 +42,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(user)
   }
 
-  const register = async ({
-    email,
-    password,
-    firstName,
-    lastName,
-  }: RegisterParams) => {
-    await authService.register(email, password, firstName, lastName)
-  }
-
   const logout = () => {
     authService.logout()
     setUser(null)
-    delete api.defaults.headers.common['Authorization']
+    window.location.href = '/auth/login'
   }
 
-  const updateUser = (data: { name: string; surname: string }) => {
+  const updateUser = (data: Partial<User>) => {
     if (user) {
       setUser({ ...user, ...data })
     }
@@ -75,7 +61,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: !!user,
         isLoading,
         login,
-        register,
         logout,
         updateUser,
       }}

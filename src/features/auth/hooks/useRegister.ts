@@ -1,9 +1,9 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../AuthContext'
+import { useMutation } from '@tanstack/react-query'
+import { authService } from '../../../services/authService'
 
 const registerSchema = z
   .object({
@@ -24,34 +24,42 @@ const registerSchema = z
 export type RegisterFormData = z.infer<typeof registerSchema>
 
 export const useRegister = () => {
-  const { register: registerUser } = useAuth()
   const navigate = useNavigate()
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   })
 
-  const onSubmit = async (data: RegisterFormData) => {
-    setIsSubmitting(true)
-    try {
-      await registerUser({
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-      })
+  const mutation = useMutation({
+    mutationFn: (data: RegisterFormData) =>
+      authService.register(
+        data.email,
+        data.password,
+        data.firstName,
+        data.lastName,
+      ),
+    onSuccess: () => {
       alert('Реєстрація успішна! Тепер увійдіть у свій акаунт.')
       navigate('/auth/login')
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error(error)
       const message =
-        error.response?.data?.title || error.message || 'Помилка реєстрації'
+        error.response?.data?.detail ||
+        error.response?.data?.title ||
+        error.message ||
+        'Помилка реєстрації'
       alert(message)
-    } finally {
-      setIsSubmitting(false)
-    }
+    },
+  })
+
+  const onSubmit = (data: RegisterFormData) => {
+    mutation.mutate(data)
   }
 
-  return { form, isSubmitting, onSubmit }
+  return {
+    form,
+    isSubmitting: mutation.isPending,
+    onSubmit,
+  }
 }
