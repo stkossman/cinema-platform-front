@@ -2,37 +2,24 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { moviesService } from '../../../services/moviesService'
 import { type Movie, MovieStatus } from '../../../types/movie'
+import { useQuery } from '@tanstack/react-query'
 
 const AUTO_PLAY_INTERVAL = 8000
 
 export const useHeroSlider = () => {
-  const [movies, setMovies] = useState<Movie[]>([])
+  const navigate = useNavigate()
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
   const [isAnimating, setIsAnimating] = useState(false)
   const timerRef = useRef<number | null>(null)
-  const navigate = useNavigate()
 
-  const fetchHeroMovies = async () => {
-    setIsLoading(true)
-    try {
+  const { data: movies = [], isLoading } = useQuery({
+    queryKey: ['hero-movies'],
+    queryFn: async () => {
       const allMovies = await moviesService.getAll()
-
-      const activeMovies = allMovies
-        .filter(m => m.status === MovieStatus.Active)
-        .slice(0, 5)
-
-      setMovies(activeMovies)
-    } catch (error) {
-      console.error('Failed to load hero slider movies:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchHeroMovies()
-  }, [])
+      return allMovies.filter(m => m.status === MovieStatus.Active).slice(0, 5)
+    },
+    staleTime: 5 * 60 * 1000,
+  })
 
   const nextSlide = useCallback(() => {
     if (movies.length === 0) return

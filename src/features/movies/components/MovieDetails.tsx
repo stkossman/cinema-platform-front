@@ -21,7 +21,7 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
 
   const handleBookingClick = () => {
     if (!user) {
-      navigate('/auth/login')
+      navigate('/auth/login', { state: { from: `/booking/${movie.id}` } })
     } else {
       navigate(`/booking/${movie.id}`)
     }
@@ -43,6 +43,10 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
   const trailerEmbedUrl = movie.videoUrl
     ? getYoutubeEmbedUrl(movie.videoUrl)
     : null
+
+  const genresList = Array.isArray(movie.genres)
+    ? movie.genres.map(g => (typeof g === 'string' ? g : g.name))
+    : []
 
   return (
     <div className='relative min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] pb-20'>
@@ -87,7 +91,7 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
               </span>
 
               <div className='flex gap-2 ml-2'>
-                {movie.genres.map(genre => (
+                {genresList.map(genre => (
                   <span
                     key={genre}
                     className='text-xs uppercase tracking-wider text-[var(--text-muted)] border-b border-transparent hover:border-[var(--color-primary)] hover:text-white transition-colors cursor-default'
@@ -212,7 +216,7 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
                   <Film size={14} /> Жанри
                 </div>
                 <div className='flex flex-wrap gap-2'>
-                  {movie.genres.map(g => (
+                  {genresList.map(g => (
                     <span
                       key={g}
                       className='text-sm font-medium text-white bg-white/5 px-2 py-1 rounded border border-white/5'

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { type Movie, MovieStatus } from '../../../types/movie'
 import { type Session } from '../../../types/hall'
 import { moviesService } from '../../../services/moviesService'
@@ -33,55 +34,45 @@ const isSameDate = (d1: Date, d2: Date) => {
 }
 
 const MoviesGrid = () => {
-  const [movies, setMovies] = useState<MovieWithMeta[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
   const [activeTab, setActiveTab] = useState<'now' | 'soon'>('now')
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const dates = useMemo(() => generateDates(), [])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true)
-      try {
-        const [moviesData, allSessions, hallsData] = await Promise.all([
-          moviesService.getAll(),
-          bookingService.getAllSessions(),
-          hallsService.getAll(),
-        ])
+  const dates = generateDates()
 
-        const hallTechMap: Record<string, string[]> = {}
-        for (const hall of hallsData) {
-          hallTechMap[hall.id] = hall.technologies?.map(t => t.name) || []
-        }
+  const { data: movies = [], isLoading } = useQuery({
+    queryKey: ['home-movies-aggregated'],
+    queryFn: async () => {
+      const [moviesData, allSessions, hallsData] = await Promise.all([
+        moviesService.getAll(),
+        bookingService.getAllSessions(),
+        hallsService.getAll(),
+      ])
 
-        const enrichedMovies = moviesData.map(movie => {
+      const hallTechMap: Record<string, string[]> = {}
+      hallsData.forEach(hall => {
+        hallTechMap[hall.id] = hall.technologies?.map(t => t.name) || []
+      })
+
+      return moviesData
+        .filter(m => m.status !== MovieStatus.Archived)
+        .map(movie => {
           const sessions = allSessions.filter(s => s.movieId === movie.id)
-
           const techSet = new Set<string>()
-          for (const session of sessions) {
-            const hallTechs = hallTechMap[session.hallId]
-            if (hallTechs) hallTechs.forEach(t => techSet.add(t))
-          }
+          sessions.forEach(s => {
+            const techs = hallTechMap[s.hallId]
+            if (techs) techs.forEach(t => techSet.add(t))
+          })
           if (techSet.size === 0) techSet.add('2D')
 
           return {
             ...movie,
             sessions,
             technologies: Array.from(techSet),
-          }
+          } as MovieWithMeta
         })
-
-        setMovies(enrichedMovies.filter(m => m.status !== MovieStatus.Archived))
-      } catch (error) {
-        console.error('Failed to load movies data:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
+    },
+    staleTime: 5 * 60 * 1000,
+  })
 
   const displayedMovies = useMemo(() => {
     if (activeTab === 'soon') {
