@@ -1,48 +1,61 @@
-import { useState, useCallback, useEffect } from 'react'
+import {
+  useQuery,
+  useQueries,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import {
   adminPricingsService,
-  type PricingDetailsDto,
   type SetPricingRuleDto,
 } from '../../../services/adminPricingsService'
 
 export const usePricings = () => {
-  const [pricings, setPricings] = useState<PricingDetailsDto[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  const fetchPricings = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const listData = await adminPricingsService.getAll()
+  const listQuery = useQuery({
+    queryKey: ['pricings-list'],
+    queryFn: adminPricingsService.getAll,
+    staleTime: 5 * 60 * 1000,
+  })
 
-      if (!Array.isArray(listData)) {
-        setPricings([])
-        return
-      }
+  const detailQueries = useQueries({
+    queries: (listQuery.data || []).map(pricing => ({
+      queryKey: ['pricing-details', pricing.id],
+      queryFn: () => adminPricingsService.getById(pricing.id),
+      staleTime: 5 * 60 * 1000,
+      enabled: !!listQuery.data,
+    })),
+  })
 
-      const detailedPricings = await Promise.all(
-        listData.map(async pricing => {
-          try {
-            return await adminPricingsService.getById(pricing.id)
-          } catch (e) {
-            console.warn(`Could not fetch details for ${pricing.name}`, e)
-            return pricing
-          }
-        }),
-      )
+  const pricings =
+    listQuery.data?.map((pricing, index) => {
+      const detail = detailQueries[index]
+      return detail.data || pricing
+    }) || []
 
-      setPricings(detailedPricings)
-    } catch (error) {
-      console.error('Failed to fetch pricings', error)
-      setPricings([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const isLoading = listQuery.isLoading || detailQueries.some(q => q.isLoading)
+
+  const createMutation = useMutation({
+    mutationFn: adminPricingsService.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pricings-list'] })
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, rules }: { id: string; rules: SetPricingRuleDto[] }) =>
+      adminPricingsService.setRules(id, rules),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['pricing-details', variables.id],
+      })
+      queryClient.invalidateQueries({ queryKey: ['pricings-list'] })
+    },
+  })
 
   const createPricing = async (name: string) => {
     try {
-      await adminPricingsService.create(name)
-      await fetchPricings()
+      await createMutation.mutateAsync(name)
       return { success: true }
     } catch (error: any) {
       const msg = error.response?.data?.title || 'Failed to create pricing'
@@ -52,8 +65,7 @@ export const usePricings = () => {
 
   const updateRules = async (id: string, rules: SetPricingRuleDto[]) => {
     try {
-      await adminPricingsService.setRules(id, rules)
-      await fetchPricings()
+      await updateMutation.mutateAsync({ id, rules })
       return { success: true }
     } catch (error: any) {
       const msg = error.response?.data?.title || 'Failed to update rules'
@@ -61,14 +73,9 @@ export const usePricings = () => {
     }
   }
 
-  useEffect(() => {
-    fetchPricings()
-  }, [fetchPricings])
-
   return {
     pricings,
     isLoading,
-    fetchPricings,
     createPricing,
     updateRules,
   }

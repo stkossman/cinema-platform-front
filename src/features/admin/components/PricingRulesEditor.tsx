@@ -6,6 +6,7 @@ import {
 } from '../../../services/adminPricingsService'
 import { seatTypesService } from '../../../services/seatTypesService'
 import { type SeatType } from '../../../types/hall'
+import { useQuery } from '@tanstack/react-query'
 
 interface PricingRulesEditorProps {
   pricing: PricingDetailsDto
@@ -30,30 +31,24 @@ const PricingRulesEditor = ({
   onClose,
   onSave,
 }: PricingRulesEditorProps) => {
-  const [seatTypes, setSeatTypes] = useState<SeatType[]>([])
+  const { data: seatTypes = [], isLoading: isLoadingTypes } = useQuery({
+    queryKey: ['seat-types'],
+    queryFn: seatTypesService.getAll,
+    staleTime: Infinity,
+  })
+
   const [matrix, setMatrix] = useState<Record<string, number>>({})
   const [isSaving, setIsSaving] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        const types = await seatTypesService.getAll()
-        setSeatTypes(types)
-
-        const initialMatrix: Record<string, number> = {}
-        pricing.items.forEach(item => {
-          const key = `${item.dayOfWeek}${SEPARATOR}${item.seatTypeId}`
-          initialMatrix[key] = item.price
-        })
-        setMatrix(initialMatrix)
-      } catch (e) {
-        console.error(e)
-      } finally {
-        setIsLoading(false)
-      }
+    if (pricing) {
+      const initialMatrix: Record<string, number> = {}
+      pricing.items.forEach(item => {
+        const key = `${item.dayOfWeek}${SEPARATOR}${item.seatTypeId}`
+        initialMatrix[key] = item.price
+      })
+      setMatrix(initialMatrix)
     }
-    init()
   }, [pricing])
 
   const handlePriceChange = (day: number, typeId: string, value: string) => {
@@ -94,7 +89,12 @@ const PricingRulesEditor = ({
     else alert(res.error)
   }
 
-  if (isLoading) return null
+  if (isLoadingTypes)
+    return (
+      <div className='p-10 flex justify-center'>
+        <Loader2 className='animate-spin' />
+      </div>
+    )
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in'>
