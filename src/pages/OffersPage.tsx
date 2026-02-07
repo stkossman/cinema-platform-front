@@ -1,20 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Sparkles, Loader2, Ticket, SearchX, Play } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Sparkles, Loader2, Ticket, SearchX, Play, Circle } from 'lucide-react'
 import { useAuth } from '../features/auth/AuthContext'
-import {
-  moviesService,
-  type MovieRecommendation,
-} from '../services/moviesService'
+import { moviesService } from '../services/moviesService'
 
 const OffersPage = () => {
   const { user, isLoading: isAuthLoading } = useAuth()
   const navigate = useNavigate()
-
-  const [recommendations, setRecommendations] = useState<MovieRecommendation[]>(
-    [],
-  )
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
@@ -22,24 +15,17 @@ const OffersPage = () => {
     }
   }, [user, isAuthLoading, navigate])
 
-  useEffect(() => {
-    const fetchRecommendations = async () => {
-      if (!user) return
-
-      try {
-        const data = await moviesService.getRecommendations(6)
-        setRecommendations(data)
-      } catch (error) {
-        console.error('Failed to fetch recommendations:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    if (user && !isAuthLoading) {
-      fetchRecommendations()
-    }
-  }, [user, isAuthLoading])
+  const {
+    data: recommendations = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['recommendations', user?.id],
+    queryFn: () => moviesService.getRecommendations(6),
+    enabled: !!user,
+    staleTime: 15 * 60 * 1000,
+    retry: false,
+  })
 
   if (isAuthLoading || (isLoading && user)) {
     return (
@@ -75,10 +61,21 @@ const OffersPage = () => {
           </p>
         </div>
 
-        {recommendations.length > 0 ? (
+        {isError && (
+          <div className='text-center text-red-400 py-10'>
+            Не вдалося завантажити рекомендації. Спробуйте пізніше.
+          </div>
+        )}
+
+        {!isError && recommendations.length > 0 ? (
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
             {recommendations.map((movie, index) => {
               const matchPercentage = Math.round(movie.similarityScore * 100)
+
+              const radius = 10
+              const circumference = 2 * Math.PI * radius
+              const strokeDashoffset =
+                circumference - (matchPercentage / 100) * circumference
 
               return (
                 <Link
@@ -97,34 +94,26 @@ const OffersPage = () => {
 
                   <div className='absolute top-4 right-4'>
                     <div className='relative flex items-center justify-center w-12 h-12 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-lg group-hover:scale-110 transition-transform'>
-                      <svg className='absolute inset-0 w-full h-full -rotate-90'>
-                        <circle
-                          cx='24'
-                          cy='24'
-                          r='20'
-                          className='stroke-white/10'
-                          strokeWidth='4'
-                          fill='none'
-                        />
-                        <circle
-                          cx='24'
-                          cy='24'
-                          r='20'
-                          className={`${
-                            matchPercentage > 80
-                              ? 'stroke-green-500'
-                              : matchPercentage > 60
-                                ? 'stroke-yellow-500'
-                                : 'stroke-[var(--color-primary)]'
-                          }`}
-                          strokeWidth='4'
-                          fill='none'
-                          strokeDasharray='126'
-                          strokeDashoffset={126 - (126 * matchPercentage) / 100}
-                          strokeLinecap='round'
-                        />
-                      </svg>
-                      <span className='text-[10px] font-bold text-white'>
+                      <Circle
+                        size={48}
+                        strokeWidth={2}
+                        className='absolute text-white/10'
+                      />
+                      <Circle
+                        size={48}
+                        strokeWidth={2}
+                        className={`absolute -rotate-90 transition-all duration-1000 ${
+                          matchPercentage > 80
+                            ? 'text-green-500'
+                            : matchPercentage > 60
+                              ? 'text-yellow-500'
+                              : 'text-[var(--color-primary)]'
+                        }`}
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap='round'
+                      />
+                      <span className='text-[10px] font-bold text-white absolute'>
                         {matchPercentage}%
                       </span>
                     </div>
@@ -143,41 +132,42 @@ const OffersPage = () => {
             })}
           </div>
         ) : (
-          <div className='flex flex-col items-center justify-center py-12 text-center animate-in fade-in zoom-in duration-500'>
-            <div className='relative mb-8 group cursor-default'>
-              <div className='absolute inset-0 bg-gradient-to-r from-[var(--color-primary)] to-purple-600 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500' />
-              <div className='relative w-32 h-32 bg-[#1a1a1a] rounded-full border border-white/10 flex items-center justify-center shadow-2xl'>
-                <SearchX
-                  size={48}
-                  className='text-[var(--text-muted)] group-hover:text-white transition-colors duration-500'
-                />
-
-                <div className='absolute -top-2 -right-2 w-10 h-10 bg-[var(--bg-card)] rounded-full border border-white/10 flex items-center justify-center animate-bounce'>
-                  <Ticket size={16} className='text-[var(--color-primary)]' />
+          !isLoading && (
+            <div className='flex flex-col items-center justify-center py-12 text-center animate-in fade-in zoom-in duration-500'>
+              <div className='relative mb-8 group cursor-default'>
+                <div className='absolute inset-0 bg-gradient-to-r from-[var(--color-primary)] to-purple-600 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500' />
+                <div className='relative w-32 h-32 bg-[#1a1a1a] rounded-full border border-white/10 flex items-center justify-center shadow-2xl'>
+                  <SearchX
+                    size={48}
+                    className='text-[var(--text-muted)] group-hover:text-white transition-colors duration-500'
+                  />
+                  <div className='absolute -top-2 -right-2 w-10 h-10 bg-[var(--bg-card)] rounded-full border border-white/10 flex items-center justify-center animate-bounce'>
+                    <Ticket size={16} className='text-[var(--color-primary)]' />
+                  </div>
                 </div>
               </div>
+
+              <h2 className='text-2xl font-bold text-white mb-3'>
+                Штучний інтелект ще навчається...
+              </h2>
+              <p className='text-[var(--text-muted)] max-w-md mb-8'>
+                У нас поки недостатньо даних про ваші вподобання. Відвідайте
+                кілька сеансів, щоб ми могли скласти ваш персональний
+                кіно-профіль!
+              </p>
+
+              <Link
+                to='/sessions'
+                className='group relative inline-flex items-center gap-2 px-8 py-4 bg-[var(--color-primary)] text-white font-bold rounded-xl overflow-hidden hover:scale-105 transition-transform shadow-lg shadow-[var(--color-primary)]/25'
+              >
+                <span className='relative z-10 flex items-center gap-2'>
+                  <Ticket size={18} />
+                  Обрати перший фільм
+                </span>
+                <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out' />
+              </Link>
             </div>
-
-            <h2 className='text-2xl font-bold text-white mb-3'>
-              Штучний інтелект ще навчається...
-            </h2>
-            <p className='text-[var(--text-muted)] max-w-md mb-8'>
-              У нас поки недостатньо даних про ваші вподобання. Відвідайте
-              кілька сеансів, щоб ми могли скласти ваш персональний
-              кіно-профіль!
-            </p>
-
-            <Link
-              to='/sessions'
-              className='group relative inline-flex items-center gap-2 px-8 py-4 bg-[var(--color-primary)] text-white font-bold rounded-xl overflow-hidden hover:scale-105 transition-transform shadow-lg shadow-[var(--color-primary)]/25'
-            >
-              <span className='relative z-10 flex items-center gap-2'>
-                <Ticket size={18} />
-                Обрати перший фільм
-              </span>
-              <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out' />
-            </Link>
-          </div>
+          )
         )}
       </div>
     </div>
