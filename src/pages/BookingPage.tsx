@@ -1,13 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import type { Movie } from '../types/movie'
-import type { Session, Hall, Seat } from '../types/hall'
-import { moviesService } from '../services/moviesService'
-import { bookingService } from '../services/bookingService'
-import {
-  adminPricingsService,
-  type PricingDetailsDto,
-} from '../services/adminPricingsService'
 import {
   Loader2,
   ArrowLeft,
@@ -15,30 +7,32 @@ import {
   Ticket,
   CalendarX,
 } from 'lucide-react'
-
 import SessionSelector from '../features/booking/components/SessionSelector'
 import SeatSelector from '../features/booking/components/SeatSelector'
 import { useAuth } from '../features/auth/AuthContext'
+import { useBooking } from '../features/booking/hooks/useBooking'
 
 const BookingPage = () => {
   const { id } = useParams<{ id: string }>()
   const { user, isLoading: isAuthLoading } = useAuth()
   const navigate = useNavigate()
 
-  const [movie, setMovie] = useState<Movie | null>(null)
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [hall, setHall] = useState<Hall | null>(null)
-
-  const [isPageLoading, setIsPageLoading] = useState(true)
-
-  const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [selectedSession, setSelectedSession] = useState<Session | null>(null)
-  const [selectedSeats, setSelectedSeats] = useState<Seat[]>([])
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
-
-  const [pricingRules, setPricingRules] = useState<PricingDetailsDto | null>(
-    null,
-  )
+  const {
+    step,
+    movie,
+    sessions,
+    selectedSession,
+    hall,
+    selectedSeats,
+    totalPrice,
+    isLoading,
+    isLoadingDetails,
+    isProcessingPayment,
+    selectSession,
+    resetSession,
+    toggleSeat,
+    submitOrder,
+  } = useBooking(id)
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
@@ -47,159 +41,10 @@ const BookingPage = () => {
   }, [user, isAuthLoading, navigate])
 
   useEffect(() => {
-    const init = async () => {
-      if (!id) return
-      try {
-        const [movieData, sessionsData] = await Promise.all([
-          moviesService.getById(id),
-          bookingService.getSessionsByMovieId(id),
-        ])
+    window.scrollTo(0, 0)
+  }, [step])
 
-        const now = new Date()
-        const upcomingSessions = sessionsData
-          .filter(session => new Date(session.startTime) > now)
-          .sort(
-            (a, b) =>
-              new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
-          )
-
-        setMovie(movieData)
-        setSessions(upcomingSessions)
-
-        if (history.state?.usr?.sessionId) {
-          const preSelected = upcomingSessions.find(
-            s => s.id === history.state.usr.sessionId,
-          )
-          if (preSelected) setSelectedSession(preSelected)
-        }
-      } catch (e) {
-        console.error(e)
-      } finally {
-        setIsPageLoading(false)
-      }
-    }
-    init()
-  }, [id])
-
-  useEffect(() => {
-    if (selectedSession) {
-      const loadData = async () => {
-        setIsPageLoading(true)
-        try {
-          const sessionDetails = await bookingService.getSessionDetails(
-            selectedSession.id,
-          )
-          const hallData = await bookingService.getHallById(
-            selectedSession.hallId,
-          )
-
-          const pricingData = selectedSession.pricingId
-            ? await adminPricingsService.getById(selectedSession.pricingId)
-            : null
-
-          setSelectedSession(sessionDetails)
-          setHall(hallData)
-          setPricingRules(pricingData)
-        } catch (e) {
-          console.error(e)
-        } finally {
-          setIsPageLoading(false)
-        }
-      }
-      loadData()
-    }
-  }, [selectedSession?.id])
-
-  const handleSeatToggle = async (seat: Seat) => {
-    const exists = selectedSeats.find(s => s.id === seat.id)
-    if (exists) {
-      setSelectedSeats(selectedSeats.filter(s => s.id !== seat.id))
-      return
-    }
-
-    if (!selectedSession) return
-
-    try {
-      setSelectedSeats([...selectedSeats, seat])
-
-      await bookingService.lockSeat(selectedSession.id, seat.id)
-    } catch (error: any) {
-      setSelectedSeats(prev => prev.filter(s => s.id !== seat.id))
-
-      if (error.response?.status === 409) {
-        alert('Це місце вже зайняте або заблоковане іншим користувачем.')
-      } else {
-        console.error('Failed to lock seat:', error)
-      }
-    }
-  }
-
-  const handlePayment = async () => {
-    if (!selectedSession || selectedSeats.length === 0) return
-
-    setIsProcessingPayment(true)
-    try {
-      const seatIds = selectedSeats.map(s => s.id)
-      await bookingService.createOrder(
-        selectedSession.id,
-        seatIds,
-        'test_token_123',
-      )
-
-      setStep(3)
-    } catch (error: any) {
-      console.error('Payment failed:', error)
-      alert(
-        error.response?.data?.detail ||
-          'Помилка при створенні замовлення. Спробуйте ще раз.',
-      )
-    } finally {
-      setIsProcessingPayment(false)
-    }
-  }
-
-  const handleChangeSession = () => {
-    setStep(1)
-    setSelectedSeats([])
-    setSelectedSession(null)
-  }
-
-  const calculateSeatPrice = (seat: Seat): number => {
-    if (!selectedSession) return 150
-
-    if (
-      !pricingRules ||
-      !pricingRules.items ||
-      pricingRules.items.length === 0
-    ) {
-      return selectedSession.priceBase || 150
-    }
-
-    const sessionDate = new Date(selectedSession.startTime)
-    const dayOfWeek = sessionDate.getDay()
-
-    const rule = pricingRules.items.find(
-      item =>
-        item.dayOfWeek === dayOfWeek &&
-        String(item.seatTypeId).toLowerCase() ===
-          String(seat.seatTypeId).toLowerCase(),
-    )
-
-    if (rule) {
-      return rule.price
-    }
-
-    return selectedSession.priceBase || 150
-  }
-
-  const totalPrice = useMemo(() => {
-    return selectedSeats.reduce(
-      (sum, seat) => sum + calculateSeatPrice(seat),
-      0,
-    )
-  }, [selectedSeats, pricingRules, selectedSession])
-
-  if (isAuthLoading || (isPageLoading && !movie)) {
+  if (isAuthLoading || (isLoading && !movie)) {
     return (
       <div className='flex h-screen items-center justify-center bg-[var(--bg-main)] text-white'>
         <Loader2 className='animate-spin text-[var(--color-primary)]' />
@@ -224,7 +69,7 @@ const BookingPage = () => {
           <div className='flex gap-4'>
             <Link
               to='/'
-              className='rounded-xl bg-white px-8 py-3 font-bold text-black hover:bg-zinc-200 shadow-lg shadow-white/10 transition-colors'
+              className='rounded-xl bg-white px-8 py-3 font-bold text-black hover:bg-zinc-200 transition-colors'
             >
               На головну
             </Link>
@@ -239,6 +84,10 @@ const BookingPage = () => {
       </div>
     )
   }
+
+  const genresList = Array.isArray(movie?.genres)
+    ? movie!.genres.map(g => (typeof g === 'string' ? g : g.name))
+    : []
 
   return (
     <div className='min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] pb-20'>
@@ -275,8 +124,8 @@ const BookingPage = () => {
               {sessions.length > 0 ? (
                 <SessionSelector
                   sessions={sessions}
-                  selectedSession={selectedSession}
-                  onSelect={setSelectedSession}
+                  selectedSession={null}
+                  onSelect={selectSession}
                 />
               ) : (
                 <div className='flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[var(--bg-card)]/30 p-12 text-center min-h-[300px]'>
@@ -286,13 +135,9 @@ const BookingPage = () => {
                   <h3 className='text-xl font-bold text-white'>
                     Актуальних сеансів немає
                   </h3>
-                  <p className='mt-2 max-w-xs text-sm text-[var(--text-muted)]'>
-                    На жаль, всі сеанси на цей фільм вже відбулися або ще не
-                    заплановані.
-                  </p>
                   <Link
                     to='/sessions'
-                    className='mt-8 rounded-xl bg-[var(--color-primary)] px-8 py-3 text-sm font-bold text-white transition-all hover:bg-[var(--color-primary-hover)] shadow-lg shadow-[var(--color-primary)]/20 hover:-translate-y-1'
+                    className='mt-8 rounded-xl bg-[var(--color-primary)] px-8 py-3 text-sm font-bold text-white'
                   >
                     Афіша кінотеатру
                   </Link>
@@ -301,17 +146,24 @@ const BookingPage = () => {
             </div>
           )}
 
-          {step === 2 && hall && (
+          {step === 2 && (
             <div className='animate-in fade-in slide-in-from-right-4 duration-500'>
               <h2 className='text-2xl font-bold text-white mb-6 flex items-center gap-3'>
                 <Ticket className='text-[var(--color-primary)]' /> Оберіть місця
               </h2>
-              <SeatSelector
-                hall={hall}
-                selectedSeats={selectedSeats}
-                onToggleSeat={handleSeatToggle}
-                occupiedSeatIds={selectedSession?.occupiedSeatIds || []}
-              />
+
+              {isLoadingDetails ? (
+                <div className='flex justify-center py-20'>
+                  <Loader2 className='animate-spin text-[var(--color-primary)]' />
+                </div>
+              ) : hall ? (
+                <SeatSelector
+                  hall={hall}
+                  selectedSeats={selectedSeats}
+                  onToggleSeat={toggleSeat}
+                  occupiedSeatIds={selectedSession?.occupiedSeatIds || []}
+                />
+              ) : null}
             </div>
           )}
         </div>
@@ -335,7 +187,7 @@ const BookingPage = () => {
                   {movie?.title}
                 </div>
                 <div className='text-xs font-medium text-[var(--text-muted)] bg-white/5 px-2 py-1 rounded w-fit'>
-                  {movie?.year} • {movie?.genres[0]}
+                  {movie?.year} • {genresList[0]}
                 </div>
               </div>
             </div>
@@ -363,7 +215,6 @@ const BookingPage = () => {
                   )}
                 </div>
               </div>
-
               <div className='flex justify-between items-center text-sm py-3 border-b border-white/5 border-dashed'>
                 <div className='text-[var(--text-muted)]'>Зал</div>
                 <div className='text-white font-medium'>
@@ -411,17 +262,16 @@ const BookingPage = () => {
               {step === 1 ? (
                 <button
                   type='button'
-                  disabled={!selectedSession}
-                  onClick={() => setStep(2)}
-                  className='w-full rounded-xl bg-white py-4 font-bold text-black hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:scale-[1.02] active:scale-100'
+                  disabled={true}
+                  className='w-full rounded-xl bg-white/10 py-4 font-bold text-white/50 cursor-not-allowed border border-white/5'
                 >
-                  Обрати місця
+                  Оберіть сеанс
                 </button>
               ) : (
                 <button
                   type='button'
                   disabled={selectedSeats.length === 0 || isProcessingPayment}
-                  onClick={handlePayment}
+                  onClick={submitOrder}
                   className='flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] py-4 font-bold text-white hover:bg-[var(--color-primary-hover)] shadow-lg shadow-[var(--color-primary)]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-100'
                 >
                   {isProcessingPayment ? (
@@ -437,7 +287,7 @@ const BookingPage = () => {
               {step === 2 && (
                 <button
                   type='button'
-                  onClick={handleChangeSession}
+                  onClick={resetSession}
                   className='w-full mt-3 py-2 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] hover:text-white transition-colors'
                 >
                   Змінити сеанс
