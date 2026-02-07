@@ -1,14 +1,19 @@
-import { useState, useMemo } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useState, useMemo, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { moviesService } from '../../../services/moviesService'
 import { bookingService } from '../../../services/bookingService'
 import { adminPricingsService } from '../../../services/adminPricingsService'
 import { useToast } from '../../../common/components/Toast/ToastContext'
+import { ticketHub } from '../../../services/signalrService'
 import type { Seat } from '../../../types/hall'
 import type { Session } from '../../../types/hall'
+import { useAuth } from '../../auth/AuthContext'
 
 export const useBooking = (movieId?: string) => {
   const toast = useToast()
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
@@ -39,21 +44,74 @@ export const useBooking = (movieId?: string) => {
     queryKey: ['session-full-details', selectedSessionId],
     queryFn: async () => {
       if (!selectedSessionId) throw new Error('No session selected')
-
       const session = await bookingService.getSessionDetails(selectedSessionId)
-
       const [hall, pricing] = await Promise.all([
         bookingService.getHallById(session.hallId),
         session.pricingId
           ? adminPricingsService.getById(session.pricingId)
           : null,
       ])
-
       return { session, hall, pricing }
     },
     enabled: !!selectedSessionId,
-    staleTime: 0,
+    staleTime: Infinity,
   })
+
+  useEffect(() => {
+    if (!selectedSessionId) return
+
+    ticketHub.startConnection(selectedSessionId)
+
+    ticketHub.onSeatLocked = (seatId, lockerUserId) => {
+      updateOccupiedSeats(seatId, 'add')
+
+      if (lockerUserId !== user?.id) {
+        setSelectedSeats(prev => {
+          const isSelected = prev.some(s => s.id === seatId)
+          if (isSelected) {
+            toast.warning('На жаль, це місце щойно зайняли.')
+            return prev.filter(s => s.id !== seatId)
+          }
+          return prev
+        })
+      }
+    }
+
+    ticketHub.onSeatUnlocked = seatId => {
+      updateOccupiedSeats(seatId, 'remove')
+    }
+
+    return () => {
+      ticketHub.stopConnection()
+    }
+  }, [selectedSessionId, user?.id])
+
+  const updateOccupiedSeats = (seatId: string, action: 'add' | 'remove') => {
+    queryClient.setQueryData(
+      ['session-full-details', selectedSessionId],
+      (oldData: any) => {
+        if (!oldData || !oldData.session) return oldData
+
+        const currentOccupied = oldData.session.occupiedSeatIds || []
+        let newOccupied = []
+
+        if (action === 'add') {
+          if (currentOccupied.includes(seatId)) return oldData
+          newOccupied = [...currentOccupied, seatId]
+        } else {
+          newOccupied = currentOccupied.filter((id: string) => id !== seatId)
+        }
+
+        return {
+          ...oldData,
+          session: {
+            ...oldData.session,
+            occupiedSeatIds: newOccupied,
+          },
+        }
+      },
+    )
+  }
 
   const lockSeatMutation = useMutation({
     mutationFn: (seatId: string) =>
@@ -71,6 +129,12 @@ export const useBooking = (movieId?: string) => {
 
   const toggleSeat = async (seat: Seat) => {
     const isSelected = selectedSeats.some(s => s.id === seat.id)
+
+    const isOccupied = bookingData?.session.occupiedSeatIds.includes(seat.id)
+    if (isOccupied && !isSelected) {
+      toast.error('Це місце вже зайняте.')
+      return
+    }
 
     if (isSelected) {
       setSelectedSeats(prev => prev.filter(s => s.id !== seat.id))
