@@ -1,34 +1,7 @@
 import { useState } from 'react'
 import { ChevronDown, HelpCircle, Phone, Mail } from 'lucide-react'
 import { clsx } from 'clsx'
-
-const FAQ_ITEMS = [
-  {
-    question: 'Які технології використовуються у ваших залах?',
-    answer:
-      'Ми використовуємо найсучасніші лазерні проєктори IMAX 4K та звукову систему Dolby Atmos. У деяких залах встановлені крісла D-Box, що рухаються синхронно з подіями на екрані.',
-  },
-  {
-    question: 'Як купити квиток онлайн?',
-    answer:
-      "Оберіть фільм, натисніть на сеанс, оберіть місця на схемі залу та натисніть 'Купити'. Після оплати квитки будуть надіслані на вашу пошту та збережені у вашому особистому кабінеті.",
-  },
-  {
-    question: 'Що робити, якщо я забув речі в залі?',
-    answer:
-      "Не хвилюйтеся! Усі знайдені речі ми зберігаємо у адміністратора протягом 30 днів. Зв'яжіться з нами за телефоном або підійдіть на касу кінотеатру.",
-  },
-  {
-    question: 'Чи можу я повернути квиток?',
-    answer:
-      'Так, повернення квитків можливе не пізніше ніж за 30 хвилин до початку сеансу. Кошти будуть повернуті на картку протягом 3-5 банківських днів.',
-  },
-  {
-    question: 'Чи є знижки для студентів?',
-    answer:
-      'Звичайно! Для студентів діє знижка 15% на всі сеанси у будні дні до 18:00. Не забудьте взяти з собою студентський квиток.',
-  },
-]
+import { FAQ_ITEMS } from '../data/staticContent'
 
 const FAQPage = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
@@ -76,7 +49,7 @@ const FAQPage = () => {
                 >
                   <span
                     className={clsx(
-                      'font-bold text-lg transition-colors',
+                      'font-bold text-lg transition-colors pr-4',
                       isOpen
                         ? 'text-white'
                         : 'text-zinc-300 group-hover:text-white',
@@ -86,7 +59,7 @@ const FAQPage = () => {
                   </span>
                   <div
                     className={clsx(
-                      'p-2 rounded-full transition-all duration-300',
+                      'p-2 rounded-full transition-all duration-300 shrink-0',
                       isOpen
                         ? 'bg-[var(--color-primary)] text-white rotate-180'
                         : 'bg-white/5 text-zinc-500 group-hover:bg-white/10 group-hover:text-white',
@@ -113,7 +86,7 @@ const FAQPage = () => {
           })}
         </div>
 
-        <div className='mt-16 rounded-3xl border border-white/10 bg-gradient-to-br from-[var(--bg-card)] to-black p-10 text-center shadow-2xl relative overflow-hidden group'>
+        <div className='mt-16 rounded-3xl border border-white/10 bg-gradient-to-br from-[var(--bg-card)] to-black p-10 text-center shadow-2xl relative overflow-hidden group animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200'>
           <div className='absolute top-0 right-0 w-64 h-64 bg-[var(--color-primary)]/10 rounded-full blur-[80px] group-hover:bg-[var(--color-primary)]/20 transition-colors duration-500'></div>
 
           <h3 className='mb-3 text-2xl font-bold text-white relative z-10'>
@@ -125,15 +98,14 @@ const FAQPage = () => {
 
           <div className='flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6 relative z-10'>
             <a
-              href='tel:+380000000000'
-              className='flex items-center gap-3 rounded-xl bg-white px-6 py-3 font-bold text-black hover:bg-zinc-200 transition-colors shadow-lg'
+              href='tel:+380800500500'
+              className='flex items-center gap-3 rounded-xl bg-white px-6 py-3 font-bold text-black hover:bg-zinc-200 transition-colors shadow-lg active:scale-95'
             >
-              <Phone size={18} />
-              Зателефонувати
+              <Phone size={18} />0 800 500 500
             </a>
             <a
               href='mailto:support@cinema.ua'
-              className='flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-6 py-3 font-bold text-white hover:bg-white/10 hover:border-white/20 transition-all'
+              className='flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-6 py-3 font-bold text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95'
             >
               <Mail size={18} />
               Написати нам
