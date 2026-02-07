@@ -130,7 +130,8 @@ export const useBooking = (movieId?: string) => {
   const toggleSeat = async (seat: Seat) => {
     const isSelected = selectedSeats.some(s => s.id === seat.id)
 
-    const isOccupied = bookingData?.session.occupiedSeatIds.includes(seat.id)
+    const occupiedList = bookingData?.session?.occupiedSeatIds || []
+    const isOccupied = occupiedList.includes(seat.id)
     if (isOccupied && !isSelected) {
       toast.error('Це місце вже зайняте.')
       return
