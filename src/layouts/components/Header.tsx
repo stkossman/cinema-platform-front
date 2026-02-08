@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, LogOut, User, ChevronRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { LogOut, User, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
 import { clsx } from 'clsx'
 
@@ -16,11 +16,31 @@ const NAV_ITEMS = [
   { label: 'Про нас', href: '/about', description: 'Технології та контакти' },
 ]
 
+const RollingText = ({ text }: { text: string }) => {
+  return (
+    <div className='relative overflow-hidden block h-[1.2em] leading-[1.2em]'>
+      {text.split('').map((char, i) => (
+        <span
+          key={i}
+          className='inline-block transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-full'
+          style={{ transitionDelay: `${i * 25}ms` }}
+        >
+          <span className='block h-[1.2em]'>
+            {char === ' ' ? '\u00A0' : char}
+          </span>
+          <span className='block h-[1.2em] absolute top-full text-[var(--color-primary)]'>
+            {char === ' ' ? '\u00A0' : char}
+          </span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const { user, logout } = useAuth()
-  const location = useLocation()
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -157,8 +177,8 @@ const Header = () => {
                 style={{ transitionDelay: `${index * 50}ms` }}
                 onClick={() => setIsMenuOpen(false)}
               >
-                <span className='text-3xl md:text-5xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-zinc-500 to-zinc-700 group-hover:from-white group-hover:to-white transition-all duration-500 uppercase tracking-tight'>
-                  {item.label}
+                <span className='text-3xl md:text-5xl lg:text-7xl font-black text-zinc-500 group-hover:text-white transition-colors duration-500 uppercase tracking-tight'>
+                  <RollingText text={item.label} />
                 </span>
 
                 <span className='hidden lg:flex items-center gap-2 text-sm font-medium text-[var(--color-primary)] opacity-0 -translate-x-10 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300'>
