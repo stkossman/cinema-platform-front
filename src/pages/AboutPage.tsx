@@ -1,15 +1,24 @@
-import { Mail, Github, MapPin, ArrowRight } from 'lucide-react'
+import {
+  Mail,
+  Github,
+  MapPin,
+  ArrowRight,
+  MonitorPlay,
+  Armchair,
+  Sparkles,
+  Quote,
+} from 'lucide-react'
 
 const AboutPage = () => {
   return (
     <div className='flex min-h-screen flex-col lg:flex-row bg-black'>
-      <div className='relative h-[50vh] w-full overflow-hidden bg-zinc-950 lg:sticky lg:top-0 lg:h-screen lg:w-1/2'>
-        <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-        <div className='absolute inset-0 bg-gradient-to-br from-[var(--bg-main)] via-transparent to-[var(--color-primary)]/20' />
+      <div className='relative h-[40vh] w-full overflow-hidden bg-zinc-950 lg:sticky lg:top-0 lg:h-screen lg:w-1/2 border-r border-white/5'>
+        <div className="absolute inset-0 opacity-30 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+        <div className='absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black' />
 
         <div className='absolute inset-0 flex items-center justify-center p-10'>
-          <div className='relative z-10'>
-            <div className='absolute -inset-20 rounded-full bg-[var(--color-primary)]/20 blur-[100px] animate-pulse-slow' />
+          <div className='relative z-10 select-none'>
+            <div className='absolute -inset-20 rounded-full bg-[var(--color-primary)]/10 blur-[120px]' />
             <h1 className='relative z-10 text-7xl font-black uppercase tracking-tighter text-white sm:text-8xl lg:text-9xl leading-[0.8]'>
               Cine
               <br />
@@ -17,109 +26,155 @@ const AboutPage = () => {
             </h1>
           </div>
         </div>
+
+        <div className='absolute bottom-12 left-12 right-12 hidden lg:block'>
+          <Quote
+            className='text-[var(--color-primary)] mb-4 opacity-50'
+            size={32}
+          />
+          <p className='text-xl font-medium text-zinc-300 italic leading-relaxed max-w-md'>
+            "Не намагайтеся зрозуміти, відчуйте це."
+          </p>
+          <div className='mt-4 flex items-center gap-3'>
+            <div className='h-px w-8 bg-zinc-600'></div>
+            <span className='text-xs font-bold uppercase tracking-widest text-zinc-500'>
+              Кристофер Нолан
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className='flex w-full flex-col justify-center bg-[var(--bg-main)] px-6 py-20 lg:min-h-screen lg:w-1/2 lg:px-24 lg:py-24 relative'>
-        <div className='max-w-xl space-y-16 animate-in slide-in-from-bottom-10 fade-in duration-1000'>
-          <div className='space-y-6'>
-            <span className='text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-primary)]'>
-              Наша місія
+      <div className='flex w-full flex-col justify-center bg-[#0a0a0a] px-6 py-20 lg:min-h-screen lg:w-1/2 lg:px-20 lg:py-24 relative'>
+        <div className='max-w-xl space-y-20 animate-in slide-in-from-bottom-10 fade-in duration-1000 mx-auto lg:mx-0'>
+          <div className='space-y-8'>
+            <span className='inline-block px-3 py-1 rounded-full border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary)]'>
+              Хто ми є
             </span>
-            <p className='text-3xl font-bold leading-tight text-white md:text-4xl'>
-              Ми переосмислюємо досвід походу в кіно, роблячи його простим,
-              красивим та емоційним.
-            </p>
+            <h2 className='text-4xl md:text-5xl font-black leading-tight text-white'>
+              Інженерія <br />
+              <span className='text-zinc-500'>ваших емоцій.</span>
+            </h2>
             <p className='text-lg leading-relaxed text-[var(--text-muted)]'>
-              Наш проєкт поєднує сучасний дизайн, передові технології та любов
-              до кінематографу. Ми не просто продаємо квитки — ми створюємо
-              атмосферу ще до того, як ви зайдете в зал.
+              Cine<span className='text-white'>ma</span> — це більше, ніж просто
+              екран і проєктор. Це пет-проект, який виріс у повноцінну
+              платформу, що демонструє можливості сучасного вебу. Ми поєднали
+              естетику мінімалізму з потужністю сучасних технологій.
             </p>
           </div>
 
-          <div className='grid grid-cols-2 gap-8 py-8 border-y border-white/5'>
-            <div>
-              <div className='text-3xl font-black text-white mb-1'>10k+</div>
-              <div className='text-xs uppercase tracking-wider text-[var(--text-muted)]'>
-                Користувачів
+          <div className='grid gap-8 py-8 border-y border-white/5'>
+            <div className='group'>
+              <div className='mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/5 text-white group-hover:bg-[var(--color-primary)] group-hover:text-black transition-colors'>
+                <MonitorPlay size={20} />
               </div>
+              <h3 className='text-lg font-bold text-white mb-2'>
+                Технологічність
+              </h3>
+              <p className='text-sm text-zinc-500 leading-relaxed'>
+                Використання React, SignalR та оптимізованих алгоритмів для
+                миттєвого бронювання без затримок.
+              </p>
             </div>
-            <div>
-              <div className='text-3xl font-black text-white mb-1'>5</div>
-              <div className='text-xs uppercase tracking-wider text-[var(--text-muted)]'>
-                Міст України
+
+            <div className='group'>
+              <div className='mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/5 text-white group-hover:bg-[var(--color-primary)] group-hover:text-black transition-colors'>
+                <Armchair size={20} />
               </div>
+              <h3 className='text-lg font-bold text-white mb-2'>Комфорт UX</h3>
+              <p className='text-sm text-zinc-500 leading-relaxed'>
+                Інтерфейс, який не заважає. "Quiet Luxury" дизайн, фокус на
+                контенті та інтуїтивна навігація.
+              </p>
+            </div>
+
+            <div className='group'>
+              <div className='mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/5 text-white group-hover:bg-[var(--color-primary)] group-hover:text-black transition-colors'>
+                <Sparkles size={20} />
+              </div>
+              <h3 className='text-lg font-bold text-white mb-2'>Атмосфера</h3>
+              <p className='text-sm text-zinc-500 leading-relaxed'>
+                Темна тема, кінематографічні анімації та увага до дрібниць
+                створюють настрій ще до початку сеансу.
+              </p>
             </div>
           </div>
 
           <div className='space-y-8'>
-            <span className='text-xs font-bold uppercase tracking-[0.2em] text-zinc-500'>
-              Зв'яжіться з нами
-            </span>
+            <h3 className='text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-6'>
+              Знімальна група (Контакти)
+            </h3>
 
-            <ul className='space-y-4'>
-              <li className='flex items-center gap-4 group cursor-pointer'>
-                <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 border border-white/5 group-hover:bg-white/10 group-hover:border-white/20 transition-all'>
-                  <MapPin size={20} className='text-white' />
+            <div className='space-y-0'>
+              <div className='flex items-baseline justify-between py-4 border-b border-white/5 hover:bg-white/[0.02] transition-colors group'>
+                <div className='flex items-center gap-3'>
+                  <MapPin
+                    size={16}
+                    className='text-[var(--color-primary)] opacity-50 group-hover:opacity-100'
+                  />
+                  <span className='text-sm font-bold text-zinc-400 group-hover:text-white transition-colors uppercase tracking-wider'>
+                    Локація
+                  </span>
                 </div>
-                <div>
-                  <div className='text-xs text-[var(--text-muted)] uppercase font-bold'>
-                    Адреса
-                  </div>
-                  <div className='text-zinc-200'>
-                    м. Острог, проспект Незалежності
-                  </div>
-                </div>
-              </li>
+                <span className='text-right text-white font-mono text-sm'>
+                  Острог, Україна
+                </span>
+              </div>
 
-              <li className='flex items-center gap-4 group cursor-pointer'>
-                <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 border border-white/5 group-hover:bg-white/10 group-hover:border-white/20 transition-all'>
-                  <Mail size={20} className='text-white' />
-                </div>
-                <div>
-                  <div className='text-xs text-[var(--text-muted)] uppercase font-bold'>
+              <div className='flex items-baseline justify-between py-4 border-b border-white/5 hover:bg-white/[0.02] transition-colors group'>
+                <div className='flex items-center gap-3'>
+                  <Mail
+                    size={16}
+                    className='text-[var(--color-primary)] opacity-50 group-hover:opacity-100'
+                  />
+                  <span className='text-sm font-bold text-zinc-400 group-hover:text-white transition-colors uppercase tracking-wider'>
                     Email
-                  </div>
-                  <a
-                    href='mailto:an.stawski@outlook.com'
-                    className='text-zinc-200 hover:text-[var(--color-primary)] transition-colors'
-                  >
-                    an.stawski@outlook.com
-                  </a>
+                  </span>
                 </div>
-              </li>
+                <a
+                  href='mailto:an.stawski@outlook.com'
+                  className='text-right text-white font-mono text-sm hover:text-[var(--color-primary)] transition-colors'
+                >
+                  an.stawski@outlook.com
+                </a>
+              </div>
 
-              <li className='flex items-center gap-4 group cursor-pointer'>
-                <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 border border-white/5 group-hover:bg-white/10 group-hover:border-white/20 transition-all'>
-                  <Github size={20} className='text-white' />
+              <div className='flex items-baseline justify-between py-4 border-b border-white/5 hover:bg-white/[0.02] transition-colors group'>
+                <div className='flex items-center gap-3'>
+                  <Github
+                    size={16}
+                    className='text-[var(--color-primary)] opacity-50 group-hover:opacity-100'
+                  />
+                  <span className='text-sm font-bold text-zinc-400 group-hover:text-white transition-colors uppercase tracking-wider'>
+                    GitHub / Dev
+                  </span>
                 </div>
-                <div>
-                  <div className='text-xs text-[var(--text-muted)] uppercase font-bold'>
-                    GitHub
-                  </div>
-                  <a
-                    href='https://github.com/stkossman'
-                    target='_blank'
-                    rel='noreferrer'
-                    className='text-zinc-200 hover:text-[var(--color-primary)] transition-colors'
-                  >
-                    github.com/stkossman
-                  </a>
-                </div>
-              </li>
-            </ul>
+                <a
+                  href='https://github.com/stkossman'
+                  target='_blank'
+                  rel='noreferrer'
+                  className='text-right text-white font-mono text-sm hover:text-[var(--color-primary)] transition-colors'
+                >
+                  @stkossman
+                </a>
+              </div>
+            </div>
 
             <div className='pt-8'>
               <a
                 href='mailto:an.stawski@outlook.com'
-                className='group flex w-full items-center justify-center gap-3 rounded-xl bg-white py-4 text-sm font-bold text-black transition-all hover:bg-zinc-200 hover:shadow-lg active:scale-95'
+                className='group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl bg-white px-8 py-4 text-sm font-bold text-black transition-all hover:bg-zinc-200'
               >
-                Написати нам
-                <ArrowRight
-                  size={18}
-                  className='transition-transform group-hover:translate-x-1'
-                />
+                <span className='relative z-10 flex items-center gap-2'>
+                  Розпочати співпрацю <ArrowRight size={18} />
+                </span>
               </a>
             </div>
+          </div>
+
+          <div className='pt-10 text-center lg:text-left opacity-30'>
+            <p className='text-[10px] uppercase tracking-[0.3em] text-white font-bold'>
+              Designed & Developed by Kossman
+            </p>
           </div>
         </div>
       </div>
