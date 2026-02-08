@@ -23,6 +23,7 @@ import PricingsPage from '../features/admin/PricingsPage'
 import GenresPage from '../features/admin/GenresPage'
 import UserActivityPage from '../features/admin/UserActivityPage'
 import CinemaBarPage from '../pages/CinemaBarPage'
+import StaticPage from '../pages/StaticPage'
 
 export const router = createBrowserRouter([
   {
@@ -73,6 +74,10 @@ export const router = createBrowserRouter([
       {
         path: 'bar',
         element: <CinemaBarPage />,
+      },
+      {
+        path: 'info/:pageId',
+        element: <StaticPage />,
       },
     ],
   },

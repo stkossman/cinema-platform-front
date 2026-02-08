@@ -13,8 +13,8 @@ const Footer = () => {
   return (
     <footer className='bg-[#050505] border-t border-white/5 pt-20 pb-10 text-sm text-[var(--text-muted)] relative z-10'>
       <div className='container mx-auto px-4'>
-        <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 mb-16'>
-          <div className='col-span-2 lg:col-span-2'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-20'>
+          <div className='lg:col-span-1'>
             <Link
               to='/'
               className='flex items-center gap-2 text-2xl font-black tracking-tighter text-white uppercase mb-6'
@@ -22,71 +22,79 @@ const Footer = () => {
               <Film size={24} className='text-[var(--color-primary)]' />
               Cinema.
             </Link>
-            <p className='text-zinc-500 mb-8 max-w-sm leading-relaxed'>
-              Сучасна платформа для бронювання квитків. Ми створюємо найкращий
-              досвід для кіноманів, поєднуючи зручність та інновації.
+            <p className='text-zinc-500 mb-8 leading-relaxed'>
+              Створюємо магію кіно, поєднуючи передові технології та бездоганний
+              сервіс. Ваш найкращий вечір починається тут.
             </p>
-            <div className='flex gap-4'>
-              <SocialIcon icon={Instagram} />
-              <SocialIcon icon={Facebook} />
-              <SocialIcon icon={Youtube} />
+            <div className='flex gap-3'>
+              <SocialIcon icon={Instagram} href='#' />
+              <SocialIcon icon={Facebook} href='#' />
+              <SocialIcon icon={Youtube} href='#' />
             </div>
           </div>
 
           <div>
             <h4 className='font-bold text-white mb-6 uppercase tracking-wider text-xs'>
-              Кінотеатри
+              Кінотеатр
             </h4>
             <ul className='space-y-4'>
-              {['Київ', 'Львів', 'Одеса', 'Харків', 'Дніпро'].map(city => (
-                <li key={city}>
-                  <a
-                    href='#'
-                    className='hover:text-white transition-colors duration-200 block'
-                  >
-                    {city}
-                  </a>
-                </li>
-              ))}
+              <li>
+                <FooterLink to='/info/technologies'>
+                  Технології (IMAX, Dolby)
+                </FooterLink>
+              </li>
+              <li>
+                <FooterLink to='/info/halls'>Наші зали</FooterLink>
+              </li>
+              <li>
+                <FooterLink to='/bar'>Меню кінобару</FooterLink>
+              </li>
+              <li>
+                <FooterLink to='/sessions'>Розклад сеансів</FooterLink>
+              </li>
             </ul>
           </div>
 
           <div>
             <h4 className='font-bold text-white mb-6 uppercase tracking-wider text-xs'>
-              Інфо
+              Сервіс
             </h4>
             <ul className='space-y-4'>
               <li>
-                <Link
-                  to='/profile'
-                  className='hover:text-white transition-colors duration-200 block'
-                >
-                  Особистий кабінет
-                </Link>
+                <FooterLink to='/profile'>Особистий кабінет</FooterLink>
               </li>
               <li>
-                <Link
-                  to='/faq'
-                  className='hover:text-white transition-colors duration-200 block'
-                >
-                  Часті запитання
-                </Link>
+                <FooterLink to='/faq'>Часті запитання (FAQ)</FooterLink>
               </li>
               <li>
-                <Link
-                  to='/offers'
-                  className='hover:text-white transition-colors duration-200 block'
+                <a
+                  href='mailto:support@cinema.ua'
+                  className='hover:text-white transition-colors duration-200 flex items-center gap-2'
                 >
-                  Акції
-                </Link>
+                  <span>Зворотній зв'язок</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className='font-bold text-white mb-6 uppercase tracking-wider text-xs'>
+              Інформація
+            </h4>
+            <ul className='space-y-4'>
+              <li>
+                <FooterLink to='/info/rules'>Правила відвідування</FooterLink>
               </li>
               <li>
-                <Link
-                  to='/about'
-                  className='hover:text-white transition-colors duration-200 block'
-                >
-                  Про нас
-                </Link>
+                <FooterLink to='/info/privacy'>
+                  Політика конфіденційності
+                </FooterLink>
+              </li>
+              <li>
+                <FooterLink to='/info/offer'>Публічна оферта</FooterLink>
+              </li>
+              <li>
+                <FooterLink to='/info/age-limits'>Вікові обмеження</FooterLink>
               </li>
             </ul>
           </div>
@@ -96,6 +104,9 @@ const Footer = () => {
               <Smartphone size={14} className='text-[var(--color-primary)]' />{' '}
               Мобільний додаток
             </h4>
+            <p className='text-xs text-zinc-600 mb-4'>
+              Купуйте квитки швидше та зберігайте їх у смартфоні.
+            </p>
             <div className='flex flex-col gap-3'>
               <AppButton icon={Apple} label='App Store' />
               <AppButton icon={Play} label='Google Play' />
@@ -105,15 +116,7 @@ const Footer = () => {
 
         <div className='border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zinc-600'>
           <div>
-            © {new Date().getFullYear()} Cinema Platform. Powered by React.
-          </div>
-          <div className='flex gap-6'>
-            <a href='#' className='hover:text-zinc-400'>
-              Публічна оферта
-            </a>
-            <a href='#' className='hover:text-zinc-400'>
-              Політика конфіденційності
-            </a>
+            © {new Date().getFullYear()} Cinema Platform. All rights reserved.
           </div>
         </div>
       </div>
@@ -121,13 +124,30 @@ const Footer = () => {
   )
 }
 
-const SocialIcon = ({ icon: Icon }: { icon: any }) => (
+const FooterLink = ({
+  to,
+  children,
+}: {
+  to: string
+  children: React.ReactNode
+}) => (
+  <Link
+    to={to}
+    className='hover:text-white transition-colors duration-200 block'
+  >
+    {children}
+  </Link>
+)
+
+const SocialIcon = ({ icon: Icon, href }: { icon: any; href: string }) => (
   <a
-    href='#'
-    className='p-3 rounded-full bg-white/5 border border-white/5 hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] hover:text-white transition-all duration-300 group'
+    href={href}
+    target='_blank'
+    rel='noreferrer'
+    className='p-2.5 rounded-full bg-white/5 border border-white/5 hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] hover:text-white transition-all duration-300 group'
   >
     <Icon
-      size={18}
+      size={16}
       className='group-hover:scale-110 transition-transform text-zinc-400 group-hover:text-white'
     />
   </a>
