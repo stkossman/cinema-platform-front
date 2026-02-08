@@ -59,7 +59,10 @@ const CinemaBarPage = () => {
 
       <div className='container mx-auto px-4 -mt-8 relative z-20'>
         <div className='bg-[var(--bg-card)]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 mb-8 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between'>
-          <div className='flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto pb-2 md:pb-0'>
+          <div
+            className='flex gap-2 overflow-x-auto md:flex-wrap w-full md:w-auto pb-2 md:pb-0 p-1 no-scrollbar'
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
             <button
               type='button'
               onClick={() => setActiveCategory('all')}
