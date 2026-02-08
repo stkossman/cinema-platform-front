@@ -36,7 +36,7 @@ const MovieCard = ({ movie, sessions, technologies }: MovieCardProps) => {
         <img
           src={movie.posterUrl || movie.backdropUrl}
           alt={movie.title}
-          className='w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105'
+          className='w-full h-full object-cover'
           loading='lazy'
         />
 
