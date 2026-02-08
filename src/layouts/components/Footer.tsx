@@ -11,7 +11,7 @@ import {
 
 const Footer = () => {
   return (
-    <footer className='bg-[#050505] border-t border-white/5 pt-20 pb-10 text-sm text-[var(--text-muted)]'>
+    <footer className='bg-[#050505] border-t border-white/5 pt-20 pb-10 text-sm text-[var(--text-muted)] relative z-10'>
       <div className='container mx-auto px-4'>
         <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 mb-16'>
           <div className='col-span-2 lg:col-span-2'>
@@ -124,16 +124,19 @@ const Footer = () => {
 const SocialIcon = ({ icon: Icon }: { icon: any }) => (
   <a
     href='#'
-    className='p-3 rounded-full bg-white/5 hover:bg-[var(--color-primary)] hover:text-white transition-all duration-300 group'
+    className='p-3 rounded-full bg-white/5 border border-white/5 hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] hover:text-white transition-all duration-300 group'
   >
-    <Icon size={18} className='group-hover:scale-110 transition-transform' />
+    <Icon
+      size={18}
+      className='group-hover:scale-110 transition-transform text-zinc-400 group-hover:text-white'
+    />
   </a>
 )
 
 const AppButton = ({ icon: Icon, label }: { icon: any; label: string }) => (
   <button
     type='button'
-    className='flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all group w-full text-left'
+    className='flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all group w-full text-left active:scale-95'
   >
     <Icon
       size={20}

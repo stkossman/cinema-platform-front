@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, LogOut, User } from 'lucide-react'
+import { Menu, X, LogOut, User, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
 import { clsx } from 'clsx'
 
 const NAV_ITEMS = [
-  { label: 'Афіша', href: '/sessions' },
-  { label: 'Пропозиції', href: '/offers' },
-  { label: 'Кінобар', href: '/bar' },
-  { label: 'Допомога', href: '/faq' },
-  { label: 'Про нас', href: '/about' },
+  {
+    label: 'Афіша',
+    href: '/sessions',
+    description: 'Розклад сеансів та квитки',
+  },
+  { label: 'Пропозиції', href: '/offers', description: 'Акції та знижки' },
+  { label: 'Кінобар', href: '/bar', description: 'Меню попкорну та напоїв' },
+  { label: 'Допомога', href: '/faq', description: 'Відповіді на запитання' },
+  { label: 'Про нас', href: '/about', description: 'Технології та контакти' },
 ]
 
 const Header = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const { user, logout } = useAuth()
   const location = useLocation()
@@ -24,136 +28,227 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isMenuOpen])
+
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
+
   const handleLogout = () => {
     logout()
-    setIsMobileMenuOpen(false)
+    setIsMenuOpen(false)
   }
 
   return (
-    <header
-      className={clsx(
-        'sticky top-0 z-50 w-full transition-all duration-300 border-b',
-        isScrolled || isMobileMenuOpen
-          ? 'glass-panel border-white/5 py-2'
-          : 'bg-transparent border-transparent py-4',
-      )}
-    >
-      <div className='container mx-auto flex items-center justify-between px-4'>
-        <Link
-          to='/'
-          className='flex items-center gap-2 text-xl font-black tracking-tighter text-white uppercase select-none z-50 group'
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          <span>
-            Cine<span className='text-[var(--color-primary)]'>ma</span>.
-          </span>
-        </Link>
+    <>
+      <header
+        className={clsx(
+          'fixed top-0 left-0 right-0 z-[60] transition-all duration-500 border-b',
+          isMenuOpen
+            ? 'border-transparent bg-transparent py-4'
+            : isScrolled
+              ? 'bg-black/50 backdrop-blur-xl border-white/5 py-3'
+              : 'bg-transparent border-transparent py-6',
+        )}
+      >
+        <div className='container mx-auto flex items-center justify-between px-6'>
+          <Link
+            to='/'
+            className='relative z-[70] flex items-center gap-1 text-2xl font-black tracking-tighter text-white uppercase select-none group'
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <span>
+              Cine
+              <span className='text-[var(--color-primary)] transition-all duration-300 group-hover:text-white'>
+                ma
+              </span>
+              .
+            </span>
+          </Link>
 
-        <nav className='hidden md:flex items-center gap-1 rounded-full border border-white/5 bg-black/20 p-1 backdrop-blur-sm'>
-          {NAV_ITEMS.map(item => {
-            const isActive = location.pathname === item.href
-            return (
+          <div className='relative z-[70] flex items-center gap-6'>
+            {!isMenuOpen && (
+              <div className='hidden md:flex items-center gap-6 animate-in fade-in duration-300'>
+                {user ? (
+                  <Link
+                    to='/profile'
+                    className='flex items-center gap-3 text-sm font-bold text-white hover:text-[var(--color-primary)] transition-colors'
+                  >
+                    <span className='text-right leading-tight'>
+                      <span className='block text-[10px] text-[var(--text-muted)] uppercase'>
+                        Вітаємо
+                      </span>
+                      {user.name}
+                    </span>
+                    <div className='w-9 h-9 rounded-full bg-white/10 flex items-center justify-center border border-white/10'>
+                      <User size={16} />
+                    </div>
+                  </Link>
+                ) : (
+                  <Link
+                    to='/auth/login'
+                    className='text-sm font-bold text-white hover:text-[var(--color-primary)] transition-colors'
+                  >
+                    Увійти
+                  </Link>
+                )}
+              </div>
+            )}
+
+            <button
+              type='button'
+              onClick={toggleMenu}
+              className='group flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors focus:outline-none'
+              aria-label='Toggle menu'
+            >
+              <span
+                className={clsx(
+                  'h-0.5 w-5 bg-white transition-all duration-300 ease-in-out',
+                  isMenuOpen && 'translate-y-2 rotate-45',
+                )}
+              />
+              <span
+                className={clsx(
+                  'h-0.5 w-3 bg-white transition-all duration-300 ease-in-out group-hover:w-5',
+                  isMenuOpen && 'opacity-0',
+                )}
+              />
+              <span
+                className={clsx(
+                  'h-0.5 w-5 bg-white transition-all duration-300 ease-in-out',
+                  isMenuOpen && '-translate-y-2 -rotate-45',
+                )}
+              />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div
+        className={clsx(
+          'fixed inset-0 z-50 flex flex-col justify-center bg-[#050505] transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]',
+          isMenuOpen
+            ? 'opacity-100 visible'
+            : 'opacity-0 invisible pointer-events-none delay-200',
+        )}
+      >
+        <div className='absolute inset-0 bg-[url("https://www.transparenttextures.com/patterns/cubes.png")] opacity-5'></div>
+        <div className='absolute top-0 right-0 w-[50vw] h-[50vh] bg-[var(--color-primary)]/10 blur-[150px] rounded-full pointer-events-none'></div>
+
+        <div className='container mx-auto px-6 grid grid-cols-1 lg:grid-cols-[2fr_1fr] h-full pt-24 pb-12'>
+          <nav className='flex flex-col justify-center space-y-2 lg:space-y-4 relative z-10'>
+            {NAV_ITEMS.map((item, index) => (
               <Link
                 key={item.label}
                 to={item.href}
                 className={clsx(
-                  'px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all duration-300',
-                  isActive
-                    ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/25'
-                    : 'text-[var(--text-muted)] hover:text-white hover:bg-white/5',
+                  'group flex items-center justify-between py-2 border-b border-white/5 lg:border-none lg:py-0 transition-all duration-500 ease-out',
+                  isMenuOpen
+                    ? 'translate-y-0 opacity-100'
+                    : 'translate-y-10 opacity-0',
                 )}
+                style={{ transitionDelay: `${index * 50}ms` }}
+                onClick={() => setIsMenuOpen(false)}
               >
-                {item.label}
-              </Link>
-            )
-          })}
-        </nav>
+                <span className='text-3xl md:text-5xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-zinc-500 to-zinc-700 group-hover:from-white group-hover:to-white transition-all duration-500 uppercase tracking-tight'>
+                  {item.label}
+                </span>
 
-        <div className='flex items-center gap-4'>
-          {user ? (
-            <div className='hidden md:flex items-center gap-4'>
-              <Link
-                to='/profile'
-                className='flex items-center gap-2 text-sm font-bold text-white hover:text-[var(--color-primary)] transition-colors'
-              >
-                <div className='w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10'>
-                  <User size={14} />
-                </div>
-                <span className='hidden lg:inline'>{user.name}</span>
+                <span className='hidden lg:flex items-center gap-2 text-sm font-medium text-[var(--color-primary)] opacity-0 -translate-x-10 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300'>
+                  {item.description} <ChevronRight size={16} />
+                </span>
               </Link>
-            </div>
-          ) : (
-            <Link
-              to='/auth/login'
-              className='hidden md:flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs font-bold text-black transition-all hover:bg-gray-200 hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-            >
-              Увійти
-            </Link>
-          )}
+            ))}
+          </nav>
 
-          <button
-            type='button'
-            className='block md:hidden text-white hover:text-[var(--color-primary)] transition-colors focus:outline-none'
-            onClick={toggleMenu}
-            aria-label='Toggle menu'
+          <div
+            className={clsx(
+              'flex flex-col justify-end lg:justify-center lg:items-start lg:pl-12 lg:border-l lg:border-white/5 space-y-8 transition-all duration-700 delay-300',
+              isMenuOpen
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-10',
+            )}
           >
-            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
+            {user ? (
+              <div className='w-full'>
+                <div className='flex items-center gap-4 mb-6'>
+                  <div className='w-16 h-16 rounded-full bg-gradient-to-br from-zinc-800 to-black border border-white/10 flex items-center justify-center text-2xl font-bold text-white shadow-xl'>
+                    {user.name[0]}
+                  </div>
+                  <div>
+                    <div className='text-[var(--text-muted)] text-sm uppercase tracking-wider mb-1'>
+                      Залогінений як
+                    </div>
+                    <div className='text-xl font-bold text-white'>
+                      {user.name} {user.surname}
+                    </div>
+                  </div>
+                </div>
+
+                <div className='grid grid-cols-2 gap-3'>
+                  <Link
+                    to='/profile'
+                    className='flex items-center justify-center gap-2 rounded-xl bg-white text-black py-4 font-bold hover:bg-zinc-200 transition-colors'
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User size={18} /> Кабінет
+                  </Link>
+                  <button
+                    type='button'
+                    onClick={handleLogout}
+                    className='flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 text-white py-4 font-bold hover:bg-white/10 transition-colors'
+                  >
+                    <LogOut size={18} /> Вийти
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className='w-full p-8 rounded-3xl bg-white/5 border border-white/5'>
+                <h3 className='text-2xl font-bold text-white mb-2'>
+                  Приєднуйтесь до нас
+                </h3>
+                <p className='text-[var(--text-muted)] mb-6'>
+                  Бронюйте місця, отримуйте знижки та зберігайте історію
+                  переглядів.
+                </p>
+                <Link
+                  to='/auth/login'
+                  className='flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] py-4 font-bold text-white shadow-lg shadow-[var(--color-primary)]/20 hover:scale-[1.02] transition-transform'
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Увійти або Зареєструватися
+                </Link>
+              </div>
+            )}
+
+            <div className='space-y-4 pt-8 lg:pt-0'>
+              <div className='text-[var(--text-muted)] uppercase tracking-widest text-xs font-bold'>
+                Контакти
+              </div>
+              <a
+                href='tel:0800500500'
+                className='block text-2xl font-mono text-white hover:text-[var(--color-primary)] transition-colors'
+              >
+                0 800 500 500
+              </a>
+              <a
+                href='mailto:support@cinema.ua'
+                className='block text-lg text-white hover:text-[var(--color-primary)] transition-colors'
+              >
+                support@cinema.ua
+              </a>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div
-        className={clsx(
-          'absolute top-full left-0 w-full border-b border-white/10 bg-[#0a0a0a]/95 backdrop-blur-2xl md:hidden overflow-hidden transition-all duration-500 ease-in-out',
-          isMobileMenuOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0',
-        )}
-      >
-        <nav className='flex flex-col p-6 space-y-4'>
-          {NAV_ITEMS.map(item => (
-            <Link
-              key={item.label}
-              to={item.href}
-              className='text-xl font-bold text-[var(--text-muted)] hover:text-white hover:translate-x-2 transition-all duration-300'
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-
-          <div className='h-px bg-white/10 my-4' />
-
-          {user ? (
-            <div className='flex flex-col gap-3'>
-              <Link
-                to='/profile'
-                className='flex items-center justify-center gap-2 w-full rounded-xl bg-white/5 border border-white/10 px-5 py-3 text-sm font-bold text-white active:scale-95 transition-transform'
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <User size={18} />
-                Мій кабінет ({user.name})
-              </Link>
-              <button
-                type='button'
-                onClick={handleLogout}
-                className='flex items-center justify-center gap-2 w-full rounded-xl border border-[var(--color-error)]/30 bg-[var(--color-error)]/10 px-5 py-3 text-sm font-bold text-[var(--color-error)] active:scale-95 transition-transform'
-              >
-                <LogOut size={18} />
-                Вийти
-              </button>
-            </div>
-          ) : (
-            <Link
-              to='/auth/login'
-              className='w-full text-center rounded-xl bg-white px-5 py-3 text-sm font-bold text-black transition-transform active:scale-95 shadow-lg'
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Увійти
-            </Link>
-          )}
-        </nav>
-      </div>
-    </header>
+    </>
   )
 }
 

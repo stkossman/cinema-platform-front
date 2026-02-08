@@ -8,7 +8,7 @@ const MainLayout = () => {
     <div className='flex min-h-screen flex-col bg-[var(--bg-main)] text-[var(--text-main)] antialiased selection:bg-[var(--color-primary)]/30'>
       <ScrollToTop />
       <Header />
-      <main className='flex-1'>
+      <main className='flex-1 relative z-0'>
         <Outlet />
       </main>
       <Footer />
