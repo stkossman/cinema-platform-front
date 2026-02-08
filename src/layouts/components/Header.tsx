@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { LogOut, User, ChevronRight } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
 import { clsx } from 'clsx'
 
