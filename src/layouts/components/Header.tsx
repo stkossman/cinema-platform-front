@@ -8,12 +8,11 @@ const NAV_ITEMS = [
   {
     label: 'Афіша',
     href: '/sessions',
-    description: 'Розклад сеансів та квитки',
   },
-  { label: 'Пропозиції', href: '/offers', description: 'Акції та знижки' },
-  { label: 'Кінобар', href: '/bar', description: 'Меню попкорну та напоїв' },
-  { label: 'Допомога', href: '/faq', description: 'Відповіді на запитання' },
-  { label: 'Про нас', href: '/about', description: 'Технології та контакти' },
+  { label: 'Пропозиції', href: '/offers' },
+  { label: 'Кінобар', href: '/bar' },
+  { label: 'Допомога', href: '/faq' },
+  { label: 'Про нас', href: '/about' },
 ]
 
 const RollingText = ({ text }: { text: string }) => {
@@ -179,10 +178,6 @@ const Header = () => {
               >
                 <span className='text-3xl md:text-5xl lg:text-7xl font-black text-zinc-500 group-hover:text-white transition-colors duration-500 uppercase tracking-tight'>
                   <RollingText text={item.label} />
-                </span>
-
-                <span className='hidden lg:flex items-center gap-2 text-sm font-medium text-[var(--color-primary)] opacity-0 -translate-x-10 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300'>
-                  {item.description} <ChevronRight size={16} />
                 </span>
               </Link>
             ))}
